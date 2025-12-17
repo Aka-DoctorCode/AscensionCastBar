@@ -805,7 +805,7 @@ local function InitializeAscensionCastBar()
             self.spellName:SetText(db.showSpellText ~= false and GetFmtName(name) or ""); if db.showIcon and texture then self.icon:SetTexture(texture); self.icon:Show() else self.icon:Hide() end
             if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; HideTicks()
             ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide()
-            ResetParticles()
+            ResetVisuals() -- CORREGIDO (Antes ResetParticles)
 
         elseif event=="UNIT_SPELLCAST_START" then
             local name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
@@ -814,8 +814,8 @@ local function InitializeAscensionCastBar()
             self.spellName:SetText(db.showSpellText ~= false and GetFmtName(name) or ""); if db.showIcon and texture then self.icon:SetTexture(texture); self.icon:Show() else self.icon:Hide() end
             if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; HideTicks()
             ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide()
-            ResetParticles()
-            
+            ResetVisuals() -- CORREGIDO
+
         elseif event=="UNIT_SPELLCAST_CHANNEL_START" then
             local name, _, texture, startMS, endMS, _, _, spellID, notInt = UnitChannelInfo("player")
             if not name then return end
@@ -834,7 +834,7 @@ local function InitializeAscensionCastBar()
             self.spellName:SetText(db.showSpellText ~= false and GetFmtName(name) or ""); if db.showIcon and texture then self.icon:SetTexture(texture); self.icon:Show() else self.icon:Hide() end
             if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; 
             ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide()
-            ResetParticles()
+            ResetVisuals() -- CORREGIDO
             
         elseif event=="UNIT_SPELLCAST_CHANNEL_UPDATE" or event=="UNIT_SPELLCAST_EMPOWER_UPDATE" then
             local _, _, _, startMS, endMS = UnitChannelInfo("player")
