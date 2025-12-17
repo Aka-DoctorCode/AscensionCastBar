@@ -55,12 +55,16 @@ local function UpdateDefaultCastBarVisibility()
     for _, frame in ipairs(frames) do
         if frame then
             if hide then
-                frame:UnregisterAllEvents(); frame:Hide()
+                frame:UnregisterAllEvents()
+                frame:Hide()
             else
-                frame:RegisterEvent("UNIT_SPELLCAST_START"); frame:RegisterEvent("UNIT_SPELLCAST_STOP")
-                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START"); frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+                frame:RegisterEvent("UNIT_SPELLCAST_START")
+                frame:RegisterEvent("UNIT_SPELLCAST_STOP")
+                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
                 pcall(function() 
-                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START"); frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
                 end)
             end
         end
@@ -115,11 +119,11 @@ local function InitializeAscensionCastBar()
         useClassColor = false,
         -- Shield/Ticks
         showShield = true, uninterruptibleColor = {0.4, 0.4, 0.4, 1},
-        showChannelTicks = true, channelTicksColor = {1, 1, 1, 0.5}, tickWidth = 1, -- NUEVO DEFAULT
+        showChannelTicks = true, channelTicksColor = {1, 1, 1, 0.5}, tickWidth = 1,
         -- Anim
         enableSpark = true, enableTails = true, animStyle = "Comet",
         sparkColor = {0.93, 0.98, 1, 1}, glowColor = {1, 1, 1, 1},
-        sparkIntensity = 1, glowIntensity = 0.5, sparkScale = 3, sparkOffset = 0, -- Default 0
+        sparkIntensity = 1, glowIntensity = 0.5, sparkScale = 3, sparkOffset = 0,
         tailLength = 200, 
         tail1Color = {1, 0, 0.1, 1}, tail1Intensity = 1, 
         tail2Color = {0, 0.9, 1, 1}, tail2Intensity = 0.4, 
@@ -198,9 +202,7 @@ local function InitializeAscensionCastBar()
 
     castBar.tailMask = CreateFrame("Frame", nil, castBar); castBar.tailMask:SetPoint("TOPLEFT", 0, 0); castBar.tailMask:SetPoint("BOTTOMLEFT", 0, 0); castBar.tailMask:SetWidth(db.width); castBar.tailMask:SetClipsChildren(true)
 
-    -- ==========================================================
-    -- TICKS (CON SOPORTE DE GROSOR)
-    -- ==========================================================
+    -- TICKS
     castBar.ticksFrame = CreateFrame("Frame", nil, castBar); castBar.ticksFrame:SetAllPoints(); castBar.ticksFrame:SetFrameLevel(15); castBar.ticks = {}
     
     local function HideTicks() 
@@ -224,7 +226,7 @@ local function InitializeAscensionCastBar()
         local duration = castBar.channelingDuration or (castBar.endTime - castBar.startTime)
         if duration <= 0 then return end
         
-        local tW = db.tickWidth or 1 -- USAR GROSOR
+        local tW = db.tickWidth or 1 
 
         for i, posTime in ipairs(castBar.tickPositions) do
             local tick = castBar.ticks[i]
@@ -233,7 +235,7 @@ local function InitializeAscensionCastBar()
                 tick:SetHeight(castBar:GetHeight())
                 table.insert(castBar.ticks, tick) 
             end
-            tick:SetWidth(tW) -- APLICAR GROSOR
+            tick:SetWidth(tW) 
             
             local pct = posTime / duration
             if db.reverseChanneling then pct = 1 - pct end
@@ -253,9 +255,7 @@ local function InitializeAscensionCastBar()
     castBar.shield = castBar:CreateTexture(nil, "OVERLAY", nil, 5); castBar.shield:SetTexture("Interface\\FriendsFrame\\StatusIcon-Online"); castBar.shield:SetSize(16, 16); castBar.shield:Hide()
     castBar.latency = castBar:CreateTexture(nil, "OVERLAY", nil, 2); castBar.latency:Hide()
 
-    -- ==========================================================
-    -- SPARK & ANIMACIONES
-    -- ==========================================================
+    -- SPARK SETUP
     castBar.sparkHead = castBar:CreateTexture(nil, "OVERLAY", nil, 7); castBar.sparkHead:SetAtlas("pvpscoreboard-header-glow", true); castBar.sparkHead:SetBlendMode("ADD"); if castBar.sparkHead.SetRotation then castBar.sparkHead:SetRotation(math.rad(90)) end
     castBar.sparkTail = castBar.tailMask:CreateTexture(nil, "OVERLAY", nil, 4); castBar.sparkTail:SetAtlas("AftLevelup-SoftCloud", true); castBar.sparkTail:SetBlendMode("ADD")
     castBar.sparkTail2 = castBar.tailMask:CreateTexture(nil, "OVERLAY", nil, 4); castBar.sparkTail2:SetAtlas("AftLevelup-SoftCloud", true); castBar.sparkTail2:SetTexCoord(0, 1, 1, 0); castBar.sparkTail2:SetBlendMode("ADD")
@@ -275,10 +275,8 @@ local function InitializeAscensionCastBar()
     UpdateSparkSize = function()
         if not castBar.sparkHead then return end
         local sc, h = db.sparkScale or 1.8, db.height or 20
-        -- Aplicar escala inmediatamente
         castBar.sparkHead:SetSize(32*sc, h*2*sc)
         castBar.sparkGlow:SetSize(190*sc, h*2.4)
-        
         castBar.sparkTail:SetSize((db.tail1Length or 90)*sc, h*1.4)
         castBar.sparkTail2:SetSize((db.tail2Length or 60)*sc, h*1.1)
         castBar.sparkTail3:SetSize((db.tail3Length or 90)*sc, h*1.4)
@@ -287,25 +285,28 @@ local function InitializeAscensionCastBar()
     end
     UpdateSparkSize()
 
-    local function ResetParticles()
-        if castBar.particles then for _, p in ipairs(castBar.particles) do p:Hide() end end
-        castBar.lastParticleTime = 0
-    end
+    -- === UPDATE SPARK ANIMATIONS (FIXED & REWRITTEN & EXPANDED) ===
 
-    local function UpdateSpark(progress, tailProgress)
-        -- Limpieza
+    local function ResetVisuals()
+        -- Helper para limpiar estados entre cambios de animación
+        castBar.sparkTail:Hide(); castBar.sparkTail:ClearAllPoints(); castBar.sparkTail:SetRotation(0)
+        castBar.sparkTail2:Hide(); castBar.sparkTail2:ClearAllPoints(); castBar.sparkTail2:SetRotation(0)
+        castBar.sparkTail3:Hide(); castBar.sparkTail3:ClearAllPoints(); castBar.sparkTail3:SetRotation(0)
+        castBar.sparkTail4:Hide(); castBar.sparkTail4:ClearAllPoints(); castBar.sparkTail4:SetRotation(0)
+        if castBar.particles then for _, p in ipairs(castBar.particles) do p:Hide() end end
+        if castBar.glitchLayers then for _, g in ipairs(castBar.glitchLayers) do g:Hide() end end
+        if castBar.lightningSegments then for _, l in ipairs(castBar.lightningSegments) do l:Hide() end end
         if castBar.waveOverlay then castBar.waveOverlay:Hide() end
         if castBar.scanLine then castBar.scanLine:Hide() end
         if castBar.rainbowOverlay then castBar.rainbowOverlay:Hide() end
-        if castBar.glitchLayers then for _, g in ipairs(castBar.glitchLayers) do g:Hide() end end
-        if castBar.lightningSegments then for _, l in ipairs(castBar.lightningSegments) do l:Hide() end end
-        if db.animStyle ~= "Particles" and castBar.particles then for _, p in ipairs(castBar.particles) do p:Hide() end end
+    end
 
-        if not castBar.sparkHead then return end
+    local function UpdateSpark(progress, tailProgress)
+        ResetVisuals() -- Limpieza crítica
 
         if not db.enableSpark or not progress or progress<=0 or progress>=1 then 
-            castBar.sparkHead:Hide(); castBar.sparkGlow:Hide()
-            castBar.sparkTail:Hide(); castBar.sparkTail2:Hide(); castBar.sparkTail3:Hide(); castBar.sparkTail4:Hide()
+            castBar.sparkHead:Hide()
+            castBar.sparkGlow:Hide()
             return 
         end
 
@@ -315,7 +316,7 @@ local function InitializeAscensionCastBar()
         local tP = tailProgress or 0
         local time = GetTime()
         
-        -- FIX: Usar 0 como base exacta + offset del usuario
+        -- Default Head Position
         castBar.sparkHead:ClearAllPoints()
         castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + (db.sparkOffset or 0), 0)
         castBar.sparkHead:SetAlpha(ClampAlpha(db.sparkIntensity or 1))
@@ -323,46 +324,46 @@ local function InitializeAscensionCastBar()
         
         castBar.sparkGlow:ClearAllPoints()
         castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
-        
-        -- FIX: Glow Intensity global
         local baseGlowAlpha = ClampAlpha(db.glowIntensity or 0.5)
         castBar.sparkGlow:SetAlpha(baseGlowAlpha)
+        castBar.sparkGlow:Show()
 
         if castBar.tailMask then
-            local aw = offset - (b>0 and b or 0); if aw<0 then aw=0 end; if aw>w then aw=w end
+            local aw = offset - (b>0 and b or 0)
+            if aw<0 then aw=0 end
+            if aw>w then aw=w end
             castBar.tailMask:SetWidth(aw)
         end
+        
+        -- == ANIMATION LOGIC == --
 
-        if not db.enableTails or (style == "Wave" or style == "Scanline" or style == "Rainbow" or style == "Glitch") then
-             castBar.sparkTail:Hide(); castBar.sparkTail2:Hide(); castBar.sparkTail3:Hide(); castBar.sparkTail4:Hide()
-        end
-
-        -- ANIMACIONES
         if style == "Orb" then
-            castBar.sparkGlow:Show()
             local rotSpeed = time * 8
             local radius = (db.height or 24) * 0.4 
+            
             local function SpinOrb(tex, angleOffset, intense)
                 tex:ClearAllPoints()
                 local x = math.cos(rotSpeed + angleOffset) * radius
                 local y = math.sin(rotSpeed + angleOffset) * radius
                 tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", x, y)
-                tex:SetAlpha(ClampAlpha(intense) * 1.0)
+                tex:SetAlpha(ClampAlpha(intense))
                 tex:Show()
             end
+            
             if db.enableTails then
                 SpinOrb(castBar.sparkTail, 0, db.tail1Intensity or 0.6)
                 SpinOrb(castBar.sparkTail2, math.pi/2, db.tail2Intensity or 0.6)
                 SpinOrb(castBar.sparkTail3, math.pi, db.tail3Intensity or 0.6)
                 SpinOrb(castBar.sparkTail4, -math.pi/2, db.tail4Intensity or 0.6)
             end
+            
             local pulse = 0.5 + 0.5 * math.sin(time * 8)
             castBar.sparkGlow:SetAlpha(baseGlowAlpha * (0.6 + 0.4*pulse))
 
         elseif style == "Vortex" then
-            castBar.sparkGlow:Show()
             local radius = (db.height or 24) * 0.9
             local speed = 8
+            
             local function Orbit(tex, idx, intense)
                 tex:ClearAllPoints()
                 local angle = (time * speed) + (offset * 0.05) - (idx * 0.8)
@@ -375,6 +376,7 @@ local function InitializeAscensionCastBar()
                 tex:SetAlpha(ClampAlpha(intense) * tP)
                 tex:Show()
             end
+            
             if db.enableTails then
                 Orbit(castBar.sparkTail, 0, db.tail1Intensity or 0.35)
                 Orbit(castBar.sparkTail2, 1, db.tail2Intensity or 0.22)
@@ -383,8 +385,8 @@ local function InitializeAscensionCastBar()
             end
 
         elseif style == "Pulse" then
-            castBar.sparkGlow:Show()
             local maxScale = 2.5
+            
             local function Ripple(tex, offsetTime, intense)
                 tex:ClearAllPoints()
                 tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
@@ -395,6 +397,7 @@ local function InitializeAscensionCastBar()
                 tex:SetAlpha(ClampAlpha(intense) * fade)
                 tex:Show()
             end
+            
             if db.enableTails then
                 Ripple(castBar.sparkTail, 0.0, db.tail1Intensity or 0.35)
                 Ripple(castBar.sparkTail2, 0.3, db.tail2Intensity or 0.22)
@@ -405,6 +408,7 @@ local function InitializeAscensionCastBar()
         elseif style == "Starfall" then
              castBar.sparkGlow:Hide()
              local h = db.height or 24
+             
              local function Fall(tex, driftBase, speed, intense)
                  tex:ClearAllPoints()
                  local fallY = -((time * speed * 15) % (h*2.5)) + h
@@ -413,6 +417,7 @@ local function InitializeAscensionCastBar()
                  tex:SetAlpha(ClampAlpha(intense) * (1 - math.abs(fallY)/(h*1.5)))
                  tex:Show()
              end
+             
              if db.enableTails then
                  Fall(castBar.sparkTail, -10, 2.5, db.tail1Intensity or 0.4)
                  Fall(castBar.sparkTail2, 10, 3.8, db.tail2Intensity or 0.3)
@@ -421,10 +426,11 @@ local function InitializeAscensionCastBar()
              end
 
         elseif style == "Flux" then
-            castBar.sparkGlow:Hide() 
+            castBar.sparkGlow:Hide()
             local dm = w * 0.05
             local jitterY = 3.5
             local jitterX = 2.5
+            
             local function Flux(tex, baseOff, drift, intense)
                 tex:ClearAllPoints()
                 local rY = (math.random() * jitterY * 2) - jitterY
@@ -434,6 +440,7 @@ local function InitializeAscensionCastBar()
                 tex:SetAlpha(ClampAlpha(intense) * tP)
                 tex:Show()
             end
+            
             if db.enableTails then
                 Flux(castBar.sparkTail, 20, -dm*tP, db.tail1Intensity or 0.35)
                 Flux(castBar.sparkTail2, 35, dm*tP, db.tail2Intensity or 0.22)
@@ -442,12 +449,12 @@ local function InitializeAscensionCastBar()
             end
 
         elseif style == "Helix" then
-             castBar.sparkGlow:Show()
              local dm = w * 0.1
              local amp = (db.height or 24) * 0.4
              local waveSpeed = 8
              local sv = math.sin(time * waveSpeed + (offset * 0.05)) * amp
              local cv = math.cos(time * waveSpeed + (offset * 0.05)) * amp
+             
              local function Helix(tex, baseOff, drift, yOff, intense)
                  tex:ClearAllPoints()
                  local x = math.max(b, math.min(w-b, offset - baseOff + drift))
@@ -455,6 +462,7 @@ local function InitializeAscensionCastBar()
                  tex:SetAlpha(ClampAlpha(intense) * tP)
                  tex:Show()
              end
+             
              if db.enableTails then
                  Helix(castBar.sparkTail, 20, -dm*tP, sv, db.tail1Intensity or 0.35)
                  Helix(castBar.sparkTail2, 35, dm*tP, -sv, db.tail2Intensity or 0.22)
@@ -463,28 +471,32 @@ local function InitializeAscensionCastBar()
              end
 
         elseif style == "Wave" then
-            castBar.sparkGlow:Hide()
-            castBar.sparkHead:Hide() 
-            if not castBar.waveOverlay then
-                castBar.waveOverlay = castBar:CreateTexture(nil, "ARTWORK")
-                castBar.waveOverlay:SetBlendMode("ADD")
-                castBar.waveOverlay:SetAllPoints()
-                castBar.waveOverlay:SetGradient("HORIZONTAL", CreateColor(1,1,1,0), CreateColor(1,1,1,0.5), CreateColor(1,1,1,0))
+            -- Nueva Lógica WAVE: Movimiento sinusoidal Vertical del Head
+            local amp = (db.height or 24) * 0.4
+            local waveY = math.sin(offset * 0.1 + time * 10) * amp
+            castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + (db.sparkOffset or 0), waveY)
+            
+            -- Trails follow wave
+            local function WaveTail(tex, lag, int)
+                local tOff = offset - lag
+                local tY = math.sin(tOff * 0.1 + time * 10) * amp
+                tex:ClearAllPoints()
+                tex:SetPoint("CENTER", castBar.tailMask, "LEFT", tOff, tY)
+                tex:SetAlpha(ClampAlpha(int)*tP)
+                tex:Show()
             end
-            local wOff = (time * 2.0) % 1
-            castBar.waveOverlay:SetTexCoord(wOff, wOff + 1, 0, 1)
-            local wH = 5 * math.sin(time * 2) 
-            castBar.waveOverlay:ClearAllPoints()
-            castBar.waveOverlay:SetPoint("TOPLEFT", castBar, "TOPLEFT", 0, wH)
-            castBar.waveOverlay:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 0, wH)
-            local wc = db.tail2Color or {0.3, 0.6, 1, 0.3}
-            castBar.waveOverlay:SetVertexColor(wc[1], wc[2], wc[3], 0.3 * (0.5 + progress * 0.5))
-            castBar.waveOverlay:Show()
+            
+            if db.enableTails then
+                 WaveTail(castBar.sparkTail, 10, db.tail1Intensity or 0.5)
+                 WaveTail(castBar.sparkTail2, 20, db.tail2Intensity or 0.4)
+                 WaveTail(castBar.sparkTail3, 30, db.tail3Intensity or 0.3)
+                 WaveTail(castBar.sparkTail4, 40, db.tail4Intensity or 0.2)
+            end
 
         elseif style == "Particles" then
-             castBar.sparkGlow:Show()
              if not castBar.particles then castBar.particles = {} end
              if not castBar.lastParticleTime then castBar.lastParticleTime = 0 end
+             
              if (time - castBar.lastParticleTime) > 0.05 then
                  local p = nil
                  for _, v in ipairs(castBar.particles) do if not v:IsShown() then p=v; break end end
@@ -494,73 +506,169 @@ local function InitializeAscensionCastBar()
                     p:SetBlendMode("ADD")
                     table.insert(castBar.particles, p)
                  end
-                 p.life = 1.0; p.sx = offset; p.sy = 0; p.vx = (math.random()-0.5)*10; p.vy = 20 + math.random()*30; p:SetSize(8,8); p:Show(); castBar.lastParticleTime = time
+                 p.life = 1.0; p.sx = offset; p.sy = 0; p.vx = (math.random()-0.5)*10; p.vy = 20 + math.random()*30
+                 p:SetSize(8,8)
+                 p:Show()
+                 castBar.lastParticleTime = time
              end
+             
              for _, p in ipairs(castBar.particles) do
                  if p:IsShown() then
                      p.life = p.life - 0.05
-                     if p.life <= 0 then p:Hide() else p.sx = p.sx + p.vx * 0.05; p.sy = p.sy + p.vy * 0.05; p:ClearAllPoints(); p:SetPoint("CENTER", castBar.tailMask, "LEFT", p.sx, p.sy); local pc = db.sparkColor or {1,1,1,1}; p:SetVertexColor(pc[1], pc[2], pc[3], p.life) end
+                     if p.life <= 0 then 
+                        p:Hide() 
+                     else 
+                        p.sx = p.sx + p.vx * 0.05
+                        p.sy = p.sy + p.vy * 0.05
+                        p:ClearAllPoints()
+                        p:SetPoint("CENTER", castBar.tailMask, "LEFT", p.sx, p.sy)
+                        local pc = db.sparkColor or {1,1,1,1}
+                        p:SetVertexColor(pc[1], pc[2], pc[3], p.life) 
+                     end
                  end
              end
 
         elseif style == "Scanline" then
-             castBar.sparkHead:Hide(); castBar.sparkGlow:Hide()
-             if not castBar.scanLine then
-                 castBar.scanLine = castBar:CreateTexture(nil, "OVERLAY")
-                 castBar.scanLine:SetColorTexture(1, 1, 1, 1)
-                 castBar.scanLine:SetBlendMode("ADD")
-                 castBar.scanLine:SetSize(4, db.height or 24)
+             -- Nueva Lógica SCANNER: Radar Ping Pong
+             castBar.sparkHead:Hide()
+             castBar.sparkGlow:Hide()
+             
+             if not castBar.scanLine then 
+                castBar.scanLine = castBar:CreateTexture(nil, "OVERLAY")
+                castBar.scanLine:SetColorTexture(1, 1, 1, 0.5)
+                castBar.scanLine:SetBlendMode("ADD")
+                castBar.scanLine:SetSize(4, db.height or 24) 
              end
-             local slP = (time % 1.5) / 1.5; if slP > 0.5 then slP = 1 - slP end
-             local slX = w * ((math.sin(time * 3) + 1) / 2)
+             
+             local cycle = (time % 2) / 2 -- 0 to 1 over 2 sec
+             local radarX = 0
+             if cycle < 0.5 then 
+                radarX = (cycle * 2) * w 
+             else 
+                radarX = (1 - (cycle - 0.5)*2) * w 
+             end
+             
              castBar.scanLine:ClearAllPoints()
-             castBar.scanLine:SetPoint("CENTER", castBar, "LEFT", slX, 0)
+             castBar.scanLine:SetPoint("CENTER", castBar, "LEFT", radarX, 0)
              local sc = db.tail1Color or {1,1,1,0.8}
              castBar.scanLine:SetVertexColor(sc[1], sc[2], sc[3], 0.8)
              castBar.scanLine:Show()
 
         elseif style == "Glitch" then
              castBar.sparkHead:Hide()
-             if not castBar.glitchLayers then
-                 castBar.glitchLayers = {}
-                 for i=1,3 do local g = castBar:CreateTexture(nil,"OVERLAY"); g:SetColorTexture(1,1,1,0.2); g:SetBlendMode("ADD"); table.insert(castBar.glitchLayers, g) end
+             if not castBar.glitchLayers then 
+                castBar.glitchLayers = {}
+                for i=1,3 do 
+                    local g = castBar:CreateTexture(nil,"OVERLAY")
+                    g:SetColorTexture(1,1,1,1)
+                    g:SetBlendMode("ADD")
+                    table.insert(castBar.glitchLayers, g) 
+                end 
              end
+             
              for i, g in ipairs(castBar.glitchLayers) do
-                 if math.random() < 0.1 then
-                     local r = math.random()>0.5 and 1 or 0; local gr = math.random()>0.5 and 1 or 0; local bl = math.random()>0.5 and 1 or 0
-                     g:SetVertexColor(r,gr,bl, 0.3); g:ClearAllPoints()
-                     local ox = math.random(-5,5); local oy = math.random(-2,2)
-                     g:SetPoint("TOPLEFT", castBar, "TOPLEFT", ox, oy); g:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", ox, oy); g:Show()
-                 else g:Hide() end
+                 if math.random() < 0.15 then
+                     local r = math.random()
+                     local gr = math.random()
+                     local bl = math.random()
+                     g:SetVertexColor(r,gr,bl, 0.6)
+                     g:ClearAllPoints()
+                     
+                     local wR = math.random(5, 30)
+                     local hR = math.random(2, 10)
+                     g:SetSize(wR, hR)
+                     
+                     local ox = math.random(0, w)
+                     local oy = math.random(-(db.height or 20)/2, (db.height or 20)/2)
+                     g:SetPoint("CENTER", castBar, "LEFT", ox, oy)
+                     g:Show()
+                 else 
+                    g:Hide() 
+                 end
              end
 
         elseif style == "Lightning" then
-             castBar.sparkGlow:Show()
              if not castBar.lightningSegments then castBar.lightningSegments = {} end
              for i=1, 3 do
                  local l = castBar.lightningSegments[i]
-                 if not l then l = castBar:CreateTexture(nil, "OVERLAY"); l:SetColorTexture(1,1,1,1); l:SetBlendMode("ADD"); castBar.lightningSegments[i] = l end
+                 if not l then 
+                    l = castBar:CreateTexture(nil, "OVERLAY")
+                    l:SetColorTexture(1,1,1,1)
+                    l:SetBlendMode("ADD")
+                    castBar.lightningSegments[i] = l 
+                 end
+                 
                  if math.random() < 0.3 then
-                     local tx = math.random(0, w); local ty = math.random(0, db.height or 24)
-                     local dx = tx - offset; local dy = ty - ((db.height or 24)/2)
-                     local len = math.sqrt(dx*dx + dy*dy); local ang = math.atan2(dy, dx)
-                     l:SetSize(len, 2); l:ClearAllPoints(); l:SetPoint("CENTER", castBar, "LEFT", offset, 0); l:SetRotation(ang)
-                     local lc = db.tail3Color or {0, 0.8, 1, 0.8}; l:SetVertexColor(lc[1], lc[2], lc[3], 0.6); l:Show()
-                 else l:Hide() end
+                     local tx = math.random(0, w)
+                     local ty = math.random(0, db.height or 24)
+                     local dx = tx - offset
+                     local dy = ty - ((db.height or 24)/2)
+                     local len = math.sqrt(dx*dx + dy*dy)
+                     local ang = math.atan2(dy, dx)
+                     
+                     l:SetSize(len, 2)
+                     l:ClearAllPoints()
+                     l:SetPoint("CENTER", castBar, "LEFT", offset, 0)
+                     l:SetRotation(ang)
+                     
+                     local lc = db.tail3Color or {0, 0.8, 1, 0.8}
+                     l:SetVertexColor(lc[1], lc[2], lc[3], 0.6)
+                     l:Show()
+                 else 
+                    l:Hide() 
+                 end
              end
 
         elseif style == "Rainbow" then
-             castBar.sparkHead:Hide(); castBar.sparkGlow:Hide()
-             if not castBar.rainbowOverlay then
-                 castBar.rainbowOverlay = castBar:CreateTexture(nil, "ARTWORK"); castBar.rainbowOverlay:SetBlendMode("ADD"); castBar.rainbowOverlay:SetAllPoints()
-                 castBar.rainbowOverlay:SetGradient("HORIZONTAL", CreateColor(1,0,0,1), CreateColor(1,1,0,1), CreateColor(0,1,0,1), CreateColor(0,1,1,1), CreateColor(0,0,1,1), CreateColor(1,0,1,1))
+             -- Nueva Lógica RAINBOW: Hue Shift en el Spark
+             local hue = (time * 0.5) % 1
+             local function HSV(h, s, v) 
+                local r, g, b
+                local i = math.floor(h * 6)
+                local f = h * 6 - i
+                local p = v * (1 - s)
+                local q = v * (1 - f * s)
+                local t = v * (1 - (1 - f) * s)
+                i = i % 6
+                if i == 0 then r, g, b = v, t, p elseif i == 1 then r, g, b = q, v, p elseif i == 2 then r, g, b = p, v, t elseif i == 3 then r, g, b = p, q, v elseif i == 4 then r, g, b = t, p, v else r, g, b = v, p, q end
+                return r, g, b
              end
-             local ro = (time * 0.5) % 1; castBar.rainbowOverlay:SetTexCoord(ro, ro+1, 0, 1); castBar.rainbowOverlay:SetAlpha(0.3 + progress * 0.7); castBar.rainbowOverlay:Show()
+             
+             local r,g,b = HSV(hue, 1, 1)
+             castBar.sparkHead:SetVertexColor(r,g,b,1)
+             castBar.sparkGlow:SetVertexColor(r,g,b,0.8)
+             
+             -- Use tails as comet but colored
+             local function Comet(tex, rel_pos, int) 
+                tex:ClearAllPoints()
+                local trailX = offset - (rel_pos * w)
+                tex:SetPoint("CENTER", castBar.tailMask, "LEFT", math.max(b, math.min(w-b, trailX)), 0)
+                tex:SetAlpha(ClampAlpha(int)*tP)
+                tex:SetVertexColor(r,g,b,1)
+                tex:Show() 
+             end
+             
+             if db.enableTails then 
+                Comet(castBar.sparkTail, 0.05, 0.6)
+                Comet(castBar.sparkTail2, 0.10, 0.4)
+                Comet(castBar.sparkTail3, 0.15, 0.3) 
+             end
 
-        else -- Comet
-            castBar.sparkGlow:Show()
-            local function Comet(tex, rel_pos, int) tex:ClearAllPoints(); local trailX = offset - (rel_pos * w); tex:SetPoint("CENTER", castBar.tailMask, "LEFT", math.max(b, math.min(w-b, trailX)), 0); tex:SetAlpha(ClampAlpha(int)*tP); tex:Show() end
-            if db.enableTails then Comet(castBar.sparkTail, 0.05, db.tail1Intensity or 0.35); Comet(castBar.sparkTail2, 0.10, db.tail2Intensity or 0.22); Comet(castBar.sparkTail3, 0.15, db.tail3Intensity or 0.28); Comet(castBar.sparkTail4, 0.20, db.tail4Intensity or 0.18) end
+        else -- Comet (Default)
+            local function Comet(tex, rel_pos, int) 
+                tex:ClearAllPoints()
+                local trailX = offset - (rel_pos * w)
+                tex:SetPoint("CENTER", castBar.tailMask, "LEFT", math.max(b, math.min(w-b, trailX)), 0)
+                tex:SetAlpha(ClampAlpha(int)*tP)
+                tex:Show() 
+            end
+            
+            if db.enableTails then 
+                Comet(castBar.sparkTail, 0.05, db.tail1Intensity or 0.35)
+                Comet(castBar.sparkTail2, 0.10, db.tail2Intensity or 0.22)
+                Comet(castBar.sparkTail3, 0.15, db.tail3Intensity or 0.28)
+                Comet(castBar.sparkTail4, 0.20, db.tail4Intensity or 0.18) 
+            end
         end
     end
 
@@ -766,7 +874,6 @@ local function InitializeAscensionCastBar()
     local function UpdateLatencyBar(forcedValue)
         if not db.showLatency then castBar.latency:Hide() return end
         
-        -- FIX: Permitir forzar valor en Test Mode
         local ms = 0
         if forcedValue then
             ms = forcedValue
@@ -826,7 +933,6 @@ local function InitializeAscensionCastBar()
             local elap = timeInCycle % 4
             
             if phase == 1 then
-                -- SIMULAR CASTEO NORMAL
                 self.casting = true; self.channeling = false; self.isEmpowered = false
                 self.spellName:SetText(db.showSpellText and "Preview: Casting" or "")
                 UpdateBarColor(false) -- Normal Color
@@ -834,15 +940,12 @@ local function InitializeAscensionCastBar()
                 self.shield:Hide()
                 Upd(elap, dur)
             else
-                -- SIMULAR CANALIZADO + ESCUDO
                 self.casting = false; self.channeling = true; self.isEmpowered = false
                 self.spellName:SetText(db.showSpellText and "Preview: Channel (Shield)" or "")
                 UpdateBarColor(true) -- Uninterruptible Color
                 if db.showChannelTicks then DrawTicks() else HideTicks() end
                 if db.showShield then self.shield:Show() else self.shield:Hide() end
-                
                 local rem = dur - elap
-                -- Simular Reverse si activado
                 if db.reverseChanneling then Upd(elap, dur) else Upd(rem, dur) end
             end
             
@@ -852,8 +955,6 @@ local function InitializeAscensionCastBar()
             
             UpdateBorder(); UpdateBackground(); UpdateIcon(); UpdateSparkColors(); self:Show()
             if db.showIcon and castBar.icon:IsShown() then castBar.icon:SetTexture("Interface\\Icons\\Spell_Holy_MagicalSentry") end
-            
-            -- Reset flags para no romper lógica real al salir
             self.casting = false; self.channeling = false
             return
         else
@@ -1124,7 +1225,7 @@ local function InitializeAscensionCastBar()
     
     local ef = CreateFrame("EditBox", nil, tabs[T_INT].child, "InputBoxTemplate"); ef:SetSize(200, 20); ef:SetPoint("TOPLEFT", 10, tabs[T_INT].cY - 20); ef:SetAutoFocus(false); ef:SetText(db.cdmFrameName or "")
     ef:SetScript("OnEnterPressed", function(self) db.cdmFrameName = self:GetText(); UpdateAnchor(); self:ClearFocus() end)
-    local fl = tabs[T_INT].child:CreateFontString(nil, "OVERLAY", "GameFontNormal"); fl:SetPoint("BOTTOMLEFT", ef, "TOPLEFT", 0, 2); fl:SetText("Custom Frame Name (Experimental):") -- FIX LABEL
+    local fl = tabs[T_INT].child:CreateFontString(nil, "OVERLAY", "GameFontNormal"); fl:SetPoint("BOTTOMLEFT", ef, "TOPLEFT", 0, 2); fl:SetText("Custom Frame Name (Experimental):")
 
     SelectTab(1)
     UpdateDefaultCastBarVisibility()
