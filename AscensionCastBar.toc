@@ -2,7 +2,7 @@
 ## Title: AscensionCastBar
 ## Notes: Customised casting bar with integration for Cooldown Manager.
 ## Author: AkaDoctorCode
-## Version: 2.2.0
+## Version: 2.2.1
 ## SavedVariables: AscensionCastBarDB
 
 AscensionCastBar.lua
