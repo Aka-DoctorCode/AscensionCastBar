@@ -1,4 +1,4 @@
-package-as: SenseiCastBar
+package-as: AscensionCastBar
 ignore:
     - .git
     - .gitignore
