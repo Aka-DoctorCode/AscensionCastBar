@@ -12,31 +12,23 @@ local ADDON_TITLE = "Ascension Cast Bar"
 local WoWRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 local GetSpellName = C_Spell and C_Spell.GetSpellName or GetSpellInfo
 
--- Tabla de Ticks (Integración Quartz)
 local channelingTicks = {
-    -- Sacerdote
     [GetSpellName(64843) or "Himno divino"] = 4,
     [GetSpellName(15407) or "Tortura mental"] = 3, 
     [GetSpellName(47540) or "Penitencia"] = 3,
-    -- Mago
     [GetSpellName(5143) or "Misiles arcanos"] = 5,
     [GetSpellName(12051) or "Evocación"] = 4,
     [GetSpellName(10) or "Ventisca"] = 8,
-    -- Druida
     [GetSpellName(740) or "Tranquilidad"] = 4,
     [GetSpellName(16914) or "Huracán"] = 10,
-    -- Brujo
     [GetSpellName(234153) or "Drenar vida"] = 5,
     [GetSpellName(198590) or "Drenar alma"] = 5,
     [GetSpellName(5740) or "Lluvia de fuego"] = 8,
-    -- Evocador
     [GetSpellName(356995) or "Desintegrar"] = 3,
-    -- Nombres en Inglés / Servidores Privados
     ["Mind Flay"] = 3, ["Drain Life"] = 5, ["Blizzard"] = 8, ["Hurricane"] = 10, ["Penance"] = 3,
     ["Divine Hyatt"] = 4, ["Rain of Fire"] = 8, ["Evocation"] = 4, ["Arcane Missiles"] = 5
 }
 
--- Lista de Hechizos Empowered
 local EMPOWERED_SPELLS = {
     ["Fire Breath"] = true, ["Aliento de fuego"] = true,
     ["Eternity Surge"] = true, ["Oleada de eternidad"] = true,
@@ -63,40 +55,21 @@ local function UpdateDefaultCastBarVisibility()
     for _, frame in ipairs(frames) do
         if frame then
             if hide then
-                frame:UnregisterAllEvents()
-                frame:Hide()
+                frame:UnregisterAllEvents(); frame:Hide()
             else
-                frame:RegisterEvent("UNIT_SPELLCAST_START")
-                frame:RegisterEvent("UNIT_SPELLCAST_STOP")
-                frame:RegisterEvent("UNIT_SPELLCAST_FAILED")
-                frame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-                frame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
-                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+                frame:RegisterEvent("UNIT_SPELLCAST_START"); frame:RegisterEvent("UNIT_SPELLCAST_STOP")
+                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START"); frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
                 pcall(function() 
-                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
-                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START"); frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
                 end)
-                frame:RegisterEvent("PLAYER_ENTERING_WORLD")
             end
         end
     end
 end
 
 local function UpdateConfigControls(db)
-    local ddTimerFormat = _G["ACB_DD_3timerFormat"]
-    if ddTimerFormat then UIDropDownMenu_SetText(ddTimerFormat, db.timerFormat or "Remaining") end
-    
-    local ddAnimStyle = _G["ACB_DD_4animStyle"]
-    if ddAnimStyle then UIDropDownMenu_SetText(ddAnimStyle, db.animStyle or "Comet") end
-    
-    local ddCDMTarget = _G["ACB_DD_5cdmTarget"]
-    if ddCDMTarget then UIDropDownMenu_SetText(ddCDMTarget, db.cdmTarget or "Auto") end
-    
-    local ddIconAnchor = _G["ACB_DD_2iconAnchor"]
-    if ddIconAnchor then UIDropDownMenu_SetText(ddIconAnchor, db.iconAnchor or "Left") end
+    if _G["ACB_DD_3timerFormat"] then UIDropDownMenu_SetText(_G["ACB_DD_3timerFormat"], db.timerFormat or "Remaining") end
+    if _G["ACB_DD_4animStyle"] then UIDropDownMenu_SetText(_G["ACB_DD_4animStyle"], db.animStyle or "Comet") end
 end
 
 -- ============================================================================
@@ -104,7 +77,7 @@ end
 -- ============================================================================
 
 local function InitializeAscensionCastBar()
-    -- Base de Datos y Perfiles
+    -- Base de Datos
     if not AscensionCastBarDB then AscensionCastBarDB = {} end
     if not AscensionCastBarDB.profiles then AscensionCastBarDB.profiles = {} end
     if not AscensionCastBarDB.activeProfile then AscensionCastBarDB.activeProfile = "Default" end
@@ -128,38 +101,34 @@ local function InitializeAscensionCastBar()
     local function ClampAlpha(v) v = tonumber(v) or 0; if v < 0 then v = 0 elseif v > 1 then v = 1 end return v end
 
     local defaults = {
-        width = 270, cdmLayoutWidth = 270, height = 24,
-        point = "CENTER", relativePoint = "CENTER", x = 0, y = -85,
+        width = 270, height = 24, point = "CENTER", relativePoint = "CENTER", x = 0, y = -85,
         unlock = true,
         -- Fonts/Text
         spellNameFontSize = 14, timerFontSize = 14, fontPath = BAR_DEFAULT_FONT_PATH,
-        fontColor = {0.80784320831299, 1, 0.95294123888016, 1},
-        showSpellText = true, showTimerText = true,
+        fontColor = {0.8, 1, 0.95, 1}, showSpellText = true, showTimerText = true,
         spellNameFontLSM = "Expressway, Bold", timerFontLSM = "Boris Black Bloxx", fontLSMName = "Expressway, Bold",
         detachText = false, textX = 0, textY = 40, textWidth = 270,
         textBackdropEnabled = false, textBackdropColor = {0, 0, 0, 0.5},
         timerFormat = "Remaining", truncateSpellName = false, truncateLength = 30,
         -- Colors
-        barColor = {0, 0.027450982481241, 0.25098040699959, 1}, barLSMName = "Solid", useClassColor = false,
+        barColor = {0, 0.02, 0.25, 1}, bgColor = {0, 0, 0, 0.65}, borderEnabled = true, borderColor = {0, 0, 0, 1}, borderThickness = 2,
+        useClassColor = false,
         -- Shield/Ticks
         showShield = true, uninterruptibleColor = {0.4, 0.4, 0.4, 1},
-        showChannelTicks = true, channelTicksColor = {1, 1, 1, 0.5},
+        showChannelTicks = true, channelTicksColor = {1, 1, 1, 0.5}, tickWidth = 1, -- NUEVO DEFAULT
         -- Anim
         enableSpark = true, enableTails = true, animStyle = "Comet",
-        sparkColor = {0.937, 0.984, 1, 1}, glowColor = {1, 1, 1, 1},
-        sparkIntensity = 1, glowIntensity = 0.5, sparkScale = 3, sparkOffset = 1.27, headLengthOffset = -23,
-        tailLength = 200, tailOffset = -14.68,
-        tail1Color = {1, 0, 0.09, 1}, tail1Intensity = 1, tail1Length = 95, tail1Offset = 200,
-        tail2Color = {0, 0.98, 1, 1}, tail2Intensity = 0.42, tail2Length = 215, tail2Offset = 84,
-        tail3Color = {0, 1, 0.22, 1}, tail3Intensity = 0.68, tail3Length = 80, tail3Offset = 187,
-        tail4Color = {1, 0, 0.8, 1}, tail4Intensity = 0.61, tail4Length = 150, tail4Offset = 58,
+        sparkColor = {0.93, 0.98, 1, 1}, glowColor = {1, 1, 1, 1},
+        sparkIntensity = 1, glowIntensity = 0.5, sparkScale = 3, sparkOffset = 0, -- Default 0
+        tailLength = 200, 
+        tail1Color = {1, 0, 0.1, 1}, tail1Intensity = 1, 
+        tail2Color = {0, 0.9, 1, 1}, tail2Intensity = 0.4, 
+        tail3Color = {0, 1, 0.2, 1}, tail3Intensity = 0.6, 
+        tail4Color = {1, 0, 0.8, 1}, tail4Intensity = 0.6, 
         -- Icon
         showIcon = false, detachIcon = false, iconAnchor = "Left", iconSize = 24, iconX = 0, iconY = 0,
-        -- BG
-        bgColor = {0, 0, 0, 0.65}, borderEnabled = true, borderColor = {0, 0, 0, 1}, borderThickness = 2,
         -- Behavior
-        hideTimerOnChannel = false, hideDefaultCastbar = true,
-        reverseChanneling = false, 
+        hideTimerOnChannel = false, hideDefaultCastbar = true, reverseChanneling = false, 
         showLatency = true, latencyColor = {1, 0, 0, 0.5}, latencyMaxPercent = 1.0,
         -- CDM
         attachToCDM = false, cdmTarget = "Auto", cdmFrameName = "CooldownManagerFrame", cdmYOffset = -5,
@@ -174,7 +143,7 @@ local function InitializeAscensionCastBar()
     
     local UpdateAnchor, UpdateSparkSize, UpdateTextLayout, ReloadProfile, UpdateIcon
 
-    -- FRAME DE LA BARRA
+    -- FRAME
     local castBar = CreateFrame("StatusBar","AscensionCastBarFrame",UIParent)
     castBar:SetClipsChildren(false) 
     castBar:SetSize(db.width, db.height)
@@ -184,46 +153,28 @@ local function InitializeAscensionCastBar()
     UpdateAnchor = function()
         if not castBar then return end
         castBar:ClearAllPoints()
-        local parentFrame, isAttached = nil, false
-        
+        local parentFrame = nil
         if db.attachToCDM then
              local target = db.cdmTarget or "Auto"
              if target == "Essential" then if _G["EssentialCooldownViewer"] and _G["EssentialCooldownViewer"]:IsShown() then parentFrame = _G["EssentialCooldownViewer"] end
              elseif target == "Utility" then if _G["UtilityCooldownViewer"] and _G["UtilityCooldownViewer"]:IsShown() then parentFrame = _G["UtilityCooldownViewer"] end
              elseif target == "Custom" then if db.cdmFrameName and db.cdmFrameName ~= "" then parentFrame = _G[db.cdmFrameName] end
-             else -- Auto
+             else
                  if _G["EssentialCooldownViewer"] and _G["EssentialCooldownViewer"]:IsShown() then parentFrame = _G["EssentialCooldownViewer"]
                  elseif _G["UtilityCooldownViewer"] and _G["UtilityCooldownViewer"]:IsShown() then parentFrame = _G["UtilityCooldownViewer"]
                  elseif db.cdmFrameName and db.cdmFrameName ~= "" then parentFrame = _G[db.cdmFrameName] end
              end
         end
-
         if parentFrame then
-            isAttached = true
             castBar:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT", 0, db.cdmYOffset or -5)
-            local w = parentFrame:GetWidth()
-            if w and w > 1 then castBar:SetWidth(w) end
+            if parentFrame:GetWidth() > 1 then castBar:SetWidth(parentFrame:GetWidth()) end
         else
             castBar:SetPoint(db.point, UIParent, db.relativePoint, db.x, db.y)
             castBar:SetWidth(db.width)
         end
-        
         if UpdateSparkSize then UpdateSparkSize() end
         if UpdateTextLayout then UpdateTextLayout() end
         if castBar.ticksFrame then castBar.ticksFrame:SetWidth(castBar:GetWidth()) end
-        return isAttached
-    end
-    
-    local hooksDefined = false
-    local function InitCDMHooks()
-        if hooksDefined then return end
-        local function OnCDMResize(_, width)
-            if db.attachToCDM then UpdateAnchor() end
-        end
-        if _G["EssentialCooldownViewer"] then hooksecurefunc(_G["EssentialCooldownViewer"], "SetSize", OnCDMResize); hooksecurefunc(_G["EssentialCooldownViewer"], "Show", OnCDMResize); hooksecurefunc(_G["EssentialCooldownViewer"], "Hide", OnCDMResize) end
-        if _G["UtilityCooldownViewer"] then hooksecurefunc(_G["UtilityCooldownViewer"], "SetSize", OnCDMResize); hooksecurefunc(_G["UtilityCooldownViewer"], "Show", OnCDMResize); hooksecurefunc(_G["UtilityCooldownViewer"], "Hide", OnCDMResize) end
-        hooksDefined = true
-        UpdateAnchor()
     end
     UpdateAnchor()
 
@@ -245,21 +196,10 @@ local function InitializeAscensionCastBar()
     local function UpdateBackground() local c = db.bgColor or {0,0,0,0.7}; castBar.bg:SetColorTexture(c[1], c[2], c[3], c[4] or 0.7) end
     UpdateBackground()
 
-    castBar.lightOverlay = castBar:CreateTexture(nil, "ARTWORK"); castBar.lightOverlay:SetColorTexture(1, 1, 1, 1); castBar.lightOverlay:SetBlendMode("ADD"); castBar.lightOverlay:SetAlpha(0); castBar.lightOverlay:Hide()
     castBar.tailMask = CreateFrame("Frame", nil, castBar); castBar.tailMask:SetPoint("TOPLEFT", 0, 0); castBar.tailMask:SetPoint("BOTTOMLEFT", 0, 0); castBar.tailMask:SetWidth(db.width); castBar.tailMask:SetClipsChildren(true)
 
-    local function UpdateLightOverlayAnchor()
-        if not castBar.lightOverlay then return end
-        local tex = castBar:GetStatusBarTexture()
-        if tex then
-            local b = (db.borderEnabled and (db.borderThickness or 1)) or 0
-            if b > 0 then castBar.lightOverlay:ClearAllPoints(); castBar.lightOverlay:SetPoint("TOPLEFT", tex, "TOPLEFT", b, -b); castBar.lightOverlay:SetPoint("BOTTOMRIGHT", tex, "BOTTOMRIGHT", -b, b)
-            else castBar.lightOverlay:SetAllPoints(tex) end
-        end
-    end
-    
     -- ==========================================================
-    -- LÓGICA DE TICKS
+    -- TICKS (CON SOPORTE DE GROSOR)
     -- ==========================================================
     castBar.ticksFrame = CreateFrame("Frame", nil, castBar); castBar.ticksFrame:SetAllPoints(); castBar.ticksFrame:SetFrameLevel(15); castBar.ticks = {}
     
@@ -283,15 +223,17 @@ local function InitializeAscensionCastBar()
         local width = castBar:GetWidth()
         local duration = castBar.channelingDuration or (castBar.endTime - castBar.startTime)
         if duration <= 0 then return end
+        
+        local tW = db.tickWidth or 1 -- USAR GROSOR
 
         for i, posTime in ipairs(castBar.tickPositions) do
             local tick = castBar.ticks[i]
             if not tick then 
                 tick = castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
-                tick:SetWidth(1)
                 tick:SetHeight(castBar:GetHeight())
                 table.insert(castBar.ticks, tick) 
             end
+            tick:SetWidth(tW) -- APLICAR GROSOR
             
             local pct = posTime / duration
             if db.reverseChanneling then pct = 1 - pct end
@@ -312,7 +254,7 @@ local function InitializeAscensionCastBar()
     castBar.latency = castBar:CreateTexture(nil, "OVERLAY", nil, 2); castBar.latency:Hide()
 
     -- ==========================================================
-    -- ANIMACIONES / SPARK
+    -- SPARK & ANIMACIONES
     -- ==========================================================
     castBar.sparkHead = castBar:CreateTexture(nil, "OVERLAY", nil, 7); castBar.sparkHead:SetAtlas("pvpscoreboard-header-glow", true); castBar.sparkHead:SetBlendMode("ADD"); if castBar.sparkHead.SetRotation then castBar.sparkHead:SetRotation(math.rad(90)) end
     castBar.sparkTail = castBar.tailMask:CreateTexture(nil, "OVERLAY", nil, 4); castBar.sparkTail:SetAtlas("AftLevelup-SoftCloud", true); castBar.sparkTail:SetBlendMode("ADD")
@@ -320,8 +262,7 @@ local function InitializeAscensionCastBar()
     castBar.sparkTail3 = castBar.tailMask:CreateTexture(nil, "OVERLAY", nil, 4); castBar.sparkTail3:SetAtlas("AftLevelup-SoftCloud", true); castBar.sparkTail3:SetBlendMode("ADD")
     castBar.sparkTail4 = castBar.tailMask:CreateTexture(nil, "OVERLAY", nil, 4); castBar.sparkTail4:SetAtlas("AftLevelup-SoftCloud", true); castBar.sparkTail4:SetTexCoord(0, 1, 1, 0); castBar.sparkTail4:SetBlendMode("ADD")
     castBar.sparkGlow = castBar:CreateTexture(nil, "OVERLAY", nil, 6); castBar.sparkGlow:SetTexture("Interface\\CastingBar\\UI-CastingBar-Pushback"); castBar.sparkGlow:SetBlendMode("ADD")
-    castBar.spark = castBar.sparkHead
-
+    
     local function UpdateSparkColors()
         local s, g = db.sparkColor or {1,1,1,1}, db.glowColor or {1,1,1,1}
         castBar.sparkHead:SetVertexColor(s[1], s[2], s[3], s[4]); castBar.sparkGlow:SetVertexColor(g[1], g[2], g[3], g[4])
@@ -334,9 +275,14 @@ local function InitializeAscensionCastBar()
     UpdateSparkSize = function()
         if not castBar.sparkHead then return end
         local sc, h = db.sparkScale or 1.8, db.height or 20
-        castBar.sparkHead:SetSize(32*sc, h*2*sc); castBar.sparkGlow:SetSize(190*sc, h*2.4)
-        castBar.sparkTail:SetSize((db.tail1Length or 90)*sc, h*1.4); castBar.sparkTail2:SetSize((db.tail2Length or 60)*sc, h*1.1)
-        castBar.sparkTail3:SetSize((db.tail3Length or 90)*sc, h*1.4); castBar.sparkTail4:SetSize((db.tail4Length or 60)*sc, h*1.1)
+        -- Aplicar escala inmediatamente
+        castBar.sparkHead:SetSize(32*sc, h*2*sc)
+        castBar.sparkGlow:SetSize(190*sc, h*2.4)
+        
+        castBar.sparkTail:SetSize((db.tail1Length or 90)*sc, h*1.4)
+        castBar.sparkTail2:SetSize((db.tail2Length or 60)*sc, h*1.1)
+        castBar.sparkTail3:SetSize((db.tail3Length or 90)*sc, h*1.4)
+        castBar.sparkTail4:SetSize((db.tail4Length or 60)*sc, h*1.1)
         if castBar.tailMask then castBar.tailMask:SetWidth(castBar:GetWidth()) end
     end
     UpdateSparkSize()
@@ -368,12 +314,19 @@ local function InitializeAscensionCastBar()
         local b = (db.borderEnabled and (db.borderThickness or 1)) or 0
         local tP = tailProgress or 0
         local time = GetTime()
-        local effOffset = (db.headLengthOffset or -23) * (w / (defaults.width or 270))
         
+        -- FIX: Usar 0 como base exacta + offset del usuario
         castBar.sparkHead:ClearAllPoints()
-        castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + (db.sparkOffset or 0) + effOffset, 0)
-        castBar.sparkHead:SetAlpha(ClampAlpha(db.sparkIntensity or 1)); castBar.sparkHead:Show()
-        castBar.sparkGlow:ClearAllPoints(); castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
+        castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + (db.sparkOffset or 0), 0)
+        castBar.sparkHead:SetAlpha(ClampAlpha(db.sparkIntensity or 1))
+        castBar.sparkHead:Show()
+        
+        castBar.sparkGlow:ClearAllPoints()
+        castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
+        
+        -- FIX: Glow Intensity global
+        local baseGlowAlpha = ClampAlpha(db.glowIntensity or 0.5)
+        castBar.sparkGlow:SetAlpha(baseGlowAlpha)
 
         if castBar.tailMask then
             local aw = offset - (b>0 and b or 0); if aw<0 then aw=0 end; if aw>w then aw=w end
@@ -404,7 +357,7 @@ local function InitializeAscensionCastBar()
                 SpinOrb(castBar.sparkTail4, -math.pi/2, db.tail4Intensity or 0.6)
             end
             local pulse = 0.5 + 0.5 * math.sin(time * 8)
-            castBar.sparkGlow:SetAlpha(ClampAlpha(db.glowIntensity or 0.5) * (0.6 + 0.4*pulse))
+            castBar.sparkGlow:SetAlpha(baseGlowAlpha * (0.6 + 0.4*pulse))
 
         elseif style == "Vortex" then
             castBar.sparkGlow:Show()
@@ -683,11 +636,10 @@ local function InitializeAscensionCastBar()
     UpdateBarColor()
 
     -- ==========================================================
-    -- LÓGICA EMPOWERED (QUARTZ INTEGRATION)
+    -- LÓGICA EMPOWERED
     -- ==========================================================
     
     local function GetStageDuration(bar, stage)
-        -- Fallback si no hay API (ej. Cliente viejo)
         if not C_Spell or not GetUnitEmpowerStageDuration then return -1 end
         if stage == bar.NumStages then return GetUnitEmpowerHoldAtMaxTime(bar.unit) else return GetUnitEmpowerStageDuration(bar.unit, stage - 1) end
     end
@@ -696,7 +648,6 @@ local function InitializeAscensionCastBar()
         bar.CurrSpellStage = -1; bar.NumStages = numStages + 1; bar.StagePoints = {}
         local sumDuration = 0
         local stageMaxValue = (bar.duration or 1) * 1000 
-        -- Limpiar Pips anteriores
         if bar.stagePips then for _, pip in ipairs(bar.stagePips) do pip:Hide() end end
         if not bar.stagePips then bar.stagePips = {} end
 
@@ -705,7 +656,6 @@ local function InitializeAscensionCastBar()
             if duration and duration > -1 then
                 sumDuration = sumDuration + duration
                 bar.StagePoints[i] = sumDuration
-                -- Lógica visual: Crear separador (Pip)
                 local percentage = sumDuration / stageMaxValue
                 if percentage > 0 and percentage < 1 then
                     local pip = bar.stagePips[i]
@@ -728,7 +678,6 @@ local function InitializeAscensionCastBar()
         end
         if (currentStage ~= bar.CurrSpellStage and currentStage > -1 and currentStage <= bar.NumStages) then
             bar.CurrSpellStage = currentStage
-            -- Aquí podrías añadir un flash o sonido de cambio de etapa
         end
     end
 
@@ -739,22 +688,17 @@ local function InitializeAscensionCastBar()
         if unit and unit~="player" then return end
         local function GetFmtName(name) if db.truncateSpellName and name then local l = db.truncateLength or 30; if #name > l then return string.sub(name,1,l).."..." end end return name or "" end
         
-        -- 1. EMPOWERED
         if event == "UNIT_SPELLCAST_EMPOWER_START" then
             local name, _, texture, startMS, endMS, _, _, _, notInt, numStages = UnitEmpowerCastingInfo("player")
             if not name then return end
             self.casting = true; self.channeling = false; self.isEmpowered = true
             self.startTime = startMS/1000; self.endTime = endMS/1000; self.duration = self.endTime - self.startTime
-            
-            -- Quartz Logic:
             AddStages(self, numStages or 1)
-
             self.spellName:SetText(db.showSpellText ~= false and GetFmtName(name) or ""); if db.showIcon and texture then self.icon:SetTexture(texture); self.icon:Show() else self.icon:Hide() end
             if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; HideTicks()
             ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide()
             ResetParticles()
 
-        -- 2. CASTING NORMAL
         elseif event=="UNIT_SPELLCAST_START" then
             local name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
             if not name then return end
@@ -764,16 +708,12 @@ local function InitializeAscensionCastBar()
             ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide()
             ResetParticles()
             
-        -- 3. CHANNELING (QUARTZ LOGIC)
         elseif event=="UNIT_SPELLCAST_CHANNEL_START" then
             local name, _, texture, startMS, endMS, _, _, spellID, notInt = UnitChannelInfo("player")
             if not name then return end
-            
             self.casting=false; self.channeling=true; self.startTime=startMS/1000; self.endTime=endMS/1000; self.duration=self.endTime-self.startTime
-            
             if EMPOWERED_SPELLS[name] then self.isEmpowered = true else self.isEmpowered = false end
             
-            -- QUARTZ CALCULATION
             self.channelingDuration = self.duration
             self.totalTicks = getChannelingTicks(name, spellID)
             self.tickDuration = self.totalTicks > 0 and (self.channelingDuration / self.totalTicks) or 0
@@ -781,7 +721,7 @@ local function InitializeAscensionCastBar()
             for i = 1, self.totalTicks do
                 self.tickPositions[i] = self.channelingDuration - (i - 1) * self.tickDuration
             end
-            DrawTicks() -- Dibujar usando nueva lógica
+            DrawTicks() 
 
             self.spellName:SetText(db.showSpellText ~= false and GetFmtName(name) or ""); if db.showIcon and texture then self.icon:SetTexture(texture); self.icon:Show() else self.icon:Hide() end
             if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; 
@@ -800,7 +740,6 @@ local function InitializeAscensionCastBar()
                 if EMPOWERED_SPELLS[cname] then self.isEmpowered = true else self.isEmpowered = false end
                 self.spellName:SetText(GetFmtName(cname)); if db.showIcon and ctex then self.icon:SetTexture(ctex); self.icon:Show() else self.icon:Hide() end
                 if cNotInt and db.showShield then self.shield:Show() else self.shield:Hide() end; 
-                -- Update Ticks on refresh
                 DrawTicks()
                 ApplyFont(); UpdateBarColor(cNotInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide(); return
             end
@@ -811,10 +750,10 @@ local function InitializeAscensionCastBar()
                 if notInt and db.showShield then self.shield:Show() else self.shield:Hide() end; HideTicks()
                 ApplyFont(); UpdateBarColor(notInt); UpdateBorder(); UpdateBackground(); UpdateIcon(); self:Show(); castBar.latency:Hide(); return
             end
-            self.casting=false; self.channeling=false; self.spellName:SetText(""); self.timer:SetText(""); self.icon:Hide(); self.shield:Hide(); HideTicks(); self:Hide()
+            self.casting=false; self.channeling=false; self.spellName:SetText(""); self.timer:SetText(""); self.icon:Hide(); self.shield:Hide(); HideTicks(); UpdateSpark(0,0); self:Hide()
         end
     end
-    -- Register Events
+    
     castBar:RegisterEvent("UNIT_SPELLCAST_START"); castBar:RegisterEvent("UNIT_SPELLCAST_STOP"); castBar:RegisterEvent("UNIT_SPELLCAST_FAILED"); castBar:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     castBar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START"); castBar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP"); castBar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
     pcall(function()
@@ -824,16 +763,24 @@ local function InitializeAscensionCastBar()
     end)
     castBar:SetScript("OnEvent",OnCast)
 
-    local function UpdateLatencyBar()
+    local function UpdateLatencyBar(forcedValue)
         if not db.showLatency then castBar.latency:Hide() return end
-        if not (castBar.casting or castBar.channeling) then castBar.latency:Hide() return end
-        local _, _, homeMS, worldMS = GetNetStats(); local ms = math.max(homeMS or 0, worldMS or 0)
+        
+        -- FIX: Permitir forzar valor en Test Mode
+        local ms = 0
+        if forcedValue then
+            ms = forcedValue
+        elseif (castBar.casting or castBar.channeling) then
+            local _, _, homeMS, worldMS = GetNetStats(); ms = math.max(homeMS or 0, worldMS or 0)
+        else
+            castBar.latency:Hide(); return
+        end
+        
         if ms <= 0 then castBar.latency:Hide() return end
         local frac = (ms / 1000) / (castBar.duration or 1); if frac > db.latencyMaxPercent then frac = db.latencyMaxPercent end
         local w = castBar:GetWidth() * frac; local minW = 2; if w < minW then w = minW end; if w <= 0.5 then castBar.latency:Hide() return end
         castBar.latency:ClearAllPoints(); local b = (db.borderEnabled and (db.borderThickness or 1)) or 0
         
-        -- Logic Reverse/Empower Latency Direction
         local isFilling = false
         if castBar.isEmpowered or castBar.casting then isFilling = true
         elseif castBar.channeling and db.reverseChanneling then isFilling = true end
@@ -860,42 +807,57 @@ local function InitializeAscensionCastBar()
             UpdateSpark(prog, isEmptying and (1-prog) or prog)
         end
 
-        -- Lógica de PREVIEW (Test Mode) MEJORADA
+        -- LÓGICA PREVIEW MEJORADA (Ciclo Automático)
         if db.previewEnabled and not self.casting and not self.channeling then
             if not self.previewStart then 
                 self.previewStart = now 
-                -- Configurar Ticks Falsos para el Preview
-                self.channelingDuration = 3
-                self.tickPositions = { 2.4, 1.8, 1.2, 0.6 } -- 4 Ticks simulados
+                self.channelingDuration = 4
+                self.tickPositions = { 3, 2, 1 }
             end
             
-            local dur = 3; local elap = (now - self.previewStart) % dur
+            -- Ciclo de 8 segundos: 4s Casteo (Normal) -> 4s Canalizando (Escudo + Reverse?)
+            local cycleTime = 8
+            local timeInCycle = (now - self.previewStart) % cycleTime
+            local phase = 1 -- 1: Casting, 2: Channeling
             
-            -- FIX 1: Respetar visibilidad del nombre del hechizo
-            if db.showSpellText then
-                self.spellName:SetText("Preview Spell")
+            if timeInCycle > 4 then phase = 2 end
+            
+            local dur = 4
+            local elap = timeInCycle % 4
+            
+            if phase == 1 then
+                -- SIMULAR CASTEO NORMAL
+                self.casting = true; self.channeling = false; self.isEmpowered = false
+                self.spellName:SetText(db.showSpellText and "Preview: Casting" or "")
+                UpdateBarColor(false) -- Normal Color
+                HideTicks()
+                self.shield:Hide()
+                Upd(elap, dur)
             else
-                self.spellName:SetText("")
+                -- SIMULAR CANALIZADO + ESCUDO
+                self.casting = false; self.channeling = true; self.isEmpowered = false
+                self.spellName:SetText(db.showSpellText and "Preview: Channel (Shield)" or "")
+                UpdateBarColor(true) -- Uninterruptible Color
+                if db.showChannelTicks then DrawTicks() else HideTicks() end
+                if db.showShield then self.shield:Show() else self.shield:Hide() end
+                
+                local rem = dur - elap
+                -- Simular Reverse si activado
+                if db.reverseChanneling then Upd(elap, dur) else Upd(rem, dur) end
             end
-
-            self.timer:SetText(GetFmtTimer(dur-elap, dur))
             
-            -- FIX 2: Actualizar Color en tiempo real
-            UpdateBarColor(false) 
-
-            -- FIX 3: Mostrar/Ocultar Ticks en tiempo real
-            if db.showChannelTicks then 
-                DrawTicks() 
-            else 
-                HideTicks() 
-            end
-
-            Upd(elap, dur)
-            UpdateBorder(); UpdateBackground(); UpdateIcon(); UpdateSparkColors(); self:Show(); UpdateLatencyBar() 
-            if db.showIcon and castBar.icon:IsShown() then castBar.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark") end
+            self.duration = dur
+            self.timer:SetText(GetFmtTimer(dur-elap, dur))
+            UpdateLatencyBar(200) -- Forzar 200ms de latencia visual
+            
+            UpdateBorder(); UpdateBackground(); UpdateIcon(); UpdateSparkColors(); self:Show()
+            if db.showIcon and castBar.icon:IsShown() then castBar.icon:SetTexture("Interface\\Icons\\Spell_Holy_MagicalSentry") end
+            
+            -- Reset flags para no romper lógica real al salir
+            self.casting = false; self.channeling = false
             return
         else
-            self.previewStart = nil -- Reiniciar preview al salir
+            self.previewStart = nil
         end
         
         if self.casting then
@@ -906,13 +868,11 @@ local function InitializeAscensionCastBar()
         if self.channeling then
             local rem = (self.endTime or now) - now; rem = math.max(0, rem)
             if self.isEmpowered or db.reverseChanneling then
-                -- LLENAR (Empty -> Full)
                 local elap = now - self.startTime
                 if db.hideTimerOnChannel then self.timer:SetText("") else self.timer:SetText(GetFmtTimer(rem, self.duration)) end 
                 Upd(elap, self.duration)
-                if self.isEmpowered and self.StagePoints then UpdateStageLogic(self) end -- Check Empower Stages
+                if self.isEmpowered and self.StagePoints then UpdateStageLogic(self) end 
             else
-                -- VACIAR (Full -> Empty)
                 if db.hideTimerOnChannel then self.timer:SetText("") else self.timer:SetText(GetFmtTimer(rem, self.duration)) end
                 Upd(rem, self.duration)
             end
@@ -931,7 +891,7 @@ local function InitializeAscensionCastBar()
     end
 
     -- ==========================================================
-    -- ===== UI CONFIGURATION - TABBED SYSTEM =====
+    -- CONFIGURATION PANEL
     -- ==========================================================
     
     local configPanel = CreateFrame("Frame", "AscensionCastBarOptionsPanel", UIParent)
@@ -1112,7 +1072,8 @@ local function InitializeAscensionCastBar()
     AddColor(T_VIS, "Shielded Bar Color", "uninterruptibleColor")
     AddCheckbox(T_VIS, "Show Channel Ticks", "showChannelTicks")
     AddColor(T_VIS, "Ticks Color", "channelTicksColor")
-    AddCheckbox(T_VIS, "Reverse Channeling", "reverseChanneling") -- NUEVA OPCION
+    AddSlider(T_VIS, "Tick Thickness", "tickWidth", 1, 5, 1) -- NUEVO SLIDER
+    AddCheckbox(T_VIS, "Reverse Channeling", "reverseChanneling")
     AddCheckbox(T_VIS, "Show Latency (Lag)", "showLatency")
     AddColor(T_VIS, "Latency Color", "latencyColor")
     AddSlider(T_VIS, "Latency Max Coverage (%)", "latencyMaxPercent", 0.1, 1.0, 0.05)
@@ -1143,7 +1104,7 @@ local function InitializeAscensionCastBar()
     AddSlider(T_FX, "Scale", "sparkScale", 0.5, 3, 0.1, UpdateSparkSize)
     
     AddHeader(T_FX, "Fine Tuning")
-    AddSlider(T_FX, "Spark Head Offset", "sparkOffset", -5, 5, 0.1)
+    AddSlider(T_FX, "Spark Head Offset", "sparkOffset", -50, 50, 1) -- FIX RANGE
     AddSlider(T_FX, "Head Length Offset", "headLengthOffset", -50, 50, 1)
     
     AddHeader(T_FX, "Colors")
@@ -1163,7 +1124,7 @@ local function InitializeAscensionCastBar()
     
     local ef = CreateFrame("EditBox", nil, tabs[T_INT].child, "InputBoxTemplate"); ef:SetSize(200, 20); ef:SetPoint("TOPLEFT", 10, tabs[T_INT].cY - 20); ef:SetAutoFocus(false); ef:SetText(db.cdmFrameName or "")
     ef:SetScript("OnEnterPressed", function(self) db.cdmFrameName = self:GetText(); UpdateAnchor(); self:ClearFocus() end)
-    local fl = tabs[T_INT].child:CreateFontString(nil, "OVERLAY", "GameFontNormal"); fl:SetPoint("BOTTOMLEFT", ef, "TOPLEFT", 0, 2); fl:SetText("Custom Frame Name:")
+    local fl = tabs[T_INT].child:CreateFontString(nil, "OVERLAY", "GameFontNormal"); fl:SetPoint("BOTTOMLEFT", ef, "TOPLEFT", 0, 2); fl:SetText("Custom Frame Name (Experimental):") -- FIX LABEL
 
     SelectTab(1)
     UpdateDefaultCastBarVisibility()
