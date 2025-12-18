@@ -51,13 +51,21 @@ end
 local function UpdateDefaultCastBarVisibility()
     local hide = AscensionCastBarDB and AscensionCastBarDB.profiles and AscensionCastBarDB.activeProfile and AscensionCastBarDB.profiles[AscensionCastBarDB.activeProfile].hideDefaultCastbar
     local frames = GetBlizzardCastBars()
+
     for _, frame in ipairs(frames) do
         if frame then
-            if hide then frame:UnregisterAllEvents(); frame:Hide()
+            if hide then
+                frame:UnregisterAllEvents()
+                frame:Hide()
             else
-                frame:RegisterEvent("UNIT_SPELLCAST_START"); frame:RegisterEvent("UNIT_SPELLCAST_STOP")
-                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START"); frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-                pcall(function() frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START"); frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP") end)
+                frame:RegisterEvent("UNIT_SPELLCAST_START")
+                frame:RegisterEvent("UNIT_SPELLCAST_STOP")
+                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+                frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+                pcall(function() 
+                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+                    frame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+                end)
             end
         end
     end
@@ -73,6 +81,7 @@ end
 -- ============================================================================
 
 local function InitializeAscensionCastBar()
+    -- Base de Datos
     if not AscensionCastBarDB then AscensionCastBarDB = {} end
     if not AscensionCastBarDB.profiles then AscensionCastBarDB.profiles = {} end
     if not AscensionCastBarDB.activeProfile then AscensionCastBarDB.activeProfile = "Default" end
@@ -81,7 +90,8 @@ local function InitializeAscensionCastBar()
         AscensionCastBarDB.profiles["Default"] = {}
         for k, v in pairs(AscensionCastBarDB) do
             if k ~= "profiles" and k ~= "activeProfile" then
-                AscensionCastBarDB.profiles["Default"][k] = v; AscensionCastBarDB[k] = nil
+                AscensionCastBarDB.profiles["Default"][k] = v
+                AscensionCastBarDB[k] = nil
             end
         end
     end
@@ -97,12 +107,14 @@ local function InitializeAscensionCastBar()
     local defaults = {
         width = 270, height = 24, point = "CENTER", relativePoint = "CENTER", x = 0, y = -85,
         unlock = true,
+        -- Fonts/Text
         spellNameFontSize = 14, timerFontSize = 14, fontPath = BAR_DEFAULT_FONT_PATH,
         fontColor = {0.8, 1, 0.95, 1}, showSpellText = true, showTimerText = true,
         spellNameFontLSM = "Expressway, Bold", timerFontLSM = "Boris Black Bloxx", fontLSMName = "Expressway, Bold",
         detachText = false, textX = 0, textY = 40, textWidth = 270,
         textBackdropEnabled = false, textBackdropColor = {0, 0, 0, 0.5},
         timerFormat = "Remaining", truncateSpellName = false, truncateLength = 30,
+        -- Colors
         barColor = {0, 0.02, 0.25, 1}, bgColor = {0, 0, 0, 0.65}, borderEnabled = true, borderColor = {0, 0, 0, 1}, borderThickness = 2,
         useClassColor = false,
         -- Ticks
@@ -117,9 +129,12 @@ local function InitializeAscensionCastBar()
         tail2Color = {0, 0.9, 1, 1}, tail2Intensity = 0.4, 
         tail3Color = {0, 1, 0.2, 1}, tail3Intensity = 0.6, 
         tail4Color = {1, 0, 0.8, 1}, tail4Intensity = 0.6, 
+        -- Icon
         showIcon = false, detachIcon = false, iconAnchor = "Left", iconSize = 24, iconX = 0, iconY = 0,
+        -- Behavior
         hideTimerOnChannel = false, hideDefaultCastbar = true, reverseChanneling = false, 
         showLatency = true, latencyColor = {1, 0, 0, 0.5}, latencyMaxPercent = 1.0,
+        -- CDM
         attachToCDM = false, cdmTarget = "Auto", cdmFrameName = "CooldownManagerFrame", cdmYOffset = -5,
         previewEnabled = false, barDraggable = true,
     }
@@ -268,17 +283,17 @@ local function InitializeAscensionCastBar()
         local b = (db.borderEnabled and (db.borderThickness or 1)) or 0
         local tP = tailProgress or 0
         local time = GetTime()
-        local headOffset = (db.sparkOffset or 0) + (db.headLengthOffset or 0) -- FIX: Sumar offsets
+        local headOffset = (db.sparkOffset or 0) + (db.headLengthOffset or 0) 
 
         -- Default Head Position
         castBar.sparkHead:ClearAllPoints()
         castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + headOffset, 0)
-        castBar.sparkHead:SetAlpha(ClampAlpha(db.sparkIntensity or 1)) -- FIX: Intensity
+        castBar.sparkHead:SetAlpha(ClampAlpha(db.sparkIntensity or 1)) 
         castBar.sparkHead:Show()
         
         castBar.sparkGlow:ClearAllPoints()
         castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
-        local baseGlowAlpha = ClampAlpha(db.glowIntensity or 0.5) -- FIX: Glow
+        local baseGlowAlpha = ClampAlpha(db.glowIntensity or 0.5) 
         castBar.sparkGlow:SetAlpha(baseGlowAlpha)
         castBar.sparkGlow:Show()
 
@@ -313,7 +328,6 @@ local function InitializeAscensionCastBar()
              castBar.sparkGlow:Hide(); local h = db.height or 24
              local function Fall(tex, driftBase, speed, intense)
                  tex:ClearAllPoints()
-                 -- FIX: Starfall Math
                  local moveTime = time * speed
                  local fallY = -((moveTime * 15) % (h*2)) + h
                  local sway = math.sin(time * 3 + driftBase) * 8 
@@ -392,7 +406,6 @@ local function InitializeAscensionCastBar()
              end
 
         elseif style == "Rainbow" then
-             -- FIX: Proper RGB Rainbow Function
              local hue = (time * 0.5) % 1
              local function HSV(h, s, v) 
                 local r, g, b; local i = math.floor(h * 6); local f = h * 6 - i; local p = v * (1 - s); local q = v * (1 - f * s); local t = v * (1 - (1 - f) * s)
@@ -550,7 +563,17 @@ local function InitializeAscensionCastBar()
         local function GetFmtName(name) if db.truncateSpellName and name then local l = db.truncateLength or 30; if #name > l then return string.sub(name,1,l).."..." end end return name or "" end
         
         if event == "UNIT_SPELLCAST_EMPOWER_START" then
-            local name, _, texture, startMS, endMS, _, _, _, notInt, numStages = UnitEmpowerCastingInfo("player")
+            local name, _, texture, startMS, endMS, _, _, _, notInt, numStages
+            
+            -- FIX: Safety check for UnitEmpowerCastingInfo presence
+            if UnitEmpowerCastingInfo then
+                name, _, texture, startMS, endMS, _, _, _, notInt, numStages = UnitEmpowerCastingInfo("player")
+            else
+                -- Fallback to standard casting info if empower API is missing
+                name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
+                numStages = 1
+            end
+
             if not name then return end
             self.casting = true; self.channeling = false; self.isEmpowered = true
             self.startTime = startMS/1000; self.endTime = endMS/1000; self.duration = self.endTime - self.startTime
@@ -590,7 +613,13 @@ local function InitializeAscensionCastBar()
             
         elseif event=="UNIT_SPELLCAST_CHANNEL_UPDATE" or event=="UNIT_SPELLCAST_EMPOWER_UPDATE" then
             local _, _, _, startMS, endMS = UnitChannelInfo("player")
-            if not startMS and event=="UNIT_SPELLCAST_EMPOWER_UPDATE" then startMS, endMS = select(4, UnitEmpowerCastingInfo("player")) end
+            if not startMS and event=="UNIT_SPELLCAST_EMPOWER_UPDATE" then 
+                 if UnitEmpowerCastingInfo then
+                    startMS, endMS = select(4, UnitEmpowerCastingInfo("player"))
+                 else
+                    startMS, endMS = select(4, UnitCastingInfo("player"))
+                 end
+            end
             if startMS then self.startTime=startMS/1000; self.endTime=endMS/1000; self.duration=self.endTime-self.startTime end
             
         elseif event=="UNIT_SPELLCAST_STOP" or event=="UNIT_SPELLCAST_CHANNEL_STOP" or event=="UNIT_SPELLCAST_EMPOWER_STOP" or event=="UNIT_SPELLCAST_FAILED" or event=="UNIT_SPELLCAST_INTERRUPTED" then
@@ -697,7 +726,7 @@ local function InitializeAscensionCastBar()
             
             self.duration = dur
             self.timer:SetText(GetFmtTimer(dur-elap, dur))
-            UpdateLatencyBar(200) -- Forzar 200ms
+            UpdateLatencyBar(200) 
             
             UpdateBorder(); UpdateBackground(); UpdateIcon(); UpdateSparkColors(); self:Show()
             if db.showIcon and castBar.icon:IsShown() then castBar.icon:SetTexture("Interface\\Icons\\Spell_Holy_MagicalSentry") end
