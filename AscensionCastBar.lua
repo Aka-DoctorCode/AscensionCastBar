@@ -48,6 +48,7 @@ local defaults = {
         
         showChannelTicks = true, 
         channelTicksColor = {1, 1, 1, 0.5},
+        channelTicksThickness = 1,
         
         useChannelColor = true,                          
         channelColor = {0.5, 0.5, 1, 1},                 
@@ -872,18 +873,20 @@ function AscensionCastBar:UpdateTicks(spellName, duration)
     local count = CHANNEL_TICKS[spellName]
     if not count or count < 1 then return end
     
-    local c = self.db.profile.channelTicksColor
+    local db = self.db.profile
+    local c = db.channelTicksColor
+    local thickness = db.channelTicksThickness or 1 -- Use the new setting
     local w = self.castBar:GetWidth() / count
+    
     for i = 1, count - 1 do
          local tick = self.castBar.ticks[i]
          if not tick then 
             tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
-            tick:SetWidth(1)
             self.castBar.ticks[i] = tick 
         end
          tick:ClearAllPoints()
          tick:SetPoint("CENTER", self.castBar, "LEFT", w * i, 0)
-         tick:SetHeight(self.castBar:GetHeight())
+         tick:SetSize(thickness, self.castBar:GetHeight()) -- Apply thickness here
          tick:SetColorTexture(c[1], c[2], c[3], c[4])
          tick:Show()
     end
@@ -1406,6 +1409,25 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.showChannelTicks end,
                         set = function(info, val) self.db.profile.showChannelTicks = val end,
                     },
+                    channelTicksThickness = {
+                        name = "Tick Thickness",
+                        type = "range", min = 1, max = 10, step = 1, order = 36.1,
+                        disabled = function() return not self.db.profile.showChannelTicks end,
+                        get = function(info) return self.db.profile.channelTicksThickness end,
+                        set = function(info, val) self.db.profile.channelTicksThickness = val end,
+                    },
+                    channelTicksColor = {
+                        name = "Tick Color",
+                        type = "color", hasAlpha = true, order = 36.2,
+                        disabled = function() return not self.db.profile.showChannelTicks end,
+                        get = function(info) 
+                            local c = self.db.profile.channelTicksColor
+                            return c[1], c[2], c[3], c[4] 
+                        end,
+                        set = function(info, r, g, b, a) 
+                            self.db.profile.channelTicksColor = {r, g, b, a} 
+                        end,
+                    },
                     useChannelColor = {
                         name = "Custom Channel Color", desc="Use a specific color for channeled spells.", type = "toggle", order = 37,
                         get = function(info) return self.db.profile.useChannelColor end,
@@ -1548,7 +1570,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.cdmTarget = val; self:UpdateAnchor() end,
                     },
                     cdmFrameName = {
-                        name = "Custom Frame Name", type = "input", order = 3,
+                        name = "Custom Frame Name (Experimental)", type = "input", order = 3,
                         get = function(info) return self.db.profile.cdmFrameName end,
                         set = function(info, val) self.db.profile.cdmFrameName = val; self:UpdateAnchor() end,
                     },
