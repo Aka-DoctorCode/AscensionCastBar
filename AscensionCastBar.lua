@@ -40,20 +40,29 @@ local defaults = {
         width = 270, height = 24,
         point = "CENTER", relativePoint = "CENTER", x = 0, y = -85,
         
-        -- UPDATED: Shield/Ticks/Colors
+        -- Empower Colors
+        empowerStage1Color = {0, 1, 0, 1},       -- Green
+        empowerStage2Color = {1, 1, 0, 1},       -- Yellow
+        empowerStage3Color = {1, 0.64, 0, 1},    -- Orange
+        empowerStage4Color = {1, 0, 0, 1},       -- Red
+        empowerStage5Color = {0.6, 0, 1, 1},     -- Purple (Default)
+        
+        -- Shield/Ticks/Colors
         showShield = true, 
         uninterruptibleColor = {0.4, 0.4, 0.4, 1},       
         uninterruptibleBorderGlow = true,                
         uninterruptibleGlowColor = {1, 0, 0, 1},         
         
+        -- Channel Ticks
         showChannelTicks = true, 
         channelTicksColor = {1, 1, 1, 0.5},
         channelTicksThickness = 1,
         
+        -- Channel Colors
         useChannelColor = true,                          
         channelColor = {0.5, 0.5, 1, 1},                 
         channelBorderGlow = false,                       
-        channelGlowColor = {0, 0.8, 1, 1},               
+        channelGlowColor = {0, 0.8, 1, 1},
 
         -- Fonts/Text
         spellNameFontSize = 14, timerFontSize = 14, 
@@ -118,23 +127,23 @@ end
 
 function AscensionCastBar:OnEnable()
     self:UpdateDefaultCastBarVisibility()
-    self:InitCDMHooks()
+    self:InitCDMHooks() -- Keep if you have this function, otherwise remove
     
-    -- Register Events
-    self:RegisterEvent("UNIT_SPELLCAST_START")
-    self:RegisterEvent("UNIT_SPELLCAST_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_FAILED")
-    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    -- Register Events (Mapped to HandleCastStart)
+    self:RegisterEvent("UNIT_SPELLCAST_START", "HandleCastStart")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", "HandleCastStart")
+    self:RegisterEvent("UNIT_SPELLCAST_STOP", "HandleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP", "HandleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "HandleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_FAILED", "HandleCastStop")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateDefaultCastBarVisibility")
     
-    -- Register Empower Events safely
+    -- Empowered Events (Retail 11.0+)
+    -- We use pcall in case the API doesn't exist on your server version
     pcall(function()
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START", "HandleCastStart")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "HandleCastStop")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "HandleCastStart")
     end)
     
     self:RefreshConfig()
@@ -194,9 +203,21 @@ end
 -- ==========================================================
 
 function AscensionCastBar:CreateBar()
-    local castBar = CreateFrame("StatusBar", "AscensionCastBarFrame", UIParent)
+    -- Creamos un marco invisible que servirá de ancla fija
+    if not self.anchorFrame then
+        self.anchorFrame = CreateFrame("Frame", nil, UIParent)
+    end
+    self.anchorFrame:SetSize(1, 1) -- Tamaño mínimo, solo para posicionar
+
+    -- IMPORTANTE: La barra ahora es hija de 'self.anchorFrame'
+    local castBar = CreateFrame("StatusBar", "AscensionCastBarFrame", self.anchorFrame)
     castBar:SetClipsChildren(false) 
     castBar:SetSize(self.db.profile.width, self.db.profile.height)
+    
+    -- La barra siempre se queda en el centro exacto (0,0) de su padre invisible
+    castBar:ClearAllPoints()
+    castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
+    
     castBar:SetFrameStrata("MEDIUM"); castBar:SetFrameLevel(10); castBar:Hide()
     self.castBar = castBar
 
@@ -278,58 +299,62 @@ function AscensionCastBar:CreateBar()
 end
 
 function AscensionCastBar:UpdateAnchor()
-    if not self.castBar then return end
     local db = self.db.profile
-    self.castBar:ClearAllPoints()
-    local parentFrame, isAttached = nil, false
+    if not self.anchorFrame or not self.castBar then return end
     
+    local targetFrame
+    -- 1. DETERMINAR EL OBJETIVO (CDM)
     if db.attachToCDM then
-         local target = db.cdmTarget or "Auto"
-         if target == "Essential" then 
-            if _G["EssentialCooldownViewer"] and _G["EssentialCooldownViewer"]:IsShown() then parentFrame = _G["EssentialCooldownViewer"] end
-         elseif target == "Utility" then 
-            if _G["UtilityCooldownViewer"] and _G["UtilityCooldownViewer"]:IsShown() then parentFrame = _G["UtilityCooldownViewer"] end
-         elseif target == "Custom" then 
-            if db.cdmFrameName and db.cdmFrameName ~= "" then parentFrame = _G[db.cdmFrameName] end
-         else -- Auto
-             if _G["EssentialCooldownViewer"] and _G["EssentialCooldownViewer"]:IsShown() then parentFrame = _G["EssentialCooldownViewer"]
-             elseif _G["UtilityCooldownViewer"] and _G["UtilityCooldownViewer"]:IsShown() then parentFrame = _G["UtilityCooldownViewer"]
-             elseif db.cdmFrameName and db.cdmFrameName ~= "" then parentFrame = _G[db.cdmFrameName] end
-         end
+        if db.cdmTarget == "Auto" then
+            targetFrame = CooldownManagerFrame -- Global por defecto de CDM
+        else
+            targetFrame = _G[db.cdmFrameName] -- Frame personalizado si existe
+        end
     end
 
-    if parentFrame then
-        isAttached = true
-        self.castBar:SetPoint("TOPLEFT", parentFrame, "BOTTOMLEFT", 0, db.cdmYOffset or -5)
-        local w = parentFrame:GetWidth()
-        if w and w > 1 then self.castBar:SetWidth(w) end
+    -- 2. SI EL CDM ESTÁ ACTIVO Y VISIBLE
+    if targetFrame and targetFrame:IsShown() then
+        -- Movemos el ancla invisible debajo del CDM
+        self.anchorFrame:ClearAllPoints()
+        self.anchorFrame:SetPoint("TOP", targetFrame, "BOTTOM", 0, db.cdmYOffset)
+        
+        -- SINCRONIZACIÓN DE TAMAÑO: Hacemos que la barra mida lo mismo que el CDM
+        local width = targetFrame:GetWidth()
+        if width and width > 0 then
+            self.castBar:SetWidth(width)
+        end
     else
-        self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.x, db.y)
+        -- 3. POSICIONAMIENTO ESTÁNDAR (Si no hay CDM o está desactivado)
+        self.anchorFrame:ClearAllPoints()
+        self.anchorFrame:SetPoint(db.point, UIParent, db.relativePoint, db.x, db.y)
+        
+        -- Volvemos al ancho configurado en las opciones del addon
         self.castBar:SetWidth(db.width)
     end
     
-    if self.castBar.ticksFrame then self.castBar.ticksFrame:SetWidth(self.castBar:GetWidth()) end
-    self:UpdateSparkSize()
-    self:UpdateTextLayout()
+    -- MANTENER CENTRADO PARA EL CRECIMIENTO (Scale)
+    -- Esto garantiza que la barra crezca desde el centro del ancla (CDM o Manual)
+    self.castBar:ClearAllPoints()
+    self.castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
 end
-
 function AscensionCastBar:InitCDMHooks()
-    if self.hooksDefined then return end
-    local function OnCDMResize(_, width)
-        if self.db.profile.attachToCDM then self:UpdateAnchor() end
+    -- Si el frame de CooldownManager existe, vigilamos sus cambios
+    if CooldownManagerFrame then
+        -- Actualizar cuando se muestra o se oculta
+        self:HookScript(CooldownManagerFrame, "OnShow", "UpdateAnchor")
+        self:HookScript(CooldownManagerFrame, "OnHide", "UpdateAnchor")
+        
+        -- CRÍTICO PARA EL TAMAÑO: Actualizar cuando el CDM cambie de dimensiones
+        self:HookScript(CooldownManagerFrame, "OnSizeChanged", "UpdateAnchor")
     end
     
-    if _G["EssentialCooldownViewer"] then 
-        self:HookScript(_G["EssentialCooldownViewer"], "OnSizeChanged", OnCDMResize)
-        self:HookScript(_G["EssentialCooldownViewer"], "OnShow", OnCDMResize)
-        self:HookScript(_G["EssentialCooldownViewer"], "OnHide", OnCDMResize)
+    -- Si usas un frame personalizado, intentamos engancharlo también
+    local customFrame = _G[self.db.profile.cdmFrameName]
+    if customFrame and customFrame ~= CooldownManagerFrame then
+        self:HookScript(customFrame, "OnShow", "UpdateAnchor")
+        self:HookScript(customFrame, "OnHide", "UpdateAnchor")
+        self:HookScript(customFrame, "OnSizeChanged", "UpdateAnchor")
     end
-    if _G["UtilityCooldownViewer"] then 
-        self:HookScript(_G["UtilityCooldownViewer"], "OnSizeChanged", OnCDMResize)
-        self:HookScript(_G["UtilityCooldownViewer"], "OnShow", OnCDMResize)
-        self:HookScript(_G["UtilityCooldownViewer"], "OnHide", OnCDMResize)
-    end
-    self.hooksDefined = true
 end
 
 -- ==========================================================
@@ -356,32 +381,61 @@ function AscensionCastBar:UpdateBarColor(isUninterruptible)
     local db = self.db.profile
     local cb = self.castBar
     
-    if not cb.glowFrame then return end -- Safety check
+    if not cb.glowFrame then return end
     cb.glowFrame:Hide()
 
-    -- 1. Uninterruptible (Shield)
+    -- 1. EMPOWERED (Prioridad Máxima)
+    if cb.isEmpowered and cb.currentStage then
+        local s = cb.currentStage
+        local c = db.empowerStage1Color -- Color por defecto (Verde)
+        
+        -- Escala: Etapa 1: 1.0, Etapa 2: 1.1, Etapa 3: 1.2, Etapa 4: 1.3, Etapa 5: 1.4
+        local scaleMultiplier = 1 + ((s - 1) * 0.1)
+        
+        -- Al estar anclada a un padre en 0,0, esto crecerá simétricamente
+        cb:SetScale(scaleMultiplier)
+
+        -- Lógica de selección de color
+        if s >= 5 then c = db.empowerStage5Color        -- NUEVO: Etapa 5 (Púrpura/Extra)
+        elseif s == 4 then c = db.empowerStage4Color
+        elseif s == 3 then c = db.empowerStage3Color
+        elseif s == 2 then c = db.empowerStage2Color
+        end
+        
+        cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
+        
+        -- Brillo solo en la etapa final (la "Extra")
+        if s >= cb.numStages then
+            cb.glowFrame:SetBackdropBorderColor(c[1], c[2], c[3], 1)
+            cb.glowFrame:Show()
+        end
+        return -- Salimos para que no aplique colores de canalizado o clase
+        else
+        -- IMPORTANTE: Volver a escala normal para casts no empoderados
+        cb:SetScale(1.0)
+    end
+
+    -- 2. ESCUDO (Uninterruptible)
     if isUninterruptible and db.showShield then 
         local c = db.uninterruptibleColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
-        
         if db.uninterruptibleBorderGlow then
             local gc = db.uninterruptibleGlowColor
             cb.glowFrame:SetBackdropBorderColor(gc[1], gc[2], gc[3], gc[4])
             cb.glowFrame:Show()
         end
 
-    -- 2. Channeling
+    -- 3. CANALIZADO ESTÁNDAR
     elseif cb.channeling and db.useChannelColor then
         local c = db.channelColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
-        
         if db.channelBorderGlow then
             local gc = db.channelGlowColor
             cb.glowFrame:SetBackdropBorderColor(gc[1], gc[2], gc[3], gc[4])
             cb.glowFrame:Show()
         end
 
-    -- 3. Standard
+    -- 4. CASTEO NORMAL
     elseif db.useClassColor then 
         local _, playerClass = UnitClass("player")
         local classColor = (RAID_CLASS_COLORS and RAID_CLASS_COLORS[playerClass]) or {r=1,g=1,b=1}
@@ -866,18 +920,27 @@ function AscensionCastBar:HideTicks()
     for _, tick in ipairs(self.castBar.ticks) do tick:Hide() end 
 end
 
-function AscensionCastBar:UpdateTicks(spellName, duration)
+function AscensionCastBar:UpdateTicks(countOrName, duration)
     self:HideTicks()
     if not self.db.profile.showChannelTicks then return end
     
-    local count = CHANNEL_TICKS[spellName]
+    local count = 0
+    -- Si recibimos un NÚMERO (ej: 5 etapas), lo usamos directamente.
+    if type(countOrName) == "number" then
+        count = countOrName
+    else
+        -- Si recibimos un NOMBRE (ej: "Drain Life"), lo buscamos en la tabla.
+        count = CHANNEL_TICKS[countOrName]
+    end
+
     if not count or count < 1 then return end
     
     local db = self.db.profile
     local c = db.channelTicksColor
-    local thickness = db.channelTicksThickness or 1 -- Use the new setting
+    local thickness = db.channelTicksThickness or 1
     local w = self.castBar:GetWidth() / count
     
+    -- Dibujar líneas. Si count es 5 (5 bloques), necesitamos 4 líneas divisorias.
     for i = 1, count - 1 do
          local tick = self.castBar.ticks[i]
          if not tick then 
@@ -886,7 +949,7 @@ function AscensionCastBar:UpdateTicks(spellName, duration)
         end
          tick:ClearAllPoints()
          tick:SetPoint("CENTER", self.castBar, "LEFT", w * i, 0)
-         tick:SetSize(thickness, self.castBar:GetHeight()) -- Apply thickness here
+         tick:SetSize(thickness, self.castBar:GetHeight())
          tick:SetColorTexture(c[1], c[2], c[3], c[4])
          tick:Show()
     end
@@ -937,69 +1000,80 @@ function AscensionCastBar:UpdateLatencyBar(castBar)
 end
 
 -- Shared Logic helper
-function AscensionCastBar:HandleCastStart(unit, channel, empowered)
-    if unit and unit~="player" then return end
+function AscensionCastBar:HandleCastStart(event, unit, ...)
+    -- 0. Sincronización de argumentos de eventos de Ace3
+    local channel = false
+    local empowered = false
+    
+    if event == "UNIT_SPELLCAST_CHANNEL_START" then 
+        channel = true
+    elseif event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then 
+        channel = true; empowered = true 
+    end
+    
+    if unit and unit ~= "player" then return end
+    
     local db = self.db.profile
     local cb = self.castBar
     
-    local name, _, texture, startMS, endMS, notInt
+    -- 1. ACTUALIZAR ANCLAJE Y TAMAÑO (Para que siga al CDM antes de aparecer)
+    self:UpdateAnchor()
+    
+    local name, _, texture, startMS, endMS, notInt, numStages
     local startTime, endTime
     
-    -- 1. GET CAST INFO
+    -- 2. OBTENER INFORMACIÓN DEL HECHIZO
     if empowered then
-        -- FIX: Empowered spells are now Channels in 11.0+
-        name, _, texture, startMS, endMS, _, _, _, notInt = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS, _, _, _, _, numStages = UnitChannelInfo("player")
     elseif channel then
-        -- Standard Channel
         name, _, texture, startMS, endMS, _, _, _, notInt = UnitChannelInfo("player")
     else
-        -- Standard Cast
         name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
     end
     
-    -- 2. VALIDATE & CALCULATE TIMES
-    if not name then return end
+    if not name or not startMS or not endMS then return end
     
-    if not startMS or not endMS then return end
     endTime = endMS / 1000
     startTime = startMS / 1000
     cb.duration = (endMS - startMS) / 1000
 
-    -- 3. SETUP BAR STATE
+    -- 3. CONFIGURAR ESTADO DE LA BARRA
     cb.casting = not channel
     cb.channeling = channel
     cb.isEmpowered = empowered
+    cb.numStages = numStages or 0
     
-    -- Detect simulated empower via channel (Ascension mechanic fallback)
-    if channel and EMPOWERED_SPELLS[name] then cb.isEmpowered = true end
+    -- Lógica de Etapa Extra (+1) para habilidades empoderadas
+    if empowered then
+        if cb.numStages == 0 then cb.numStages = 5 else cb.numStages = cb.numStages + 1 end
+    end
 
     cb.startTime = startTime
     cb.endTime = endTime
+    cb.currentStage = 1 -- Empezamos en etapa 1
+    cb:SetScale(1.0)    -- Reset de escala inicial
     
-    -- 4. UPDATE TEXT
-    local displayName = name
-    if db.truncateSpellName and #name > db.truncateLength then
-        displayName = string.sub(name, 1, db.truncateLength).."..."
-    end
-    
-    cb.spellName:SetText(db.showSpellText and displayName or "")
+    -- 4. ACTUALIZAR TEXTO Y VISUALES
+    cb.spellName:SetText(db.showSpellText and name or "")
     if db.showIcon and texture then 
         cb.icon:SetTexture(texture); cb.icon:Show() 
     else 
         cb.icon:Hide() 
     end
     
-    -- 5. UPDATE VISUALS
     if notInt and db.showShield then cb.shield:Show() else cb.shield:Hide() end
     
-    if channel or empowered then 
-        self:UpdateTicks(name, cb.duration) 
-    else 
-        self:HideTicks() 
+    -- Dibujar Ticks (pasamos el número de etapas si es empoderado)
+    if empowered then
+        self:UpdateTicks(cb.numStages, cb.duration)
+    elseif channel then
+        self:UpdateTicks(name, cb.duration)
+    else
+        self:HideTicks()
     end
     
     self:ApplyFont()
-    self:UpdateBarColor(notInt)
+    self:UpdateBarColor(notInt) -- Esto aplica el color inicial y la escala base
     self:UpdateBorder()
     self:UpdateBackground()
     self:UpdateIcon()
@@ -1007,7 +1081,19 @@ function AscensionCastBar:HandleCastStart(unit, channel, empowered)
     
     cb:Show()
     cb.latency:Hide()
-    self:ResetParticles()
+end
+
+function AscensionCastBar:HandleCastStop(event, unit)
+    if unit and unit ~= "player" then return end
+    
+    if self.castBar then
+        self.castBar:SetScale(1.0) -- Volver al tamaño original siempre
+    end
+    
+    self.castBar.casting = false
+    self.castBar.channeling = false
+    self.castBar.isEmpowered = false
+    self.castBar:Hide()
 end
 
 function AscensionCastBar:UNIT_SPELLCAST_START(event, unit)
@@ -1084,133 +1170,24 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
     local function GetFmtTimer(rem, dur)
         if not db.showTimerText then return "" end
         local f = db.timerFormat
-        if f == "Duration" then 
-            return string.format("%.1f / %.1f", math.max(0, rem), dur) 
-        elseif f == "Total" then 
-            return string.format("%.1f", dur) 
-        else 
-            return string.format("%.1f", math.max(0, rem)) 
-        end
+        if f == "Duration" then return string.format("%.1f / %.1f", math.max(0, rem), dur) 
+        elseif f == "Total" then return string.format("%.1f", dur) 
+        else return string.format("%.1f", math.max(0, rem)) end
     end
 
-    -- Updated helper to handle Spark Direction
     local function Upd(val, dur, forceEmptying)
         selfFrame:SetMinMaxValues(0, dur)
         selfFrame:SetValue(val)
         local prog = 0
         if dur > 0 then prog = val / dur end
-        
-        -- Determine if bar is emptying (Standard Channel) or Filling (Cast/Reverse)
         local isEmptying = forceEmptying
         if isEmptying == nil then
              isEmptying = (selfFrame.channeling and not selfFrame.isEmpowered and not db.reverseChanneling)
         end
-        
-        -- Spark moves backwards if emptying
         self:UpdateSpark(prog, isEmptying and (1-prog) or prog)
     end
 
-    -- ==========================================================
-    -- TEST MODE LOGIC (Now simulates all features)
-    -- ==========================================================
-    if db.previewEnabled and not selfFrame.casting and not selfFrame.channeling then
-        if not selfFrame.previewStart then selfFrame.previewStart = now end
-        local dur = 3.0
-        local elap = (now - selfFrame.previewStart) % dur
-        
-        selfFrame.spellName:SetText("Preview Spell")
-        
-        -- 1. Simulate Channel Behavior
-        -- If Ticks are enabled, we assume the user wants to see a "Channel".
-        -- If "Reverse" is OFF, channels should Empty. If ON, they Fill.
-        local simulateChannel = db.showChannelTicks
-        local isReverse = db.reverseChanneling
-        local isFilling = true 
-        
-        if simulateChannel and not isReverse then
-            isFilling = false -- Standard channel simulation (Emptying)
-        end
-        
-        -- Calculate Value based on direction
-        local val = elap
-        if not isFilling then
-             val = dur - elap
-             selfFrame.timer:SetText(GetFmtTimer(val, dur))
-        else
-             selfFrame.timer:SetText(GetFmtTimer(dur - val, dur))
-        end
-        
-        -- Update Bar & Spark
-        Upd(val, dur, not isFilling)
-        
-        -- 2. Force Ticks (Simulate 'Drain Life' ticks)
-        if db.showChannelTicks then
-            self:UpdateTicks("Drain Life", dur) 
-        else
-            self:HideTicks()
-        end
-
-        -- 3. Force Latency Display
-        if db.showLatency then
-             local w = selfFrame:GetWidth()
-             local latWidth = w * 0.15 -- Mock 15% latency
-             local b = db.borderEnabled and db.borderThickness or 0
-             
-             selfFrame.latency:ClearAllPoints()
-             if not isFilling then
-                -- Emptying: Latency on Left
-                selfFrame.latency:SetPoint("TOPLEFT", selfFrame, "TOPLEFT", b, -b)
-                selfFrame.latency:SetPoint("BOTTOMLEFT", selfFrame, "BOTTOMLEFT", b, b)
-             else
-                -- Filling: Latency on Right
-                selfFrame.latency:SetPoint("TOPRIGHT", selfFrame, "TOPRIGHT", -b, -b)
-                selfFrame.latency:SetPoint("BOTTOMRIGHT", selfFrame, "BOTTOMRIGHT", -b, b)
-             end
-             selfFrame.latency:SetWidth(latWidth)
-             local c = db.latencyColor
-             selfFrame.latency:SetColorTexture(c[1],c[2],c[3],c[4])
-             selfFrame.latency:Show()
-        else
-            selfFrame.latency:Hide()
-        end
-        
-        -- Force updates for live editing
-        self:UpdateBorder(); self:UpdateBackground(); self:UpdateIcon(); self:UpdateSparkColors()
-        
-        -- === SIMULATE COMBAT / CHANNEL FEATURES ===
-        local isUnint = false
-        
-        -- If simulating Shield, force Uninterruptible color/glow
-        if db.showShield then
-            selfFrame.shield:Show()
-            isUnint = true
-        else
-            selfFrame.shield:Hide()
-        end
-        
-        -- If simulating Ticks (Channel), force Channel color/glow (if shield is off)
-        -- We temporarily set .channeling to true for the Color Update function to detect it
-        if db.showChannelTicks and not isUnint then
-             selfFrame.channeling = true 
-        else
-             selfFrame.channeling = false
-        end
-        
-        self:UpdateBarColor(isUnint) -- Apply Colors/Glows
-        selfFrame.channeling = false -- Reset state after update so logic doesn't break
-        -- ==========================================
-
-        selfFrame:Show()
-        if db.showIcon and selfFrame.icon:IsShown() then selfFrame.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark") end
-        return
-    else
-        selfFrame.previewStart = nil
-    end
-
-    -- ==========================================================
-    -- LIVE GAMEPLAY LOGIC
-    -- ==========================================================
-
+    -- LIVE LOGIC
     if selfFrame.casting then
         local elap = now - (selfFrame.startTime or now)
         elap = math.max(0, math.min(elap, selfFrame.duration or 0))
@@ -1223,16 +1200,43 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
     if selfFrame.channeling then
         local rem = (selfFrame.endTime or now) - now
         rem = math.max(0, rem)
+        local dur = selfFrame.duration or 1
+        local elap = now - selfFrame.startTime
         
-        if selfFrame.isEmpowered or db.reverseChanneling then
-            -- FILLING (Reverse or Empowered)
-            local elap = now - selfFrame.startTime
-            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, selfFrame.duration))
-            Upd(elap, selfFrame.duration)
+        -- === EMPOWERED SYNC LOGIC ===
+        if selfFrame.isEmpowered then
+            -- 1. Calculate Progress %
+            local pct = 0
+            if dur > 0 then pct = elap / dur end
+            if pct > 1 then pct = 1 end
+            
+            -- 2. Determine Stage
+            local stages = selfFrame.numStages or 1
+            if stages < 1 then stages = 1 end
+            
+            -- Math: Floor(Progress * Stages) + 1. 
+            local currentStage = math.floor(pct * stages) + 1
+            if currentStage > stages then currentStage = stages end
+            
+            -- 3. Update Color ONLY if stage changed
+            if currentStage ~= selfFrame.currentStage then
+                selfFrame.currentStage = currentStage
+                self:UpdateBarColor() -- Triggers color change
+            end
+            
+            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, dur))
+            Upd(elap, dur, false) 
+            self:UpdateLatencyBar(selfFrame)
+            return
+        end
+
+        -- Standard Channel
+        if db.reverseChanneling then
+            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, dur))
+            Upd(elap, dur, false)
         else
-            -- EMPTYING (Standard Channel)
-            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, selfFrame.duration))
-            Upd(rem, selfFrame.duration)
+            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, dur))
+            Upd(rem, dur, true)
         end
         self:UpdateLatencyBar(selfFrame)
         return
@@ -1427,6 +1431,33 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) 
                             self.db.profile.channelTicksColor = {r, g, b, a} 
                         end,
+                    },
+                    headerEmpower = { name = "Empowered Spells", type = "header", order = 45 },
+                    
+                    empowerStage1Color = {
+                        name = "Stage 1 (Start)", type = "color", hasAlpha = true, order = 46,
+                        get = function(info) local c = self.db.profile.empowerStage1Color; return c[1], c[2], c[3], c[4] end,
+                        set = function(info, r, g, b, a) self.db.profile.empowerStage1Color = {r, g, b, a} end,
+                    },
+                    empowerStage2Color = {
+                        name = "Stage 2", type = "color", hasAlpha = true, order = 47,
+                        get = function(info) local c = self.db.profile.empowerStage2Color; return c[1], c[2], c[3], c[4] end,
+                        set = function(info, r, g, b, a) self.db.profile.empowerStage2Color = {r, g, b, a} end,
+                    },
+                    empowerStage3Color = {
+                        name = "Stage 3", type = "color", hasAlpha = true, order = 48,
+                        get = function(info) local c = self.db.profile.empowerStage3Color; return c[1], c[2], c[3], c[4] end,
+                        set = function(info, r, g, b, a) self.db.profile.empowerStage3Color = {r, g, b, a} end,
+                    },
+                    empowerStage4Color = {
+                        name = "Stage 4 Color", type = "color", hasAlpha = true, order = 49,
+                        get = function(info) local c = self.db.profile.empowerStage4Color; return c[1], c[2], c[3], c[4] end,
+                        set = function(info, r, g, b, a) self.db.profile.empowerStage4Color = {r, g, b, a} end,
+                    },
+                    empowerStage5Color = {
+                        name = "Stage 5 (Max Hold)", desc = "Color for the extra final stage.", type = "color", hasAlpha = true, order = 50,
+                        get = function(info) local c = self.db.profile.empowerStage5Color; return c[1], c[2], c[3], c[4] end,
+                        set = function(info, r, g, b, a) self.db.profile.empowerStage5Color = {r, g, b, a} end,
                     },
                     useChannelColor = {
                         name = "Custom Channel Color", desc="Use a specific color for channeled spells.", type = "toggle", order = 37,
