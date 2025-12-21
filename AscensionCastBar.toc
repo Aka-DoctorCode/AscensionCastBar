@@ -2,7 +2,7 @@
 ## Title: Ascension Cast Bar
 ## Notes: Customised casting bar with integration for Cooldown Manager (Ace3).
 ## Author: AkaDoctorCode
-## Version: 3.0.12
+## Version: 4.0.0
 ## SavedVariables: AscensionCastBarDB
 ## OptionalDeps: Ace3, LibSharedMedia-3.0
 
@@ -19,3 +19,8 @@
 # Libs\LibSharedMedia-3.0\lib.xml
 
 AscensionCastBar.lua
+Constants.lua
+Config.lua
+Animations.lua
+UI.lua
+Logic.lua
