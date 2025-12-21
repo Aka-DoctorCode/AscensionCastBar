@@ -17,16 +17,12 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     
     local db = self.db.profile
     local cb = self.castBar
-    
-    -- 1. ACTUALIZAR ANCLAJE Y TAMAÑO
-    self:UpdateAnchor()
-    
-    local name, _, texture, startMS, endMS, notInt, numStages
-    local startTime, endTime
-    
-    -- 2. OBTENER INFORMACIÓN DEL HECHIZO
+    if not cb then return end
+
+    -- 1. OBTENER INFORMACIÓN DEL HECHIZO
+    local name, _, texture, startMS, endMS, _, notInt, _, _, numStages
     if empowered then
-        name, _, texture, startMS, endMS, _, _, _, _, numStages = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
     elseif channel then
         name, _, texture, startMS, endMS, _, _, _, notInt = UnitChannelInfo("player")
     else
@@ -34,24 +30,58 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     end
     
     if not name or not startMS or not endMS then return end
+
+    -- EVITAR REINICIOS: Si el hechizo ya estaba activo, actualizamos tiempos pero no el inicio base
+    if (cb.casting or cb.channeling) and cb.lastSpellName == name then
+        local rawDuration = (endMS - startMS) / 1000
+        if cb.isEmpowered and cb.numStages and cb.numStages > 1 then
+            local baseStages = cb.numStages - 1
+            cb.duration = rawDuration * (cb.numStages / baseStages)
+            cb.endTime = cb.startTime + cb.duration
+        else
+            cb.endTime = endMS / 1000
+            cb.duration = rawDuration
+        end
+        cb.notInterruptible = notInt
+        -- Actualizamos ticks por si las etapas cambiaron
+        if empowered then self:UpdateTicks(cb.numStages, cb.duration) end
+        self:UpdateBarColor(notInt)
+        return
+    end
+
+    -- 2. ACTUALIZAR ANCLAJE Y TAMAÑO
+    self:UpdateAnchor()
     
-    endTime = endMS / 1000
-    startTime = startMS / 1000
-    cb.duration = (endMS - startMS) / 1000
+    local startTime = startMS / 1000
+    local rawDuration = (endMS - startMS) / 1000
+    cb.lastSpellName = name
 
     -- 3. CONFIGURAR ESTADO DE LA BARRA
     cb.casting = not channel
     cb.channeling = channel
     cb.isEmpowered = empowered
-    cb.numStages = numStages or 0
     
     if empowered then
-        if cb.numStages == 0 then cb.numStages = 5 else cb.numStages = cb.numStages + 1 end
+        -- Font of Magic (ID: 408083) aumenta las etapas máximas de 3 a 4.
+        local hasFontOfMagic = IsPlayerSpell and IsPlayerSpell(408083)
+        local baseStages = (numStages and numStages > 0) and numStages or (hasFontOfMagic and 4 or 3)
+        
+        -- Segmentación: niveles + 1 (para la fase de hold/auto-launch)
+        cb.numStages = baseStages + 1 
+        -- Estiramos la duración para que la barra no llegue al 100% y 0s al terminar de cargar,
+        -- permitiendo visualizar ese "espacio extra" posterior.
+        cb.duration = rawDuration * (cb.numStages / baseStages)
+        cb.endTime = startTime + cb.duration
+    else
+        cb.numStages = 0
+        cb.duration = rawDuration
+        cb.endTime = endMS / 1000
     end
 
     cb.startTime = startTime
-    cb.endTime = endTime
+    cb.endTime = cb.endTime or (startTime + cb.duration)
     cb.currentStage = 1 
+    cb.notInterruptible = notInt
     cb:SetScale(1.0)
     
     -- 4. ACTUALIZAR TEXTO Y VISUALES
@@ -88,16 +118,18 @@ function AscensionCastBar:HandleCastStop(event, unit)
     
     if self.castBar then
         self.castBar:SetScale(1.0)
+        self.castBar.casting = false
+        self.castBar.channeling = false
+        self.castBar.isEmpowered = false
+        self.castBar.lastSpellName = nil
+        self.castBar:Hide()
     end
-    
-    self.castBar.casting = false
-    self.castBar.channeling = false
-    self.castBar.isEmpowered = false
-    self.castBar:Hide()
 end
 
 function AscensionCastBar:StopCast()
     local cb = self.castBar
+    if not cb then return end
+
     local cname, _, ctex, cstartMS, cendMS, _, _, _, cNotInt = UnitChannelInfo("player")
     if cname then
         self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
@@ -110,7 +142,7 @@ function AscensionCastBar:StopCast()
         return
     end
     
-    cb.casting=false; cb.channeling=false
+    cb.casting=false; cb.channeling=false; cb.lastSpellName = nil
     cb.spellName:SetText(""); cb.timer:SetText("")
     cb.icon:Hide(); cb.shield:Hide()
     self:HideTicks()
@@ -119,6 +151,18 @@ function AscensionCastBar:StopCast()
     if not self.db.profile.previewEnabled then
         cb:Hide()
     end
+end
+
+function AscensionCastBar:GetEmpoweredStageWeights(numStages)
+    if numStages == 4 then -- 3 Niveles + 1 Hold
+        return {1.5, 1.0, 1.0, 1.5}
+    elseif numStages == 5 then -- 4 Niveles + 1 Hold
+        return {1.5, 1.0, 1.0, 1.0, 1.5}
+    end
+    -- Fallback: Igual duración
+    local w = {}
+    for i=1, numStages do w[i] = 1 end
+    return w
 end
 
 function AscensionCastBar:ToggleTestMode(val)
@@ -139,6 +183,7 @@ function AscensionCastBar:ToggleTestMode(val)
     else
         cb.casting = false
         cb.channeling = false
+        cb.lastSpellName = nil
         cb:Hide()
     end
 end
@@ -177,8 +222,8 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         local duration = selfFrame.duration or 1
         local endTime = selfFrame.endTime or (start + duration)
         
-        -- Loop the test mode cast
-        if db.previewEnabled and now > endTime then
+        -- Loop the test mode ONLY for the test spell
+        if db.previewEnabled and selfFrame.lastSpellName == "Test Spell" and now > endTime then
             selfFrame.startTime = now
             selfFrame.endTime = now + duration
             start = selfFrame.startTime
@@ -199,14 +244,26 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
             if selfFrame.isEmpowered then
                 local pct = math.max(0, math.min(elap / duration, 1))
                 local stages = selfFrame.numStages or 1
-                if stages < 1 then stages = 1 end
+                local weights = self:GetEmpoweredStageWeights(stages)
                 
-                local currentStage = math.floor(pct * stages) + 1
-                if currentStage > stages then currentStage = stages end
+                -- Calcular etapa actual basada en pesos
+                local currentStage = 1
+                local cumulative = 0
+                local totalWeight = 0
+                for _, w in ipairs(weights) do totalWeight = totalWeight + w end
                 
+                for i, w in ipairs(weights) do
+                    cumulative = cumulative + (w / totalWeight)
+                    if pct <= cumulative then
+                        currentStage = i
+                        break
+                    end
+                end
+                if pct > 0.99 then currentStage = stages end
+
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
-                    self:UpdateBarColor()
+                    self:UpdateBarColor(selfFrame.notInterruptible)
                 end
                 
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))

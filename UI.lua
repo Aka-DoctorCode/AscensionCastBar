@@ -372,7 +372,9 @@ function AscensionCastBar:UpdateTicks(countOrName, duration)
     if not self.db.profile.showChannelTicks then return end
     
     local count = 0
-    if type(countOrName) == "number" then
+    local isEmpowered = type(countOrName) == "number"
+
+    if isEmpowered then
         count = countOrName
     else
         count = self.CHANNEL_TICKS[countOrName]
@@ -383,19 +385,41 @@ function AscensionCastBar:UpdateTicks(countOrName, duration)
     local db = self.db.profile
     local c = db.channelTicksColor
     local thickness = db.channelTicksThickness or 1
-    local w = self.castBar:GetWidth() / count
+    local width = self.castBar:GetWidth()
     
-    for i = 1, count - 1 do
-         local tick = self.castBar.ticks[i]
-         if not tick then 
-            tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
-            self.castBar.ticks[i] = tick 
+    if isEmpowered then
+        local weights = self:GetEmpoweredStageWeights(count)
+        local totalWeight = 0
+        for _, w in ipairs(weights) do totalWeight = totalWeight + w end
+        
+        local cumulative = 0
+        for i = 1, count - 1 do
+            cumulative = cumulative + (weights[i] / totalWeight)
+            local tick = self.castBar.ticks[i]
+            if not tick then 
+                tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
+                self.castBar.ticks[i] = tick 
+            end
+            tick:ClearAllPoints()
+            tick:SetPoint("CENTER", self.castBar, "LEFT", width * cumulative, 0)
+            tick:SetSize(thickness, self.castBar:GetHeight())
+            tick:SetColorTexture(c[1], c[2], c[3], c[4])
+            tick:Show()
         end
-         tick:ClearAllPoints()
-         tick:SetPoint("CENTER", self.castBar, "LEFT", w * i, 0)
-         tick:SetSize(thickness, self.castBar:GetHeight())
-         tick:SetColorTexture(c[1], c[2], c[3], c[4])
-         tick:Show()
+    else
+        local w = width / count
+        for i = 1, count - 1 do
+             local tick = self.castBar.ticks[i]
+             if not tick then 
+                tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
+                self.castBar.ticks[i] = tick 
+            end
+             tick:ClearAllPoints()
+             tick:SetPoint("CENTER", self.castBar, "LEFT", w * i, 0)
+             tick:SetSize(thickness, self.castBar:GetHeight())
+             tick:SetColorTexture(c[1], c[2], c[3], c[4])
+             tick:Show()
+        end
     end
 end
 
