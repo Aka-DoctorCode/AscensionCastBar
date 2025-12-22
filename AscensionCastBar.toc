@@ -1,23 +1,24 @@
 ## Interface: 120000
 ## Title: Ascension Cast Bar
-## Notes: Customised casting bar with integration for Cooldown Manager (Ace3).
 ## Author: AkaDoctorCode
-## Version: 4.2.0
+## Notes: Customised casting bar with integration for Cooldown Manager (Ace3).
+## Version: 4.2.1
 ## SavedVariables: AscensionCastBarDB
 ## OptionalDeps: Ace3, LibSharedMedia-3.0
 
-# Embeds (If you use a Libs folder, otherwise ensure you have Ace3 standalone)
-# Libs\LibStub\LibStub.lua
-# Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-# Libs\AceAddon-3.0\AceAddon-3.0.xml
-# Libs\AceEvent-3.0\AceEvent-3.0.xml
-# Libs\AceDB-3.0\AceDB-3.0.xml
-# Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
-# Libs\AceConsole-3.0\AceConsole-3.0.xml
-# Libs\AceGUI-3.0\AceGUI-3.0.xml
-# Libs\AceConfig-3.0\AceConfig-3.0.xml
-# Libs\LibSharedMedia-3.0\lib.xml
+# Loading Libraries (Mandatory order)
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\LibSharedMedia-3.0\lib.xml
 
+# Addon files
 AscensionCastBar.lua
 Constants.lua
 Config.lua
