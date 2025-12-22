@@ -19,14 +19,14 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local cb = self.castBar
     if not cb then return end
 
-    -- 1. OBTENER INFORMACIÓN DEL HECHIZO
-    local name, _, texture, startMS, endMS, _, _, _, numStages
+-- 1. OBTENER INFORMACIÓN DEL HECHIZO
+    local name, _, texture, startMS, endMS, _, notInt, _, numStages
     if empowered then
-        name, _, texture, startMS, endMS, _, _, _, numStages = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
     elseif channel then
-        name, _, texture, startMS, endMS = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS, _, _, notInt = UnitChannelInfo("player")
     else
-        name, _, texture, startMS, endMS = UnitCastingInfo("player")
+        name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
     end
     
     if not name or not startMS or not endMS then return end
