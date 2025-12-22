@@ -20,13 +20,13 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     if not cb then return end
 
     -- 1. OBTENER INFORMACIÓN DEL HECHIZO
-    local name, _, texture, startMS, endMS, _, notInt, _, _, numStages
+    local name, _, texture, startMS, endMS, _, _, _, numStages
     if empowered then
-        name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS, _, _, _, numStages = UnitChannelInfo("player")
     elseif channel then
-        name, _, texture, startMS, endMS, _, _, _, notInt = UnitChannelInfo("player")
+        name, _, texture, startMS, endMS = UnitChannelInfo("player")
     else
-        name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
+        name, _, texture, startMS, endMS = UnitCastingInfo("player")
     end
     
     if not name or not startMS or not endMS then return end
@@ -42,10 +42,9 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
             cb.endTime = endMS / 1000
             cb.duration = rawDuration
         end
-        cb.notInterruptible = notInt
         -- Actualizamos ticks por si las etapas cambiaron
         if empowered then self:UpdateTicks(cb.numStages, cb.duration) end
-        self:UpdateBarColor(notInt)
+        self:UpdateBarColor()
         return
     end
 
@@ -81,7 +80,6 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     cb.startTime = startTime
     cb.endTime = cb.endTime or (startTime + cb.duration)
     cb.currentStage = 1 
-    cb.notInterruptible = notInt
     cb:SetScale(1.0)
     
     -- 4. ACTUALIZAR TEXTO Y VISUALES
@@ -92,7 +90,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
         cb.icon:Hide() 
     end
     
-    if notInt and db.showShield then cb.shield:Show() else cb.shield:Hide() end
+    cb.shield:Hide()
     
     if empowered then
         self:UpdateTicks(cb.numStages, cb.duration)
@@ -169,20 +167,38 @@ function AscensionCastBar:ToggleTestMode(val)
     local cb = self.castBar
     if not cb then return end
     
+    local db = self.db.profile
     if val then
-        cb.casting = true
+        local state = db.testModeState or "Cast"
+        cb.casting = (state == "Cast")
+        cb.channeling = (state == "Channel" or state == "Empowered")
+        cb.isEmpowered = (state == "Empowered")
+        
         cb.duration = 10
         cb.startTime = GetTime()
         cb.endTime = GetTime() + 10
-        cb.spellName:SetText("Test Spell")
+        cb.spellName:SetText("Test " .. state)
+        cb.lastSpellName = "Test Spell"
         cb.icon:SetTexture("Interface\\Icons\\Spell_Nature_Lightning")
         cb.icon:Show()
-        self:UpdateBarColor(false)
+        
+        if cb.isEmpowered then
+            local hasFontOfMagic = IsPlayerSpell and IsPlayerSpell(408083)
+            cb.numStages = hasFontOfMagic and 5 or 4
+            self:UpdateTicks(cb.numStages, cb.duration)
+        elseif cb.channeling then
+            self:UpdateTicks("Test", cb.duration)
+        else
+            self:HideTicks()
+        end
+        
+        self:UpdateBarColor()
         self:UpdateAnchor()
         cb:Show()
     else
         cb.casting = false
         cb.channeling = false
+        cb.isEmpowered = false
         cb.lastSpellName = nil
         cb:Hide()
     end
@@ -263,7 +279,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
 
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
-                    self:UpdateBarColor(selfFrame.notInterruptible)
+                    self:UpdateBarColor()
                 end
                 
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))

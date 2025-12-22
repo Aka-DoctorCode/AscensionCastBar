@@ -220,7 +220,7 @@ function AscensionCastBar:UpdateBorder()
     self.castBar.border.left:SetWidth(t); self.castBar.border.right:SetWidth(t)
 end
 
-function AscensionCastBar:UpdateBarColor(isUninterruptible)
+function AscensionCastBar:UpdateBarColor()
     local db = self.db.profile
     local cb = self.castBar
     
@@ -251,18 +251,8 @@ function AscensionCastBar:UpdateBarColor(isUninterruptible)
         cb:SetScale(1.0)
     end
 
-    -- 2. SHIELD (Uninterruptible)
-    if isUninterruptible and db.showShield then 
-        local c = db.uninterruptibleColor
-        cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
-        if db.uninterruptibleBorderGlow then
-            local gc = db.uninterruptibleGlowColor
-            cb.glowFrame:SetBackdropBorderColor(gc[1], gc[2], gc[3], gc[4])
-            cb.glowFrame:Show()
-        end
-
-    -- 3. CHANNEL
-    elseif cb.channeling and db.useChannelColor then
+    -- 2. CHANNEL
+    if cb.channeling and db.useChannelColor then
         local c = db.channelColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
         if db.channelBorderGlow then
@@ -271,11 +261,13 @@ function AscensionCastBar:UpdateBarColor(isUninterruptible)
             cb.glowFrame:Show()
         end
 
-    -- 4. NORMAL CAST
+    -- 3. NORMAL CAST (Class Color)
     elseif db.useClassColor then 
         local _, playerClass = UnitClass("player")
         local classColor = (RAID_CLASS_COLORS and RAID_CLASS_COLORS[playerClass]) or {r=1,g=1,b=1}
         cb:SetStatusBarColor(classColor.r, classColor.g, classColor.b, 1)
+
+    -- 4. NORMAL CAST (Custom Color)
     else 
         local c = db.barColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4]) 

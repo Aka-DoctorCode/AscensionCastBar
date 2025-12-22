@@ -20,13 +20,8 @@ AscensionCastBar.defaults = {
         empowerStage4Color = {1, 0, 0, 1},       -- Red
         empowerStage5Color = {0.6, 0, 1, 1},     -- Purple (Default)
         
-        -- Shield/Ticks/Colors
-        showShield = true, 
-        uninterruptibleColor = {0.4, 0.4, 0.4, 1},       
-        uninterruptibleBorderGlow = true,                
-        uninterruptibleGlowColor = {1, 0, 0, 1},         
-        
         -- Channel Ticks
+        showChannelTicks = true, 
         showChannelTicks = true, 
         channelTicksColor = {1, 1, 1, 0.5},
         channelTicksThickness = 1,
@@ -75,7 +70,7 @@ AscensionCastBar.defaults = {
         
         -- CDM
         attachToCDM = false, cdmTarget = "Auto", cdmFrameName = "CooldownManagerFrame", cdmYOffset = -5,
-        previewEnabled = false, 
+        previewEnabled = false, testModeState = "Cast",
     }
 }
 
@@ -114,6 +109,16 @@ function AscensionCastBar:SetupOptions()
                         order = 3,
                         get = function(info) return self.db.profile.previewEnabled end,
                         set = function(info, val) self.db.profile.previewEnabled = val; self:ToggleTestMode(val) end,
+                    },
+                    testModeState = {
+                        name = "Test State",
+                        desc = "Select which type of cast to simulate.",
+                        type = "select",
+                        order = 3.5,
+                        values = {["Cast"]="Cast", ["Channel"]="Channel", ["Empowered"]="Empowered"},
+                        disabled = function() return not self.db.profile.previewEnabled end,
+                        get = function(info) return self.db.profile.testModeState end,
+                        set = function(info, val) self.db.profile.testModeState = val; self:ToggleTestMode(true) end,
                     },
                     hideBlizzard = {
                         name = "Hide Blizzard Castbar",
@@ -212,29 +217,6 @@ function AscensionCastBar:SetupOptions()
                     },
                     headerCombat = { name = "Combat & Channels", type = "header", order = 30 },
                     
-                    -- SHIELD / UNINTERRUPTIBLE
-                    showShield = {
-                        name = "Uninterruptible Shield", type = "toggle", order = 31,
-                        get = function(info) return self.db.profile.showShield end,
-                        set = function(info, val) self.db.profile.showShield = val end,
-                    },
-                    uninterruptibleColor = {
-                        name = "Shield Bar Color", type = "color", hasAlpha = true, order = 32,
-                        get = function(info) local c = self.db.profile.uninterruptibleColor; return c[1], c[2], c[3], c[4] end,
-                        set = function(info, r, g, b, a) self.db.profile.uninterruptibleColor = {r, g, b, a}; end,
-                    },
-                    uninterruptibleBorderGlow = {
-                        name = "Shield Glow", desc="Glow the border when uninterruptible.", type = "toggle", order = 33,
-                        get = function(info) return self.db.profile.uninterruptibleBorderGlow end,
-                        set = function(info, val) self.db.profile.uninterruptibleBorderGlow = val end,
-                    },
-                    uninterruptibleGlowColor = {
-                        name = "Shield Glow Color", type = "color", hasAlpha = true, order = 34,
-                        disabled = function() return not self.db.profile.uninterruptibleBorderGlow end,
-                        get = function(info) local c = self.db.profile.uninterruptibleGlowColor; return c[1], c[2], c[3], c[4] end,
-                        set = function(info, r, g, b, a) self.db.profile.uninterruptibleGlowColor = {r, g, b, a}; end,
-                    },
-
                     -- CHANNELS
                     spacer1 = { name = " ", type = "description", order = 35 },
                     showChannelTicks = {
@@ -317,7 +299,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.reverseChanneling = val end,
                     },
                     showLatency = {
-                        name = "Show Latency", type = "toggle", order = 34,
+                        name = "Show Latency", type = "toggle", order = 34.5,
                         get = function(info) return self.db.profile.showLatency end,
                         set = function(info, val) self.db.profile.showLatency = val end,
                     },
@@ -397,7 +379,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.animStyle = val end,
                     },
                     sparkIntensity = {
-                        name = "Intensity", type = "range", min=0, max=1, step=0.05, order=3,
+                        name = "Intensity", type = "range", min=0, max=5, step=0.05, order=3,
                         get = function(info) return self.db.profile.sparkIntensity end,
                         set = function(info, val) self.db.profile.sparkIntensity = val end,
                     },
@@ -406,10 +388,101 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.sparkScale end,
                         set = function(info, val) self.db.profile.sparkScale = val; self:UpdateSparkSize() end,
                     },
+                    sparkOffset = {
+                        name = "Horizontal Offset", type = "range", min=-100, max=100, step=0.1, order=4.5,
+                        get = function(info) return self.db.profile.sparkOffset end,
+                        set = function(info, val) self.db.profile.sparkOffset = val end,
+                    },
                     sparkColor = {
-                        name = "Spark Color", type = "color", hasAlpha = true, order=5,
+                        name = "Spark Head Color", type = "color", hasAlpha = true, order=5,
                         get = function(info) local c = self.db.profile.sparkColor; return c[1], c[2], c[3], c[4] end,
                         set = function(info, r, g, b, a) self.db.profile.sparkColor = {r,g,b,a}; self:UpdateSparkColors() end,
+                    },
+                    headerTails = { name = "Individual Tail Settings", type = "header", order = 10 },
+                    enableTails = {
+                        name = "Enable Tails", type = "toggle", order = 11,
+                        get = function(info) return self.db.profile.enableTails end,
+                        set = function(info, val) self.db.profile.enableTails = val end,
+                    },
+                    tail1Group = {
+                        name = "Tail 1 (Primary)", type = "group", inline = true, order = 12,
+                        args = {
+                            color = {
+                                name = "Color", type = "color", hasAlpha = true, order = 1,
+                                get = function(info) local c = self.db.profile.tail1Color; return c[1], c[2], c[3], c[4] end,
+                                set = function(info, r, g, b, a) self.db.profile.tail1Color = {r,g,b,a}; self:UpdateSparkColors() end,
+                            },
+                            intensity = {
+                                name = "Intensity", type = "range", min=0, max=5, step=0.05, order = 2,
+                                get = function(info) return self.db.profile.tail1Intensity end,
+                                set = function(info, val) self.db.profile.tail1Intensity = val end,
+                            },
+                            length = {
+                                name = "Length", type = "range", min=10, max=400, step=1, order = 3,
+                                get = function(info) return self.db.profile.tail1Length end,
+                                set = function(info, val) self.db.profile.tail1Length = val; self:UpdateSparkSize() end,
+                            },
+                        }
+                    },
+                    tail2Group = {
+                        name = "Tail 2", type = "group", inline = true, order = 13,
+                        args = {
+                            color = {
+                                name = "Color", type = "color", hasAlpha = true, order = 1,
+                                get = function(info) local c = self.db.profile.tail2Color; return c[1], c[2], c[3], c[4] end,
+                                set = function(info, r, g, b, a) self.db.profile.tail2Color = {r,g,b,a}; self:UpdateSparkColors() end,
+                            },
+                            intensity = {
+                                name = "Intensity", type = "range", min=0, max=5, step=0.05, order = 2,
+                                get = function(info) return self.db.profile.tail2Intensity end,
+                                set = function(info, val) self.db.profile.tail2Intensity = val end,
+                            },
+                            length = {
+                                name = "Length", type = "range", min=10, max=400, step=1, order = 3,
+                                get = function(info) return self.db.profile.tail2Length end,
+                                set = function(info, val) self.db.profile.tail2Length = val; self:UpdateSparkSize() end,
+                            },
+                        }
+                    },
+                    tail3Group = {
+                        name = "Tail 3", type = "group", inline = true, order = 14,
+                        args = {
+                            color = {
+                                name = "Color", type = "color", hasAlpha = true, order = 1,
+                                get = function(info) local c = self.db.profile.tail3Color; return c[1], c[2], c[3], c[4] end,
+                                set = function(info, r, g, b, a) self.db.profile.tail3Color = {r,g,b,a}; self:UpdateSparkColors() end,
+                            },
+                            intensity = {
+                                name = "Intensity", type = "range", min=0, max=5, step=0.05, order = 2,
+                                get = function(info) return self.db.profile.tail3Intensity end,
+                                set = function(info, val) self.db.profile.tail3Intensity = val end,
+                            },
+                            length = {
+                                name = "Length", type = "range", min=10, max=400, step=1, order = 3,
+                                get = function(info) return self.db.profile.tail3Length end,
+                                set = function(info, val) self.db.profile.tail3Length = val; self:UpdateSparkSize() end,
+                            },
+                        }
+                    },
+                    tail4Group = {
+                        name = "Tail 4", type = "group", inline = true, order = 15,
+                        args = {
+                            color = {
+                                name = "Color", type = "color", hasAlpha = true, order = 1,
+                                get = function(info) local c = self.db.profile.tail4Color; return c[1], c[2], c[3], c[4] end,
+                                set = function(info, r, g, b, a) self.db.profile.tail4Color = {r,g,b,a}; self:UpdateSparkColors() end,
+                            },
+                            intensity = {
+                                name = "Intensity", type = "range", min=0, max=5, step=0.05, order = 2,
+                                get = function(info) return self.db.profile.tail4Intensity end,
+                                set = function(info, val) self.db.profile.tail4Intensity = val end,
+                            },
+                            length = {
+                                name = "Length", type = "range", min=10, max=400, step=1, order = 3,
+                                get = function(info) return self.db.profile.tail4Length end,
+                                set = function(info, val) self.db.profile.tail4Length = val; self:UpdateSparkSize() end,
+                            },
+                        }
                     },
                 }
             },
