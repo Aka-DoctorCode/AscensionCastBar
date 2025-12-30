@@ -8,6 +8,19 @@ local LSM = LibStub("LibSharedMedia-3.0")
 
 local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
 
+-- Función auxiliar para copiar tablas
+local function CopyTable(orig)
+    local copy = {}
+    for key, value in pairs(orig) do
+        if type(value) == "table" then
+            copy[key] = CopyTable(value)
+        else
+            copy[key] = value
+        end
+    end
+    return copy
+end
+
 AscensionCastBar.defaults = {
     profile = {
         -- Attached Settings
@@ -121,6 +134,55 @@ AscensionCastBar.defaults = {
         cdmYOffset = -5,
         previewEnabled = false,
         testModeState = "Cast",
+
+        -- Animation Parameters by Style
+        animationParams = {
+            Comet = {
+                tailOffset = -14.68,
+                headLengthOffset = -23,
+                tailLength = 200,
+            },
+            Orb = {
+                rotationSpeed = 8,
+                radiusMultiplier = 0.4,
+                glowPulse = 1.0,
+            },
+            Pulse = {
+                maxScale = 2.5,
+                rippleCycle = 1,
+                fadeSpeed = 1.0,
+            },
+            Starfall = {
+                fallSpeed = 2.5,
+                swayAmount = 8,
+                particleSpeed = 3.8,
+            },
+            Flux = {
+                jitterY = 3.5,
+                jitterX = 2.5,
+                driftMultiplier = 0.05,
+            },
+            Helix = {
+                driftMultiplier = 0.1,
+                amplitude = 0.4,
+                waveSpeed = 8,
+            },
+            Wave = {
+                waveCount = 3,
+                waveSpeed = 0.4,
+                amplitude = 0.05,
+                waveWidth = 0.25,
+            },
+            Glitch = {
+                glitchChance = 0.1,
+                maxOffset = 5,
+                colorIntensity = 0.3,
+            },
+            Lightning = {
+                lightningChance = 0.3,
+                segmentCount = 3,
+            }
+        }
     }
 }
 
@@ -679,8 +741,8 @@ function AscensionCastBar:SetupOptions()
                     },
                 }
             },
-            effects = {
-                name = "Effects",
+            animation = {
+                name = "Animation",
                 type = "group",
                 order = 4,
                 args = {
@@ -700,19 +762,400 @@ function AscensionCastBar:SetupOptions()
                             ["Orb"] = "Orb",
                             ["Flux"] = "Flux",
                             ["Helix"] = "Helix",
-                            ["Vortex"] = "Vortex",
                             ["Pulse"] = "Pulse",
                             ["Starfall"] = "Starfall",
                             ["Wave"] = "Wave",
-                            ["Particles"] = "Particles",
-                            ["Scanline"] = "Scanline",
                             ["Glitch"] = "Glitch",
                             ["Lightning"] = "Lightning",
-                            ["Rainbow"] = "Rainbow"
                         },
                         get = function(info) return self.db.profile.animStyle end,
-                        set = function(info, val) self.db.profile.animStyle = val end,
+                        set = function(info, val)
+                            self.db.profile.animStyle = val
+                            -- Asegurarnos de que los parámetros existan para el estilo seleccionado
+                            if not self.db.profile.animationParams[val] then
+                                self.db.profile.animationParams[val] = CopyTable(self.ANIMATION_STYLE_PARAMS[val])
+                            end
+                        end,
                     },
+
+                    -- PARÁMETROS ESPECÍFICOS POR ESTILO
+                    styleSpecificGroup = {
+                        name = "Style Specific Settings",
+                        type = "group",
+                        inline = true,
+                        order = 2.5,
+                        hidden = function()
+                            local style = self.db.profile.animStyle
+                            -- Ocultar si el estilo es Comet (ya tiene sus propias opciones en Tail Settings)
+                            -- También ocultar si no hay parámetros específicos para el estilo
+                            return style == "Comet" or not self.db.profile.animationParams[style]
+                        end,
+                        args = {
+                            -- Orb Settings
+                            orbRotationSpeed = {
+                                name = "Rotation Speed",
+                                type = "range",
+                                min = 1,
+                                max = 20,
+                                step = 1,
+                                order = 1,
+                                hidden = function() return self.db.profile.animStyle ~= "Orb" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].rotationSpeed
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].rotationSpeed = val
+                                end,
+                            },
+                            orbRadius = {
+                                name = "Orb Radius",
+                                desc = "Distance from center (multiplier of bar height)",
+                                type = "range",
+                                min = 0.1,
+                                max = 1.0,
+                                step = 0.1,
+                                order = 2,
+                                hidden = function() return self.db.profile.animStyle ~= "Orb" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].radiusMultiplier
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].radiusMultiplier = val
+                                end,
+                            },
+                            orbGlowPulse = {
+                                name = "Glow Pulse",
+                                type = "range",
+                                min = 0.1,
+                                max = 2.0,
+                                step = 0.1,
+                                order = 3,
+                                hidden = function() return self.db.profile.animStyle ~= "Orb" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].glowPulse
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].glowPulse = val
+                                end,
+                            },
+
+                            -- Pulse Settings
+                            pulseMaxScale = {
+                                name = "Max Ripple Scale",
+                                type = "range",
+                                min = 1.0,
+                                max = 5.0,
+                                step = 0.1,
+                                order = 10,
+                                hidden = function() return self.db.profile.animStyle ~= "Pulse" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].maxScale
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].maxScale = val
+                                end,
+                            },
+                            pulseRippleCycle = {
+                                name = "Ripple Cycle",
+                                desc = "Speed of ripple animation",
+                                type = "range",
+                                min = 0.5,
+                                max = 3.0,
+                                step = 0.1,
+                                order = 11,
+                                hidden = function() return self.db.profile.animStyle ~= "Pulse" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].rippleCycle
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].rippleCycle = val
+                                end,
+                            },
+
+                            -- Starfall Settings
+                            starfallFallSpeed = {
+                                name = "Fall Speed",
+                                type = "range",
+                                min = 1.0,
+                                max = 10.0,
+                                step = 0.5,
+                                order = 20,
+                                hidden = function() return self.db.profile.animStyle ~= "Starfall" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].fallSpeed
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].fallSpeed = val
+                                end,
+                            },
+                            starfallSwayAmount = {
+                                name = "Sway Amount",
+                                type = "range",
+                                min = 0,
+                                max = 20,
+                                step = 1,
+                                order = 21,
+                                hidden = function() return self.db.profile.animStyle ~= "Starfall" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].swayAmount
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].swayAmount = val
+                                end,
+                            },
+
+                            -- Flux Settings
+                            fluxJitterY = {
+                                name = "Vertical Jitter",
+                                type = "range",
+                                min = 1.0,
+                                max = 10.0,
+                                step = 0.5,
+                                order = 30,
+                                hidden = function() return self.db.profile.animStyle ~= "Flux" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].jitterY
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].jitterY = val
+                                end,
+                            },
+                            fluxJitterX = {
+                                name = "Horizontal Jitter",
+                                type = "range",
+                                min = 1.0,
+                                max = 10.0,
+                                step = 0.5,
+                                order = 31,
+                                hidden = function() return self.db.profile.animStyle ~= "Flux" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].jitterX
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].jitterX = val
+                                end,
+                            },
+
+                            -- Helix Settings
+                            helixDriftMultiplier = {
+                                name = "Drift Multiplier",
+                                type = "range",
+                                min = 0.01,
+                                max = 0.3,
+                                step = 0.01,
+                                order = 40,
+                                hidden = function() return self.db.profile.animStyle ~= "Helix" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].driftMultiplier
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].driftMultiplier = val
+                                end,
+                            },
+                            helixAmplitude = {
+                                name = "Wave Amplitude",
+                                desc = "Height of the wave (multiplier of bar height)",
+                                type = "range",
+                                min = 0.1,
+                                max = 1.0,
+                                step = 0.1,
+                                order = 41,
+                                hidden = function() return self.db.profile.animStyle ~= "Helix" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].amplitude
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].amplitude = val
+                                end,
+                            },
+                            helixWaveSpeed = {
+                                name = "Wave Speed",
+                                type = "range",
+                                min = 1,
+                                max = 20,
+                                step = 1,
+                                order = 42,
+                                hidden = function() return self.db.profile.animStyle ~= "Helix" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].waveSpeed
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].waveSpeed = val
+                                end,
+                            },
+
+                            -- Wave Settings
+                            waveCount = {
+                                name = "Number of Waves",
+                                type = "range",
+                                min = 1,
+                                max = 10,
+                                step = 1,
+                                order = 50,
+                                hidden = function() return self.db.profile.animStyle ~= "Wave" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].waveCount
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].waveCount = val
+                                end,
+                            },
+                            waveSpeed = {
+                                name = "Wave Speed",
+                                type = "range",
+                                min = 0.1,
+                                max = 2.0,
+                                step = 0.1,
+                                order = 51,
+                                hidden = function() return self.db.profile.animStyle ~= "Wave" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].waveSpeed
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].waveSpeed = val
+                                end,
+                            },
+                            waveAmplitude = {
+                                name = "Wave Amplitude",
+                                desc = "Height of the wave (multiplier of bar height)",
+                                type = "range",
+                                min = 0.01,
+                                max = 0.2,
+                                step = 0.01,
+                                order = 52,
+                                hidden = function() return self.db.profile.animStyle ~= "Wave" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].amplitude
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].amplitude = val
+                                end,
+                            },
+                            waveWidth = {
+                                name = "Wave Width",
+                                desc = "Width of each wave (multiplier of bar width)",
+                                type = "range",
+                                min = 0.1,
+                                max = 0.5,
+                                step = 0.05,
+                                order = 53,
+                                hidden = function() return self.db.profile.animStyle ~= "Wave" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].waveWidth
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].waveWidth = val
+                                end,
+                            },
+                            -- Glitch Settings
+                            glitchChance = {
+                                name = "Glitch Chance",
+                                desc = "Probability of glitch effect",
+                                type = "range",
+                                min = 0.01,
+                                max = 0.5,
+                                step = 0.01,
+                                order = 70,
+                                hidden = function() return self.db.profile.animStyle ~= "Glitch" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].glitchChance
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].glitchChance = val
+                                end,
+                            },
+                            glitchMaxOffset = {
+                                name = "Max Glitch Offset",
+                                type = "range",
+                                min = 1,
+                                max = 20,
+                                step = 1,
+                                order = 71,
+                                hidden = function() return self.db.profile.animStyle ~= "Glitch" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].maxOffset
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].maxOffset = val
+                                end,
+                            },
+
+                            -- Lightning Settings
+                            lightningChance = {
+                                name = "Lightning Chance",
+                                type = "range",
+                                min = 0.1,
+                                max = 1.0,
+                                step = 0.1,
+                                order = 80,
+                                hidden = function() return self.db.profile.animStyle ~= "Lightning" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].lightningChance
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].lightningChance = val
+                                end,
+                            },
+                            lightningSegmentCount = {
+                                name = "Segment Count",
+                                desc = "Number of lightning segments",
+                                type = "range",
+                                min = 1,
+                                max = 10,
+                                step = 1,
+                                order = 81,
+                                hidden = function() return self.db.profile.animStyle ~= "Lightning" end,
+                                get = function(info)
+                                    local style = self.db.profile.animStyle
+                                    return self.db.profile.animationParams[style].segmentCount
+                                end,
+                                set = function(info, val)
+                                    local style = self.db.profile.animStyle
+                                    self.db.profile.animationParams[style].segmentCount = val
+                                end,
+                            },
+                        }
+                    },
+
+                    headerTailSettings = { name = "Tail Settings", type = "header", order = 10 },
                     sparkIntensity = {
                         name = "Intensity",
                         type = "range",
@@ -757,7 +1200,6 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.sparkColor = { r, g, b, a }; self:UpdateSparkColors()
                         end,
                     },
-                    headerTails = { name = "Individual Tail Settings", type = "header", order = 10 },
                     enableTails = {
                         name = "Enable Tails",
                         type = "toggle",
@@ -932,6 +1374,22 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                         }
+                    },
+
+                    -- Botón de reset
+                    resetStyleSettings = {
+                        name = "Reset Current Style",
+                        desc = "Reset all parameters for the current animation style to defaults",
+                        type = "execute",
+                        order = 100,
+                        func = function()
+                            local currentStyle = self.db.profile.animStyle
+                            if currentStyle and AscensionCastBar.ANIMATION_STYLE_PARAMS[currentStyle] then
+                                self.db.profile.animationParams[currentStyle] = CopyTable(AscensionCastBar
+                                    .ANIMATION_STYLE_PARAMS[currentStyle])
+                                AscensionCastBar:RefreshConfig()
+                            end
+                        end,
                     },
                 }
             },

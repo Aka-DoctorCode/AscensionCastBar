@@ -317,3 +317,19 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         selfFrame:Hide()
     end
 end
+
+-- Asegurarse de que los parámetros de animación estén inicializados
+function AscensionCastBar:InitializeAnimationParams()
+    if not self.db.profile.animationParams then
+        self.db.profile.animationParams = {}
+    end
+
+    -- Inicializar cada estilo si no existe
+    for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS) do
+        if not self.db.profile.animationParams[styleName] then
+            self.db.profile.animationParams[styleName] = CopyTable(defaults)
+        end
+    end
+end
+
+-- Llamar a esta función en OnEnable o RefreshConfig
