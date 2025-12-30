@@ -8,18 +8,18 @@ local LSM = LibStub("LibSharedMedia-3.0")
 -- ==========================================================
 
 function AscensionCastBar:CreateBar()
-    -- Creamos un marco invisible que servirá de ancla fija
+    -- Create an invisible anchor frame
     if not self.anchorFrame then
         self.anchorFrame = CreateFrame("Frame", nil, UIParent)
     end
-    self.anchorFrame:SetSize(1, 1) -- Tamaño mínimo, solo para posicionar
+    self.anchorFrame:SetSize(1, 1) -- Minimal size, just for positioning
 
-    -- IMPORTANTE: La barra ahora es hija de 'self.anchorFrame'
+    -- IMPORTANT: The cast bar is now a child of 'self.anchorFrame'
     local castBar = CreateFrame("StatusBar", "AscensionCastBarFrame", self.anchorFrame)
     castBar:SetClipsChildren(false)
     castBar:SetSize(self.db.profile.width, self.db.profile.height)
 
-    -- La barra siempre se queda en el centro exacto (0,0) de su padre invisible
+    -- The bar always stays in the exact center (0,0) of its invisible parent
     castBar:ClearAllPoints()
     castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
 
@@ -120,48 +120,79 @@ function AscensionCastBar:UpdateAnchor()
     if not self.anchorFrame or not self.castBar then return end
 
     local targetFrame = nil
+    local useAttached = false
 
-    -- 1. Attempt to find the CDM Target if enabled
-    if db.attachToCDM then
-        if db.cdmTarget == "Auto" then
-            -- Check common frames
-            targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
-        elseif db.cdmTarget == "Buffs" then
-            targetFrame = _G["TrackedBuffsViewer"] or _G["TrackedBuffsFrame"]
-        elseif db.cdmTarget == "Essential" then
-            targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
-        elseif db.cdmTarget == "Utility" then
-            targetFrame = _G["UtilityCooldownViewer"] or _G["UtilityCooldownsFrame"]
-        else -- Custom
-            if db.cdmFrameName then
-                targetFrame = _G[db.cdmFrameName]
+    -- 1. Determine if we should use attached mode
+    if db.testAttached or db.attachToCDM then
+        -- In testAttached mode OR when attachToCDM is enabled
+        if db.attachToCDM then
+            -- Only try to find actual CDM frame if attachToCDM is true
+            if db.cdmTarget == "Auto" then
+                targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
+            elseif db.cdmTarget == "Buffs" then
+                targetFrame = _G["TrackedBuffsViewer"] or _G["TrackedBuffsFrame"]
+            elseif db.cdmTarget == "Essential" then
+                targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
+            elseif db.cdmTarget == "Utility" then
+                targetFrame = _G["UtilityCooldownViewer"] or _G["UtilityCooldownsFrame"]
+            else -- Custom
+                if db.cdmFrameName then
+                    targetFrame = _G[db.cdmFrameName]
+                end
+            end
+        end
+
+        -- Check if we have a valid target frame OR we're in testAttached mode
+        if db.testAttached or (targetFrame and type(targetFrame) == "table" and targetFrame.GetWidth and targetFrame:IsVisible()) then
+            useAttached = true
+
+            -- If we're in testAttached mode but no target frame exists, simulate one
+            if db.testAttached and not targetFrame then
+                targetFrame = {
+                    GetWidth = function() return db.manualWidth end,
+                    GetHeight = function() return 30 end,
+                    IsVisible = function() return true end
+                }
             end
         end
     end
 
-    -- 2. Determine Mode: Attached vs Manual
-    local useAttached = false
-    if targetFrame and type(targetFrame) == "table" and targetFrame.GetWidth and targetFrame:IsVisible() then
-        useAttached = true
-    end
-
     if useAttached then
         -- === ATTACHED MODE ===
-        self.anchorFrame:ClearAllPoints()
-        self.anchorFrame:SetPoint("TOP", targetFrame, "BOTTOM", 0, db.cdmYOffset)
-
-        -- Match CDM Width
-        local width = targetFrame:GetWidth()
-        if width and width > 10 then
-            self.castBar:SetWidth(width)
-        else
-            self.castBar:SetWidth(db.width) -- Fallback if width read fails
+        if db.testAttached and not self.testAttachedFrame then
+            -- Create a simulated frame for testing attached position
+            self.testAttachedFrame = CreateFrame("Frame", nil, UIParent)
+            self.testAttachedFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
+            self.testAttachedFrame:SetSize(db.manualWidth, 30)
         end
 
-        -- Use Attached Height
-        self.castBar:SetHeight(db.height)
-    else
+        local actualFrame = targetFrame or self.testAttachedFrame
+        if not actualFrame then
+            -- Fallback to manual mode if no frame
+            useAttached = false
+        else
+            self.anchorFrame:ClearAllPoints()
+            self.anchorFrame:SetPoint("TOP", actualFrame, "BOTTOM", 0, db.cdmYOffset)
+
+            -- Match target frame width
+            local width = actualFrame:GetWidth()
+            if width and width > 10 then
+                self.castBar:SetWidth(width)
+            else
+                self.castBar:SetWidth(db.manualWidth) -- Fallback
+            end
+
+            -- Use Attached Height
+            self.castBar:SetHeight(db.height)
+        end
+    end
+
+    if not useAttached then
         -- === MANUAL / FALLBACK MODE ===
+        if self.testAttachedFrame then
+            self.testAttachedFrame:Hide()
+        end
+
         self.anchorFrame:ClearAllPoints()
         self.anchorFrame:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
 
@@ -206,7 +237,7 @@ function AscensionCastBar:InitCDMHooks()
         if self.lastHookedFrame ~= targetFrame then
             self.lastHookedFrame = targetFrame
 
-            -- Usamos hooksecurefunc como hace SCRB para una sincronización perfecta
+            -- Use hooksecurefunc for perfect sync
             local hookFunc = function()
                 if self.db.profile.attachToCDM and self.lastHookedFrame == targetFrame then
                     self:UpdateAnchor()
@@ -217,7 +248,7 @@ function AscensionCastBar:InitCDMHooks()
                 hooksecurefunc(targetFrame, "SetSize", hookFunc)
                 hooksecurefunc(targetFrame, "Show", hookFunc)
                 hooksecurefunc(targetFrame, "Hide", hookFunc)
-                -- También mantenemos los hooks de scripts por si acaso
+                -- Keep script hooks just in case
                 self:HookScript(targetFrame, "OnShow", "UpdateAnchor")
                 self:HookScript(targetFrame, "OnHide", "UpdateAnchor")
                 self:HookScript(targetFrame, "OnSizeChanged", "UpdateAnchor")
@@ -226,7 +257,7 @@ function AscensionCastBar:InitCDMHooks()
         self:UpdateAnchor()
         self.cdmRetryCount = 0
     else
-        -- Reintentar con un contador de seguridad
+        -- Retry with safety counter
         self.cdmRetryCount = (self.cdmRetryCount or 0) + 1
         if self.cdmRetryCount < 15 then
             C_Timer.After(2, function() self:InitCDMHooks() end)

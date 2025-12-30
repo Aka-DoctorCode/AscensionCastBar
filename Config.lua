@@ -10,22 +10,26 @@ local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf
 
 AscensionCastBar.defaults = {
     profile = {
-        width = 270,
+        -- Attached Settings
         height = 24,
+        testAttached = false, -- Nuevo: Para probar modo pegado
+
+        -- Manual / Fallback Settings
+        manualWidth = 270,
+        manualHeight = 24,
         point = "CENTER",
         relativePoint = "CENTER",
-        x = 0,
-        y = -85,
+        manualX = 0,
+        manualY = -85,
 
         -- Empower Colors
-        empowerStage1Color = { 0, 1, 0, 1 },  -- Green
-        empowerStage2Color = { 1, 1, 0, 1 },  -- Yellow
+        empowerStage1Color = { 0, 1, 0, 1 },    -- Green
+        empowerStage2Color = { 1, 1, 0, 1 },    -- Yellow
         empowerStage3Color = { 1, 0.64, 0, 1 }, -- Orange
-        empowerStage4Color = { 1, 0, 0, 1 },  -- Red
-        empowerStage5Color = { 0.6, 0, 1, 1 }, -- Purple (Default)
+        empowerStage4Color = { 1, 0, 0, 1 },    -- Red
+        empowerStage5Color = { 0.6, 0, 1, 1 },  -- Purple (Default)
 
         -- Channel Ticks
-        showChannelTicks = true,
         showChannelTicks = true,
         channelTicksColor = { 1, 1, 1, 0.5 },
         channelTicksThickness = 1,
@@ -117,12 +121,6 @@ AscensionCastBar.defaults = {
         cdmYOffset = -5,
         previewEnabled = false,
         testModeState = "Cast",
-
-        -- Fallback Defaults
-        manualWidth = 270,
-        manualHeight = 24,
-        manualX = 0,
-        manualY = -85,
     }
 }
 
@@ -131,6 +129,18 @@ AscensionCastBar.defaults = {
 -- ==========================================================
 
 function AscensionCastBar:SetupOptions()
+    local anchors = {
+        ["CENTER"] = "Center",
+        ["TOP"] = "Top",
+        ["BOTTOM"] = "Bottom",
+        ["LEFT"] = "Left",
+        ["RIGHT"] = "Right",
+        ["TOPLEFT"] = "Top Left",
+        ["TOPRIGHT"] = "Top Right",
+        ["BOTTOMLEFT"] = "Bottom Left",
+        ["BOTTOMRIGHT"] = "Bottom Right",
+    }
+
     local options = {
         name = ADDON_NAME,
         handler = AscensionCastBar,
@@ -141,14 +151,30 @@ function AscensionCastBar:SetupOptions()
                 type = "group",
                 order = 1,
                 args = {
-                    -- ATTACHED SETTINGS (Visible only when attached)
+                    -- ==========================================
+                    -- 1. ATTACHED SETTINGS
+                    -- ==========================================
                     headerAttached = {
-                        name = "Attached Settings",
+                        name = "Attached Settings (Active when CDM is used)",
                         type = "header",
                         order = 0,
                         hidden = function() return not self.db.profile.attachToCDM end
                     },
-                    height = { -- This acts as "Attached Height"
+                    testAttached = {
+                        name = "Test Attached Mode",
+                        desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
+                        type = "toggle",
+                        order = 0.5,
+                        hidden = function() return not self.db.profile.attachToCDM end,
+                        get = function(info) return self.db.profile.testAttached end,
+                        set = function(info, val)
+                            self.db.profile.testAttached = val
+                            self.db.profile.previewEnabled = val -- Auto-enable preview
+                            self:ToggleTestMode(val)
+                            self:UpdateAnchor()                  -- Force update
+                        end,
+                    },
+                    height = {
                         name = "Height (Attached)",
                         type = "range",
                         min = 10,
@@ -165,47 +191,57 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    -- MANUAL SETTINGS (Visible when CDM is disabled)
+                    -- ==========================================
+                    -- 2. MANUAL SETTINGS
+                    -- ==========================================
                     headerManual = {
-                        name = "Manual Position & Size",
+                        name = "Manual Position & Size (Fallback / Default)",
                         type = "header",
                         order = 10,
-                        hidden = function() return self.db.profile.attachToCDM end,
+                    },
+                    -- Position Controls
+                    point = {
+                        name = "Anchor Point",
+                        type = "select",
+                        values = anchors,
+                        order = 11,
+                        get = function(info) return self.db.profile.point end,
+                        set = function(info, val)
+                            self.db.profile.point = val; self:UpdateAnchor()
+                        end,
                     },
                     manualX = {
-                        name = "X Position",
+                        name = "X Offset",
                         type = "range",
-                        min = -1000,
-                        max = 1000,
+                        min = -2000,
+                        max = 2000,
                         step = 1,
-                        order = 11,
-                        hidden = function() return self.db.profile.attachToCDM end,
+                        order = 12,
                         get = function(info) return self.db.profile.manualX end,
                         set = function(info, val)
                             self.db.profile.manualX = val; self:UpdateAnchor()
                         end,
                     },
                     manualY = {
-                        name = "Y Position",
+                        name = "Y Offset",
                         type = "range",
-                        min = -1000,
-                        max = 1000,
+                        min = -2000,
+                        max = 2000,
                         step = 1,
-                        order = 12,
-                        hidden = function() return self.db.profile.attachToCDM end,
+                        order = 13,
                         get = function(info) return self.db.profile.manualY end,
                         set = function(info, val)
                             self.db.profile.manualY = val; self:UpdateAnchor()
                         end,
                     },
+                    -- Size Controls
                     manualWidth = {
                         name = "Width",
                         type = "range",
                         min = 100,
-                        max = 600,
+                        max = 1000,
                         step = 1,
-                        order = 13,
-                        hidden = function() return self.db.profile.attachToCDM end,
+                        order = 14,
                         get = function(info) return self.db.profile.manualWidth end,
                         set = function(info, val)
                             self.db.profile.manualWidth = val; self:UpdateAnchor()
@@ -217,8 +253,7 @@ function AscensionCastBar:SetupOptions()
                         min = 10,
                         max = 100,
                         step = 1,
-                        order = 14,
-                        hidden = function() return self.db.profile.attachToCDM end,
+                        order = 15,
                         get = function(info) return self.db.profile.manualHeight end,
                         set = function(info, val)
                             self.db.profile.manualHeight = val
@@ -230,16 +265,45 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    -- COMMON SETTINGS
+                    -- ==========================================
+                    -- 3. COMMON OPTIONS
+                    -- ==========================================
                     headerCommon = { name = "Options", type = "header", order = 20 },
+
+                    hideDefaultCastbar = {
+                        name = "Hide Default Cast Bar",
+                        desc = "Hides the standard Blizzard casting bar.",
+                        type = "toggle",
+                        order = 21,
+                        get = function(info) return self.db.profile.hideDefaultCastbar end,
+                        set = function(info, val)
+                            self.db.profile.hideDefaultCastbar = val
+                            self:UpdateDefaultCastBarVisibility()
+                        end,
+                    },
                     preview = {
                         name = "Test Mode",
                         desc = "Show a preview cast to configure visuals.",
                         type = "toggle",
-                        order = 21,
+                        order = 22,
                         get = function(info) return self.db.profile.previewEnabled end,
                         set = function(info, val)
-                            self.db.profile.previewEnabled = val; self:ToggleTestMode(val)
+                            self.db.profile.previewEnabled = val
+                            if not val then self.db.profile.testAttached = false end -- Disable attached test if main off
+                            self:ToggleTestMode(val)
+                        end,
+                    },
+                    testModeState = {
+                        name = "Test Animation",
+                        desc = "Select the type of spell to preview.",
+                        type = "select",
+                        values = { ["Cast"] = "Cast", ["Channel"] = "Channel", ["Empowered"] = "Empowered" },
+                        order = 23,
+                        disabled = function() return not self.db.profile.previewEnabled end,
+                        get = function(info) return self.db.profile.testModeState end,
+                        set = function(info, val)
+                            self.db.profile.testModeState = val
+                            if self.db.profile.previewEnabled then self:ToggleTestMode(true) end
                         end,
                     },
                 }
@@ -451,7 +515,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage3Color = { r, g, b, a } end,
                     },
                     empowerStage4Color = {
-                        name = "Stage 4 Color",
+                        name = "Stage 4",
                         type = "color",
                         hasAlpha = true,
                         order = 49,

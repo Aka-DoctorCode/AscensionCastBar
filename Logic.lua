@@ -6,20 +6,20 @@ local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 function AscensionCastBar:HandleCastStart(event, unit, ...)
     local channel = false
     local empowered = false
-    
-    if event == "UNIT_SPELLCAST_CHANNEL_START" then 
+
+    if event == "UNIT_SPELLCAST_CHANNEL_START" then
         channel = true
-    elseif event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then 
-        channel = true; empowered = true 
+    elseif event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then
+        channel = true; empowered = true
     end
-    
+
     if unit and unit ~= "player" then return end
-    
+
     local db = self.db.profile
     local cb = self.castBar
     if not cb then return end
 
--- 1. OBTENER INFORMACIÓN DEL HECHIZO
+    -- 1. GET SPELL INFO
     local name, _, texture, startMS, endMS, _, notInt, _, numStages
     if empowered then
         name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
@@ -28,13 +28,14 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     else
         name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
     end
-    
+
     if not name or not startMS or not endMS then return end
 
-    -- EVITAR REINICIOS: Si el hechizo ya estaba activo, actualizamos tiempos pero no el inicio base
+    -- PREVENT RESTARTS: If the spell was already active, update times but not base start
     if (cb.casting or cb.channeling) and cb.lastSpellName == name then
         local rawDuration = (endMS - startMS) / 1000
-        if cb.isEmpowered and cb.numStages and cb.numStages > 1 then
+        -- Safety check: ensure numStages is valid number
+        if cb.isEmpowered and (cb.numStages and cb.numStages > 1) then
             local baseStages = cb.numStages - 1
             cb.duration = rawDuration * (cb.numStages / baseStages)
             cb.endTime = cb.startTime + cb.duration
@@ -42,33 +43,33 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
             cb.endTime = endMS / 1000
             cb.duration = rawDuration
         end
-        -- Actualizamos ticks por si las etapas cambiaron
+        -- Update ticks in case stages changed
         if empowered then self:UpdateTicks(cb.numStages, cb.duration) end
         self:UpdateBarColor()
         return
     end
 
-    -- 2. ACTUALIZAR ANCLAJE Y TAMAÑO
+    -- 2. UPDATE ANCHOR & SIZE
     self:UpdateAnchor()
-    
+
     local startTime = startMS / 1000
     local rawDuration = (endMS - startMS) / 1000
     cb.lastSpellName = name
 
-    -- 3. CONFIGURAR ESTADO DE LA BARRA
+    -- 3. CONFIGURE BAR STATE
     cb.casting = not channel
     cb.channeling = channel
     cb.isEmpowered = empowered
-    
+
     if empowered then
-        -- Font of Magic (ID: 408083) aumenta las etapas máximas de 3 a 4.
+        -- Font of Magic (ID: 408083) increases max stages from 3 to 4.
         local hasFontOfMagic = IsPlayerSpell and IsPlayerSpell(408083)
         local baseStages = (numStages and numStages > 0) and numStages or (hasFontOfMagic and 4 or 3)
-        
-        -- Segmentación: niveles + 1 (para la fase de hold/auto-launch)
-        cb.numStages = baseStages + 1 
-        -- Estiramos la duración para que la barra no llegue al 100% y 0s al terminar de cargar,
-        -- permitiendo visualizar ese "espacio extra" posterior.
+
+        -- Segmentation: levels + 1 (for the hold/auto-launch phase)
+        cb.numStages = baseStages + 1
+        -- Stretch duration so bar doesn't hit 100% and 0s immediately upon finishing charge,
+        -- allowing visualization of that "extra space" later.
         cb.duration = rawDuration * (cb.numStages / baseStages)
         cb.endTime = startTime + cb.duration
     else
@@ -79,19 +80,19 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
 
     cb.startTime = startTime
     cb.endTime = cb.endTime or (startTime + cb.duration)
-    cb.currentStage = 1 
+    cb.currentStage = 1
     cb:SetScale(1.0)
-    
-    -- 4. ACTUALIZAR TEXTO Y VISUALES
+
+    -- 4. UPDATE TEXT AND VISUALS
     cb.spellName:SetText(db.showSpellText and name or "")
-    if db.showIcon and texture then 
-        cb.icon:SetTexture(texture); cb.icon:Show() 
-    else 
-        cb.icon:Hide() 
+    if db.showIcon and texture then
+        cb.icon:SetTexture(texture); cb.icon:Show()
+    else
+        cb.icon:Hide()
     end
-    
+
     cb.shield:Hide()
-    
+
     if empowered then
         self:UpdateTicks(cb.numStages, cb.duration)
     elseif channel then
@@ -99,21 +100,21 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     else
         self:HideTicks()
     end
-    
+
     self:ApplyFont()
     self:UpdateBarColor(notInt)
     self:UpdateBorder()
     self:UpdateBackground()
     self:UpdateIcon()
     self:UpdateSparkColors()
-    
+
     cb:Show()
     cb.latency:Hide()
 end
 
 function AscensionCastBar:HandleCastStop(event, unit)
     if unit and unit ~= "player" then return end
-    
+
     if self.castBar then
         self.castBar:SetScale(1.0)
         self.castBar.casting = false
@@ -133,47 +134,47 @@ function AscensionCastBar:StopCast()
         self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
         return
     end
-    
+
     local name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
     if name then
         self:HandleCastStart("UNIT_SPELLCAST_START", "player")
         return
     end
-    
-    cb.casting=false; cb.channeling=false; cb.lastSpellName = nil
+
+    cb.casting = false; cb.channeling = false; cb.lastSpellName = nil
     cb.spellName:SetText(""); cb.timer:SetText("")
     cb.icon:Hide(); cb.shield:Hide()
     self:HideTicks()
-    self:UpdateSpark(0,0)
-    
+    self:UpdateSpark(0, 0)
+
     if not self.db.profile.previewEnabled then
         cb:Hide()
     end
 end
 
 function AscensionCastBar:GetEmpoweredStageWeights(numStages)
-    if numStages == 4 then -- 3 Niveles + 1 Hold
-        return {1.5, 1.0, 1.0, 1.5}
-    elseif numStages == 5 then -- 4 Niveles + 1 Hold
-        return {1.5, 1.0, 1.0, 1.0, 1.5}
+    if numStages == 4 then     -- 3 Levels + 1 Hold
+        return { 1.5, 1.0, 1.0, 1.5 }
+    elseif numStages == 5 then -- 4 Levels + 1 Hold
+        return { 1.5, 1.0, 1.0, 1.0, 1.5 }
     end
-    -- Fallback: Igual duración
+    -- Fallback: Equal duration
     local w = {}
-    for i=1, numStages do w[i] = 1 end
+    for i = 1, numStages do w[i] = 1 end
     return w
 end
 
 function AscensionCastBar:ToggleTestMode(val)
     local cb = self.castBar
     if not cb then return end
-    
+
     local db = self.db.profile
     if val then
         local state = db.testModeState or "Cast"
         cb.casting = (state == "Cast")
         cb.channeling = (state == "Channel" or state == "Empowered")
         cb.isEmpowered = (state == "Empowered")
-        
+
         cb.duration = 10
         cb.startTime = GetTime()
         cb.endTime = GetTime() + 10
@@ -181,7 +182,7 @@ function AscensionCastBar:ToggleTestMode(val)
         cb.lastSpellName = "Test Spell"
         cb.icon:SetTexture("Interface\\Icons\\Spell_Nature_Lightning")
         cb.icon:Show()
-        
+
         if cb.isEmpowered then
             local hasFontOfMagic = IsPlayerSpell and IsPlayerSpell(408083)
             cb.numStages = hasFontOfMagic and 5 or 4
@@ -191,16 +192,24 @@ function AscensionCastBar:ToggleTestMode(val)
         else
             self:HideTicks()
         end
-        
+
         self:UpdateBarColor()
-        self:UpdateAnchor()
+        self:UpdateAnchor() -- Make sure anchor is updated for test mode
         cb:Show()
     else
         cb.casting = false
         cb.channeling = false
         cb.isEmpowered = false
         cb.lastSpellName = nil
-        cb:Hide()
+
+        -- Clean up test attached frame
+        if self.testAttachedFrame then
+            self.testAttachedFrame:Hide()
+        end
+
+        if not db.previewEnabled then
+            cb:Hide()
+        end
     end
 end
 
@@ -211,13 +220,17 @@ end
 function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
     local now = GetTime()
     local db = self.db.profile
-    
+
     local function GetFmtTimer(rem, dur)
         if not db.showTimerText then return "" end
         local f = db.timerFormat
-        if f == "Duration" then return string.format("%.1f / %.1f", math.max(0, rem), dur) 
-        elseif f == "Total" then return string.format("%.1f", dur) 
-        else return string.format("%.1f", math.max(0, rem)) end
+        if f == "Duration" then
+            return string.format("%.1f / %.1f", math.max(0, rem), dur)
+        elseif f == "Total" then
+            return string.format("%.1f", dur)
+        else
+            return string.format("%.1f", math.max(0, rem))
+        end
     end
 
     local function Upd(val, dur, forceEmptying)
@@ -227,9 +240,9 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         if dur > 0 then prog = val / dur end
         local isEmptying = forceEmptying
         if isEmptying == nil then
-             isEmptying = (selfFrame.channeling and not selfFrame.isEmpowered and not db.reverseChanneling)
+            isEmptying = (selfFrame.channeling and not selfFrame.isEmpowered and not db.reverseChanneling)
         end
-        self:UpdateSpark(prog, isEmptying and (1-prog) or prog)
+        self:UpdateSpark(prog, isEmptying and (1 - prog) or prog)
     end
 
     if selfFrame.casting or selfFrame.channeling then
@@ -237,7 +250,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         local start = selfFrame.startTime or now
         local duration = selfFrame.duration or 1
         local endTime = selfFrame.endTime or (start + duration)
-        
+
         -- Loop the test mode ONLY for the test spell
         if db.previewEnabled and selfFrame.lastSpellName == "Test Spell" and now > endTime then
             selfFrame.startTime = now
@@ -256,18 +269,18 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
             local rem = endTime - now
             rem = math.max(0, rem)
             local elap = now - start
-            
+
             if selfFrame.isEmpowered then
                 local pct = math.max(0, math.min(elap / duration, 1))
                 local stages = selfFrame.numStages or 1
                 local weights = self:GetEmpoweredStageWeights(stages)
-                
-                -- Calcular etapa actual basada en pesos
+
+                -- Calculate current stage based on weights
                 local currentStage = 1
                 local cumulative = 0
                 local totalWeight = 0
                 for _, w in ipairs(weights) do totalWeight = totalWeight + w end
-                
+
                 for i, w in ipairs(weights) do
                     cumulative = cumulative + (w / totalWeight)
                     if pct <= cumulative then
@@ -281,9 +294,9 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
                     selfFrame.currentStage = currentStage
                     self:UpdateBarColor()
                 end
-                
+
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
-                Upd(elap, duration, false) 
+                Upd(elap, duration, false)
             elseif db.reverseChanneling then
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
                 Upd(elap, duration, false)
@@ -300,7 +313,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         selfFrame:SetValue(0); selfFrame.spellName:SetText(""); selfFrame.timer:SetText("")
         selfFrame.icon:Hide(); selfFrame.shield:Hide()
         self:HideTicks()
-        self:UpdateSpark(0,0)
+        self:UpdateSpark(0, 0)
         selfFrame:Hide()
     end
 end
