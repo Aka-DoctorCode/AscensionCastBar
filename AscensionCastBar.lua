@@ -1,7 +1,8 @@
--- AscensionCastBar.lua
--- Framework: Ace3
--- Author: AkaDoctorCode
-
+-- Happy new year everyone!
+-- Please leave feedback to improve the add on
+-- ==========================================================
+-- AscensionCastBar - Version 4.4.0
+-- ==========================================================
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 
