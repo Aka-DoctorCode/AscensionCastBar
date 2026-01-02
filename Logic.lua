@@ -20,6 +20,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     if not cb then return end
 
     -- 1. GET SPELL INFO
+    -- We use UnitCastingInfo/UnitChannelInfo to get the authoritative state
     local name, _, texture, startMS, endMS, _, notInt, _, numStages
     if empowered then
         name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
@@ -29,7 +30,11 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
         name, _, texture, startMS, endMS, _, _, _, notInt = UnitCastingInfo("player")
     end
 
-    if not name or not startMS or not endMS then return end
+    if not name or not startMS or not endMS then 
+        -- If we received a START event but there is no active cast info, hide the bar
+        self:HandleCastStop(nil, "player")
+        return 
+    end
 
     -- PREVENT RESTARTS: If the spell was already active, update times but not base start
     if (cb.casting or cb.channeling) and cb.lastSpellName == name then
@@ -115,6 +120,25 @@ end
 function AscensionCastBar:HandleCastStop(event, unit)
     if unit and unit ~= "player" then return end
 
+    -- SPELL QUEUE PROTECTION
+    -- Before hiding the bar, check if a new cast has already started.
+    -- This happens when the next spell starts before the 'STOP' event of the previous one is processed.
+    local cName = UnitCastingInfo("player")
+    local chName = UnitChannelInfo("player")
+
+    if cName then
+        -- We are casting something new, trigger start handler to ensure sync
+        self:HandleCastStart("UNIT_SPELLCAST_START", "player")
+        return
+    end
+
+    if chName then
+        -- We are channeling something new, trigger start handler
+        self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
+        return
+    end
+
+    -- If we are truly stopped, then hide
     if self.castBar then
         self.castBar:SetScale(1.0)
         self.castBar.casting = false
@@ -129,6 +153,7 @@ function AscensionCastBar:StopCast()
     local cb = self.castBar
     if not cb then return end
 
+    -- Check if we are actually casting/channeling before forcing a stop
     local cname, _, ctex, cstartMS, cendMS, _, _, _, cNotInt = UnitChannelInfo("player")
     if cname then
         self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
@@ -141,6 +166,7 @@ function AscensionCastBar:StopCast()
         return
     end
 
+    -- True stop
     cb.casting = false; cb.channeling = false; cb.lastSpellName = nil
     cb.spellName:SetText(""); cb.timer:SetText("")
     cb.icon:Hide(); cb.shield:Hide()
@@ -160,7 +186,9 @@ function AscensionCastBar:GetEmpoweredStageWeights(numStages)
     end
     -- Fallback: Equal duration
     local w = {}
-    for i = 1, numStages do w[i] = 1 end
+    if numStages and numStages > 0 then
+        for i = 1, numStages do w[i] = 1 end
+    end
     return w
 end
 
@@ -317,19 +345,3 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         selfFrame:Hide()
     end
 end
-
--- Asegurarse de que los parámetros de animación estén inicializados
-function AscensionCastBar:InitializeAnimationParams()
-    if not self.db.profile.animationParams then
-        self.db.profile.animationParams = {}
-    end
-
-    -- Inicializar cada estilo si no existe
-    for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS) do
-        if not self.db.profile.animationParams[styleName] then
-            self.db.profile.animationParams[styleName] = CopyTable(defaults)
-        end
-    end
-end
-
--- Llamar a esta función en OnEnable o RefreshConfig

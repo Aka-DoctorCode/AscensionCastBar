@@ -17,7 +17,11 @@ function AscensionCastBar:CreateBar()
     -- IMPORTANT: The cast bar is now a child of 'self.anchorFrame'
     local castBar = CreateFrame("StatusBar", "AscensionCastBarFrame", self.anchorFrame)
     castBar:SetClipsChildren(false)
-    castBar:SetSize(self.db.profile.width, self.db.profile.height)
+    
+    -- FIXED: Changed 'width' to 'manualWidth' and added safety defaults
+    local width = self.db.profile.manualWidth or 270
+    local height = self.db.profile.manualHeight or 24
+    castBar:SetSize(width, height)
 
     -- The bar always stays in the exact center (0,0) of its invisible parent
     castBar:ClearAllPoints()

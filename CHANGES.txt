@@ -1,0 +1,4 @@
+** Changes since tag V4.4.01
+- Spell queuing fix: Bar will disapear when the next spell is queued before the current spell is finished.
+- Bugs fixed: bad argument #1 to 'SetSize' and attempt to index local 'cb'.
+

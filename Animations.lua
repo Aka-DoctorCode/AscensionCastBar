@@ -421,12 +421,15 @@ function AscensionCastBar:SafeValue(val, default)
 end
 
 function AscensionCastBar:UpdateSparkColors()
-    -- Actualiza colores de todos los elementos del spark
+    local cb = self.castBar
+    -- FIXED: Added nil check for cb
+    if not cb then return end
+
     local db = self.db.profile
     local s, g = db.sparkColor, db.glowColor
 
-    if self.castBar.sparkHead then
-        self.castBar.sparkHead:SetVertexColor(s[1], s[2], s[3], s[4])
+    if cb.sparkHead then
+        cb.sparkHead:SetVertexColor(s[1], s[2], s[3], s[4])
     end
     if self.castBar.sparkGlow then
         self.castBar.sparkGlow:SetVertexColor(g[1], g[2], g[3], g[4])
@@ -449,10 +452,13 @@ function AscensionCastBar:UpdateSparkColors()
 end
 
 function AscensionCastBar:UpdateSparkSize()
-    -- Actualiza tamaños de todos los elementos del spark
+    -- Update sizes of all spark elements
+    local cb = self.castBar
+    -- FIXED: Added nil check for cb
+    if not cb then return end
+
     local db = self.db.profile
     local sc, h = db.sparkScale, db.height
-    local cb = self.castBar
 
     if cb.sparkHead then
         cb.sparkHead:SetSize(32 * sc, h * 2 * sc)
@@ -479,16 +485,17 @@ function AscensionCastBar:UpdateSparkSize()
 end
 
 function AscensionCastBar:ResetParticles()
-    -- Limpia y reinicia todas las partículas
     local cb = self.castBar
+    if not cb then return end -- Nil check added
+    
     if cb.particles then
         for _, p in ipairs(cb.particles) do
-            if p then p:Hide() end
+             if p then p:Hide() end
         end
     end
     cb.lastParticleTime = 0
 
-    -- Limpiar también otros overlays específicos
+    -- Clean up other specific overlays
     if cb.lightningSegments then
         for _, l in ipairs(cb.lightningSegments) do
             if l then l:Hide() end
@@ -598,11 +605,14 @@ function AscensionCastBar:InitializeTailMask()
 end
 
 function AscensionCastBar:UpdateSpark(progress, tailProgress)
-    -- Función principal que coordina y actualiza las animaciones
+    -- Main function coordinating animations
     local db = self.db.profile
     local castBar = self.castBar
 
-    -- Validaciones iniciales
+    -- FIXED: Added nil check for castBar
+    if not castBar then return end
+
+    -- Validations
     if not progress or type(progress) ~= "number" then
         self:HideAllSparkElements()
         return
