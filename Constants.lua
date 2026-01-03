@@ -26,6 +26,8 @@ AscensionCastBar.CHANNEL_TICKS = {
     ["Tranquilidad"] = 4,
     ["Divine hymn"] = 4,
     ["Himno divino"] = 4,
+    ["Disintegrate"] = 4,
+    ["Desintegrar"] = 4,
     -- Dracthyr / Empowered (Usually have stages)
     ["Fire Breath"] = 4,
     ["Aliento de fuego"] = 4,
