@@ -1,5 +1,5 @@
 package-as: AscensionCastBar
-enable-nolib-creation: no
+
 ignore:
     - .git
     - .gitignore
