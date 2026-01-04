@@ -1,5 +1,3 @@
--- Happy new year everyone!
--- Please leave feedback to improve the add on
 -- ==========================================================
 -- AscensionCastBar - Version 4.4.0
 -- ==========================================================
