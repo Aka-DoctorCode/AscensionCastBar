@@ -89,7 +89,14 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     cb:SetScale(1.0)
 
     -- 4. UPDATE TEXT AND VISUALS
-    cb.spellName:SetText(db.showSpellText and name or "")
+    -- Apply truncation logic if enabled
+    local displayName = name
+    if db.truncateSpellName and displayName and string.len(displayName) > db.truncateLength then
+        displayName = string.sub(displayName, 1, db.truncateLength) .. "..."
+    end
+
+    cb.spellName:SetText(db.showSpellText and displayName or "")
+
     if db.showIcon and texture then
         cb.icon:SetTexture(texture); cb.icon:Show()
     else
