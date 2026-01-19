@@ -32,6 +32,11 @@ function AscensionCastBar:OnEnable()
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "HandleCastStop")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED", "HandleCastStop")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateDefaultCastBarVisibility")
+    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "HandleSpellSucceeded")
+    self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "HandleCombatLog")
+    
+    -- Variables
+    self.lastSpellID = nil
 
     -- Empowered Events (Retail 11.0+)
     pcall(function()
@@ -45,6 +50,18 @@ function AscensionCastBar:OnEnable()
     self:RegisterChatCommand("ascensioncastbar", "OpenConfig")
 
     self:RefreshConfig()
+end
+
+function AscensionCastBar:HandleSpellSucceeded(event, unit, castGUID, spellID)
+    if unit ~= "player" then return end
+    
+    -- Store the spellID for the last successful spell
+    self.lastSpellID = spellID
+    
+    -- If we have an active cast bar, update it with the spellID
+    if self.castBar and (self.castBar.casting or self.castBar.channeling) then
+        self.castBar.lastSpellID = spellID
+    end
 end
 
 function AscensionCastBar:RefreshConfig()
@@ -188,6 +205,27 @@ function AscensionCastBar:ValidateAnimationParams()
                     params[key] = self.ANIMATION_STYLE_PARAMS[style][key] or 1.0
                 end
             end
+        end
+    end
+end
+
+function AscensionCastBar:HandleCombatLog(event, ...)
+    local timestamp, subevent, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellID, spellName = ...
+    
+    -- Only care about our own spell casts
+    if sourceGUID ~= UnitGUID("player") then return end
+    
+    -- Catch instant spell casts
+    if subevent == "SPELL_CAST_SUCCESS" then
+        -- Store the spellID
+        self.lastSpellID = spellID
+        
+        -- Check if this is likely an instant cast (no cast time)
+        local castTime = select(4, GetSpellInfo(spellID)) or 0
+        
+        if castTime == 0 and not self.castBar.casting and not self.castBar.channeling then
+            -- Flash the bar briefly for instant spells
+            self:FlashInstantSpell(spellName, spellID)
         end
     end
 end

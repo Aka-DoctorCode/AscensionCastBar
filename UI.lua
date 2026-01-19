@@ -433,21 +433,42 @@ function AscensionCastBar:HideTicks()
     for _, tick in ipairs(self.castBar.ticks) do tick:Hide() end
 end
 
-function AscensionCastBar:UpdateTicks(countOrName, duration)
+function AscensionCastBar:UpdateTicks(spellIDOrCount, duration)
     self:HideTicks()
     if not self.db.profile.showChannelTicks then return end
 
     local count = 0
-    local isEmpowered = type(countOrName) == "number"
-
+    
+    -- Determinar si es empowered (número pequeño) o spellID (número grande)
+    local isEmpowered = (type(spellIDOrCount) == "number" and spellIDOrCount < 1000)
+    
     if isEmpowered then
-        count = countOrName
+        -- Es un conteo de etapas para empowered spells
+        count = spellIDOrCount
+    elseif type(spellIDOrCount) == "number" then
+        -- Es un spellID - usar el nuevo sistema condicional
+        count = self:CalculateTicks(spellIDOrCount)
+        
+        -- Si es 0, intentar con tabla legada por nombre (fallback)
+        if count == 0 and self.castBar.lastSpellName then
+            count = self.CHANNEL_TICKS_LEGACY[self.castBar.lastSpellName] or 0
+        end
+    elseif type(spellIDOrCount) == "string" then
+        -- Es un string (nombre del hechizo) - usar tabla legada
+        count = self.CHANNEL_TICKS_LEGACY[spellIDOrCount] or 0
     else
-        count = self.CHANNEL_TICKS[countOrName]
+        count = 0
     end
 
-    if not count or count < 1 then return end
+    -- Si aún es 0 y es un canal largo, calcular aproximación
+    if count == 0 and duration and duration > 2 then
+        count = math.floor(duration / 0.75)  -- Aprox 1 tick cada 0.75s
+        count = math.min(count, 10)  -- Máximo 10 ticks
+    end
 
+    if count < 1 then return end
+
+    -- Resto del código para dibujar ticks (mantener igual)...
     local db = self.db.profile
     local c = db.channelTicksColor
     local thickness = db.channelTicksThickness or 1
