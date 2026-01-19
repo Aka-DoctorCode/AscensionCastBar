@@ -21,7 +21,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
 
     -- 1. GET SPELL INFO
     -- We use UnitCastingInfo/UnitChannelInfo to get the authoritative state
-        local name, _, texture, startMS, endMS, _, notInt, _, numStages
+    local name, _, texture, startMS, endMS, _, notInt, _, numStages
     if empowered then
         name, _, texture, startMS, endMS, _, notInt, _, _, numStages = UnitChannelInfo("player")
     elseif channel then
@@ -31,15 +31,13 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     end
 
     if not name or not startMS or not endMS then 
+        -- If we received a START event but there is no active cast info, hide the bar
         self:HandleCastStop(nil, "player")
         return 
     end
- 
-    local spellID = self.lastSpellID or name
-
 
     -- PREVENT RESTARTS: If the spell was already active, update times but not base start
-    if (cb.casting or cb.channeling) and cb.lastSpellID == spellID then
+    if (cb.casting or cb.channeling) and cb.lastSpellName == name then
         local rawDuration = (endMS - startMS) / 1000
         -- Safety check: ensure numStages is valid number
         if cb.isEmpowered and (cb.numStages and cb.numStages > 1) then
@@ -61,7 +59,6 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
 
     local startTime = startMS / 1000
     local rawDuration = (endMS - startMS) / 1000
-    cb.lastSpellID = spellID
     cb.lastSpellName = name
 
     -- 3. CONFIGURE BAR STATE
@@ -111,7 +108,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     if empowered then
         self:UpdateTicks(cb.numStages, cb.duration)
     elseif channel then
-        self:UpdateTicks(spellID, cb.duration)
+        self:UpdateTicks(name, cb.duration)
     else
         self:HideTicks()
     end
@@ -131,45 +128,29 @@ function AscensionCastBar:HandleCastStop(event, unit)
     if unit and unit ~= "player" then return end
 
     -- SPELL QUEUE PROTECTION
-    local cName, _, _, cstartMS, cendMS = UnitCastingInfo("player")
-    local chName, _, _, chstartMS, chendMS = UnitChannelInfo("player")
-
-    -- Get the new spell's ID
-    local newSpellID = self.lastSpellID
+    -- Before hiding the bar, check if a new cast has already started.
+    -- This happens when the next spell starts before the 'STOP' event of the previous one is processed.
+    local cName = UnitCastingInfo("player")
+    local chName = UnitChannelInfo("player")
 
     if cName then
-        -- Check if it's the SAME spell (refresh) or a NEW spell
-        if self.castBar and self.castBar.lastSpellID == newSpellID and self.castBar.lastSpellName == cName then
-            -- SAME SPELL: Just update timings smoothly
-            self.castBar.startTime = cstartMS / 1000
-            self.castBar.endTime = cendMS / 1000
-            self.castBar.duration = (cendMS - cstartMS) / 1000
-        else
-            -- NEW SPELL: Full restart
-            self:HandleCastStart("UNIT_SPELLCAST_START", "player")
-        end
+        -- We are casting something new, trigger start handler to ensure sync
+        self:HandleCastStart("UNIT_SPELLCAST_START", "player")
         return
     end
 
     if chName then
-        -- Same logic for channeled spells
-        if self.castBar and self.castBar.lastSpellID == newSpellID and self.castBar.lastSpellName == chName then
-            self.castBar.startTime = chstartMS / 1000
-            self.castBar.endTime = chendMS / 1000
-            self.castBar.duration = (chendMS - chstartMS) / 1000
-        else
-            self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
-        end
+        -- We are channeling something new, trigger start handler
+        self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
         return
     end
 
-    -- TRUE STOP: Reset everything
+    -- If we are truly stopped, then hide
     if self.castBar then
         self.castBar:SetScale(1.0)
         self.castBar.casting = false
         self.castBar.channeling = false
         self.castBar.isEmpowered = false
-        self.castBar.lastSpellID = nil
         self.castBar.lastSpellName = nil
         self.castBar:Hide()
     end
@@ -205,26 +186,17 @@ function AscensionCastBar:StopCast()
 end
 
 function AscensionCastBar:GetEmpoweredStageWeights(numStages)
-    -- Validate input
-    if not numStages or type(numStages) ~= "number" or numStages < 1 then
-        numStages = 1
-    end
-    -- Known stage configurations
     if numStages == 4 then     -- 3 Levels + 1 Hold
         return { 1.5, 1.0, 1.0, 1.5 }
     elseif numStages == 5 then -- 4 Levels + 1 Hold
         return { 1.5, 1.0, 1.0, 1.0, 1.5 }
-    end  
-    -- Fallback for any other number of stages
-    local weights = {}
-    for i = 1, numStages do 
-        weights[i] = 1.0 
     end
-    -- Ensure at least one weight
-    if #weights == 0 then
-        weights[1] = 1.0
+    -- Fallback: Equal duration
+    local w = {}
+    if numStages and numStages > 0 then
+        for i = 1, numStages do w[i] = 1 end
     end
-    return weights
+    return w
 end
 
 function AscensionCastBar:ToggleTestMode(val)
@@ -372,48 +344,11 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         return
     end
 
-if not db.previewEnabled then
-        selfFrame:SetValue(0)
-        selfFrame.spellName:SetText("")
-        selfFrame.timer:SetText("")
-        selfFrame.icon:Hide()
-        selfFrame.shield:Hide()
+    if not db.previewEnabled then
+        selfFrame:SetValue(0); selfFrame.spellName:SetText(""); selfFrame.timer:SetText("")
+        selfFrame.icon:Hide(); selfFrame.shield:Hide()
         self:HideTicks()
         self:UpdateSpark(0, 0)
-        self:HideAllSparkElements()
-        selfFrame.casting = false
-        selfFrame.channeling = false
-        selfFrame.isEmpowered = false
-        selfFrame.lastSpellID = nil
-        selfFrame.lastSpellName = nil
-        
         selfFrame:Hide()
     end
-end
-
-function AscensionCastBar:FlashInstantSpell(spellName, spellID)
-    local db = self.db.profile
-    local cb = self.castBar
-    
-    if not cb or not db.enableSpark then return end
-    
-    -- Quick display for 0.5 seconds
-    cb.spellName:SetText(spellName)
-    cb.lastSpellID = spellID
-    cb.lastSpellName = spellName
-    
-    -- Show a quick spark flash
-    cb:Show()
-    self:UpdateSpark(1.0, 1.0)  -- Full spark
-    
-    -- Schedule hide
-    C_Timer.After(0.5, function()
-        if cb.lastSpellID == spellID then  -- Only hide if still showing this spell
-            cb.spellName:SetText("")
-            self:UpdateSpark(0, 0)
-            if not (cb.casting or cb.channeling) then
-                cb:Hide()
-            end
-        end
-    end)
 end
