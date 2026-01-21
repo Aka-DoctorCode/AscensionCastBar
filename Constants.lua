@@ -39,6 +39,8 @@ AscensionCastBar.CHANNEL_TICKS = {
     ["Flor de espíritu"] = 4,
     ["Upheaval"] = 4,
     ["Agitación"] = 4,
+    ["Void Torrent"] = 4,
+    ["Torrente del vacío"] = 4,
 }
 
 AscensionCastBar.ANIMATION_STYLE_PARAMS = {

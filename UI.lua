@@ -308,7 +308,7 @@ function AscensionCastBar:UpdateIcon()
     local db = self.db.profile
     if db.showIcon then
         self.castBar.icon:Show()
-        local h = db.height
+        local h = (self.castBar and self.castBar:GetHeight()) or db.manualHeight or db.height or 24
         if db.detachIcon then
             self.castBar.icon:SetSize(db.iconSize, db.iconSize)
             self.castBar.icon:ClearAllPoints()
@@ -352,7 +352,9 @@ function AscensionCastBar:UpdateTextLayout()
         cb.spellName:ClearAllPoints(); cb.timer:ClearAllPoints()
 
         local iconW = 0
-        if db.showIcon and not db.detachIcon then iconW = db.height end
+        if db.showIcon and not db.detachIcon then
+            iconW = (cb and cb:GetHeight()) or db.manualHeight or db.height or 24
+        end
 
         if iconW > 0 then
             if db.iconAnchor == "Left" then
