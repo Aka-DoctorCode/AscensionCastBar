@@ -11,7 +11,6 @@ local function ClampAlpha(v)
     return v
 end
 
--- Función auxiliar segura para cálculos matemáticos
 local function SafeValue(val, default)
     if type(val) ~= "number" or val ~= val or math.abs(val) == math.huge then
         return default or 1.0
@@ -25,14 +24,12 @@ end
 
 AscensionCastBar.AnimationStyles = {}
 
--- Lista de estilos que no usan tails (para validación)
 AscensionCastBar.AnimationStyles.withoutTails = {
     Wave = true,
     Glitch = true,
     Lightning = true,
 }
 
--- Lista de estilos válidos para validación
 AscensionCastBar.AnimationStyles.validStyles = {
     Orb = true,
     Pulse = true,
@@ -46,7 +43,6 @@ AscensionCastBar.AnimationStyles.validStyles = {
 }
 
 function AscensionCastBar.AnimationStyles.Orb(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Orbes girando alrededor del spark principal
     castBar.sparkGlow:Show()
     local params = db.animationParams.Orb or {}
     local rotSpeed = time * SafeValue(params.rotationSpeed, 8)
@@ -75,14 +71,12 @@ function AscensionCastBar.AnimationStyles.Orb(self, castBar, db, progress, tailP
 end
 
 function AscensionCastBar.AnimationStyles.Pulse(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Ondas expansivas concéntricas desde el spark
     castBar.sparkGlow:Show()
     local params = db.animationParams.Pulse or {}
     local maxScale = SafeValue(params.maxScale, 2.5)
     local rippleCycle = SafeValue(params.rippleCycle, 1.0)
     local fadeSpeed = SafeValue(params.fadeSpeed, 1.0)
 
-    -- Asegurar valores mínimos para evitar división por cero o valores negativos
     rippleCycle = math.max(0.1, rippleCycle)
     fadeSpeed = math.max(0.1, fadeSpeed)
 
@@ -92,20 +86,16 @@ function AscensionCastBar.AnimationStyles.Pulse(self, castBar, db, progress, tai
         tex:ClearAllPoints()
         tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
 
-        -- Calcular ciclo seguro
         local totalTime = time + SafeValue(offsetTime, 0)
         local rawCycle = (totalTime % math.max(rippleCycle, 0.1)) / math.max(rippleCycle, 0.1)
-        local cycle = math.max(0, math.min(1, rawCycle)) -- Asegurar entre 0 y 1
-
-        -- Calcular tamaño con protección
+        local cycle = math.max(0, math.min(1, rawCycle))
         local baseSize = db.height * 2
         local scaleFactor = 0.2 + cycle * maxScale
         local size = baseSize * math.max(0.1, scaleFactor)
         tex:SetSize(size, size)
 
-        -- Calcular fade con protección
         local fade = 1 - (cycle * cycle * fadeSpeed)
-        fade = math.max(0, math.min(1, fade)) -- Clamp entre 0 y 1
+        fade = math.max(0, math.min(1, fade))
 
         local alpha = self:ClampAlpha(intense) * fade
         tex:SetAlpha(alpha)
@@ -121,7 +111,6 @@ function AscensionCastBar.AnimationStyles.Pulse(self, castBar, db, progress, tai
 end
 
 function AscensionCastBar.AnimationStyles.Starfall(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Partículas cayendo verticalmente con movimiento sinusoidal
     castBar.sparkGlow:Hide()
     local params = db.animationParams.Starfall or {}
     local h = db.height
@@ -141,7 +130,7 @@ function AscensionCastBar.AnimationStyles.Starfall(self, castBar, db, progress, 
 
         local alphaIntensity = self:ClampAlpha(intense)
         local distanceFactor = 1 - math.abs(fallY) / (h * 1.5)
-        distanceFactor = math.max(0, distanceFactor) -- Evitar valores negativos
+        distanceFactor = math.max(0, distanceFactor)
 
         tex:SetAlpha(alphaIntensity * distanceFactor)
         tex:Show()
@@ -156,7 +145,6 @@ function AscensionCastBar.AnimationStyles.Starfall(self, castBar, db, progress, 
 end
 
 function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Movimiento caótico/jitter con deriva progresiva
     castBar.sparkGlow:Hide()
     local params = db.animationParams.Flux or {}
 
@@ -171,7 +159,6 @@ function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tail
         local rY = (math.random() * jitterY * 2) - jitterY
         local rX = (math.random() * jitterX * 2) - jitterX
 
-        -- Limitar posición dentro de los bordes
         local xPos = offset - baseOff + drift + rX
         xPos = math.max(b, math.min(w - b, xPos))
 
@@ -189,7 +176,6 @@ function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tail
 end
 
 function AscensionCastBar.AnimationStyles.Helix(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Ondas sinusoidales dobles creando patrón de hélice
     castBar.sparkGlow:Show()
     local params = db.animationParams.Helix or {}
 
@@ -230,7 +216,6 @@ function AscensionCastBar.AnimationStyles.Wave(self, castBar, db, progress, tail
     local amplitude = SafeValue(params.amplitude, 0.05)
     local waveWidth = SafeValue(params.waveWidth, 0.25)
 
-    -- Usar el tailMask existente para confinar las ondas
     if not castBar.tailMask then
         castBar.tailMask = CreateFrame("Frame", nil, castBar)
         castBar.tailMask:SetPoint("LEFT", castBar, "LEFT")
@@ -239,12 +224,9 @@ function AscensionCastBar.AnimationStyles.Wave(self, castBar, db, progress, tail
         castBar.tailMask:SetWidth(w)
     end
 
-    -- Crear ondas como hijas del tailMask para ser recortadas automáticamente
     if not castBar.waveLines then
         castBar.waveLines = {}
     end
-
-    -- Asegurarnos de que tenemos suficientes ondas
     while #castBar.waveLines < waveCount do
         local wave = castBar.tailMask:CreateTexture(nil, "ARTWORK")
         wave:SetBlendMode("ADD")
@@ -253,42 +235,35 @@ function AscensionCastBar.AnimationStyles.Wave(self, castBar, db, progress, tail
         table.insert(castBar.waveLines, wave)
     end
 
-    -- Ocultar ondas extra
     for i = waveCount + 1, #castBar.waveLines do
         castBar.waveLines[i]:Hide()
     end
 
     local wc = db.tail2Color
     local baseAlpha = 0.4 * (0.5 + progress * 0.5)
-    baseAlpha = math.max(0, math.min(1, baseAlpha)) -- Clamp
+    baseAlpha = math.max(0, math.min(1, baseAlpha))
 
     for i = 1, waveCount do
         local wave = castBar.waveLines[i]
         if wave then
-            -- Tiempo individual para cada onda
             local waveTime = time + (i * 0.5)
-
-            -- Posición horizontal cíclica dentro del tailMask
             local waveProgress = (waveTime * waveSpeed) % 1
             local waveX = waveProgress * castBar.tailMask:GetWidth()
 
-            -- Oscilación vertical
             local waveY = math.sin(waveTime * 3 + i) * (db.height * amplitude)
 
-            -- Ancho de la onda
             local waveW = castBar.tailMask:GetWidth() * waveWidth
 
             wave:SetWidth(waveW)
             wave:ClearAllPoints()
             wave:SetPoint("CENTER", castBar.tailMask, "LEFT", waveX, waveY)
 
-            -- Opacidad con variación y desvanecimiento en extremos
             local edgeFade = 1.0
             local distanceFromCenter = math.abs(waveProgress - 0.5) * 2
-            edgeFade = 1.0 - distanceFromCenter * 0.5 -- Desvanecer en extremos
+            edgeFade = 1.0 - distanceFromCenter * 0.5
 
             local waveAlpha = baseAlpha * (0.6 + 0.4 * math.sin(waveTime * 2)) * edgeFade
-            waveAlpha = math.max(0, math.min(1, waveAlpha)) -- Clamp
+            waveAlpha = math.max(0, math.min(1, waveAlpha))
 
             wave:SetVertexColor(wc[1], wc[2], wc[3], waveAlpha)
             wave:Show()
@@ -297,7 +272,6 @@ function AscensionCastBar.AnimationStyles.Wave(self, castBar, db, progress, tail
 end
 
 function AscensionCastBar.AnimationStyles.Glitch(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Efecto de distorsión/glitch aleatorio con múltiples capas
     castBar.sparkHead:Hide()
     local params = db.animationParams.Glitch or {}
 
@@ -334,7 +308,6 @@ function AscensionCastBar.AnimationStyles.Glitch(self, castBar, db, progress, ta
 end
 
 function AscensionCastBar.AnimationStyles.Lightning(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Rayos que conectan sparkHead con puntos aleatorios en la barra
     castBar.sparkGlow:Show()
     local params = db.animationParams.Lightning or {}
 
@@ -343,7 +316,6 @@ function AscensionCastBar.AnimationStyles.Lightning(self, castBar, db, progress,
 
     if not castBar.lightningSegments then castBar.lightningSegments = {} end
 
-    -- Asegurarse de tener suficientes segmentos
     while #castBar.lightningSegments < segmentCount do
         local l = castBar:CreateTexture(nil, "OVERLAY")
         l:SetColorTexture(1, 1, 1, 1)
@@ -351,7 +323,6 @@ function AscensionCastBar.AnimationStyles.Lightning(self, castBar, db, progress,
         table.insert(castBar.lightningSegments, l)
     end
 
-    -- Ocultar segmentos extra
     for i = segmentCount + 1, #castBar.lightningSegments do
         castBar.lightningSegments[i]:Hide()
     end
@@ -379,7 +350,6 @@ function AscensionCastBar.AnimationStyles.Lightning(self, castBar, db, progress,
 end
 
 function AscensionCastBar.AnimationStyles.Comet(self, castBar, db, progress, tailProgress, time, offset, w, b)
-    -- Cola estática detrás del spark principal
     castBar.sparkGlow:Show()
     local params = db.animationParams.Comet or {}
 
@@ -408,21 +378,18 @@ end
 -- ==========================================================
 
 function AscensionCastBar:ClampAlpha(v)
-    -- Wrapper para la función local ClampAlpha con validaciones adicionales
     local num = tonumber(v)
-    if not num or num ~= num then return 0 end      -- NaN
-    if math.abs(num) == math.huge then return 1 end -- Infinito
+    if not num or num ~= num then return 0 end
+    if math.abs(num) == math.huge then return 1 end
     return ClampAlpha(num)
 end
 
--- Función auxiliar para obtener valores seguros
 function AscensionCastBar:SafeValue(val, default)
     return SafeValue(val, default)
 end
 
 function AscensionCastBar:UpdateSparkColors()
     local cb = self.castBar
-    -- FIXED: Added nil check for cb
     if not cb then return end
 
     local db = self.db.profile
@@ -452,9 +419,7 @@ function AscensionCastBar:UpdateSparkColors()
 end
 
 function AscensionCastBar:UpdateSparkSize()
-    -- Update sizes of all spark elements
     local cb = self.castBar
-    -- FIXED: Added nil check for cb
     if not cb then return end
 
     local db = self.db.profile
@@ -486,7 +451,7 @@ end
 
 function AscensionCastBar:ResetParticles()
     local cb = self.castBar
-    if not cb then return end -- Nil check added
+    if not cb then return end
     
     if cb.particles then
         for _, p in ipairs(cb.particles) do
@@ -495,7 +460,6 @@ function AscensionCastBar:ResetParticles()
     end
     cb.lastParticleTime = 0
 
-    -- Clean up other specific overlays
     if cb.lightningSegments then
         for _, l in ipairs(cb.lightningSegments) do
             if l then l:Hide() end
@@ -512,7 +476,6 @@ function AscensionCastBar:ResetParticles()
 end
 
 function AscensionCastBar:HideAllSparkElements()
-    -- Oculta todos los elementos del spark y overlays
     local cb = self.castBar
 
     if cb.sparkHead then cb.sparkHead:Hide() end
@@ -522,7 +485,6 @@ function AscensionCastBar:HideAllSparkElements()
     if cb.sparkTail3 then cb.sparkTail3:Hide() end
     if cb.sparkTail4 then cb.sparkTail4:Hide() end
 
-    -- Ocultar overlays específicos
     if cb.waveOverlay then cb.waveOverlay:Hide() end
     if cb.waveTexture then cb.waveTexture:Hide() end
     if cb.waveSegments then
@@ -553,17 +515,13 @@ function AscensionCastBar:HideAllSparkElements()
 end
 
 function AscensionCastBar:CleanupOverlays()
-    -- Limpia overlays no usados por el estilo actual
     local cb = self.castBar
     local db = self.db.profile
     local style = db.animStyle
-
-    -- Validar que style sea válido
     if not style or not self.AnimationStyles.validStyles[style] then
         style = "Comet" -- Fallback
     end
 
-    -- Limpiar overlays no usados por el estilo actual
     if style ~= "Wave" then
         if cb.waveOverlay then cb.waveOverlay:Hide() end
         if cb.waveTexture then cb.waveTexture:Hide() end
@@ -593,7 +551,6 @@ function AscensionCastBar:CleanupOverlays()
 end
 
 function AscensionCastBar:InitializeTailMask()
-    -- Inicializa la máscara de cola si no existe
     local cb = self.castBar
     if not cb.tailMask then
         cb.tailMask = CreateFrame("Frame", nil, cb)
@@ -605,14 +562,11 @@ function AscensionCastBar:InitializeTailMask()
 end
 
 function AscensionCastBar:UpdateSpark(progress, tailProgress)
-    -- Main function coordinating animations
     local db = self.db.profile
     local castBar = self.castBar
 
-    -- FIXED: Added nil check for castBar
     if not castBar then return end
 
-    -- Validations
     if not progress or type(progress) ~= "number" then
         self:HideAllSparkElements()
         return
@@ -623,36 +577,29 @@ function AscensionCastBar:UpdateSpark(progress, tailProgress)
         return
     end
 
-    -- Inicializar tailMask si es necesario
     self:InitializeTailMask()
 
-    -- Validar estilo de animación
     local style = db.animStyle
     if not style or not self.AnimationStyles.validStyles[style] then
         style = "Comet" -- Fallback a estilo por defecto
     end
 
-    -- Limpiar overlays no utilizados
     self:CleanupOverlays()
 
-    -- Validar tailProgress
     local tP = self:ClampAlpha(tailProgress or 0)
 
-    -- Obtener dimensiones y tiempo
     local w = castBar:GetWidth()
-    if w <= 0 then return end -- Evitar división por cero
+    if w <= 0 then return end
 
     local offset = w * progress
-    offset = math.max(0, math.min(w, offset)) -- Clamp offset
+    offset = math.max(0, math.min(w, offset))
 
     local b = db.borderEnabled and db.borderThickness or 0
     local time = GetTime()
 
-    -- Calcular effOffset con protección contra división por cero
     local baseWidth = 270
     local effOffset = (db.headLengthOffset) * (w / math.max(baseWidth, 1))
 
-    -- Posicionar sparkHead
     if castBar.sparkHead then
         castBar.sparkHead:ClearAllPoints()
         castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + db.sparkOffset + effOffset, 0)
@@ -660,13 +607,11 @@ function AscensionCastBar:UpdateSpark(progress, tailProgress)
         castBar.sparkHead:Show()
     end
 
-    -- Posicionar sparkGlow
     if castBar.sparkGlow then
         castBar.sparkGlow:ClearAllPoints()
         castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
     end
 
-    -- Actualizar máscara de cola
     if castBar.tailMask then
         local aw = offset - (b > 0 and b or 0)
         if aw < 0 then aw = 0 end
@@ -674,7 +619,6 @@ function AscensionCastBar:UpdateSpark(progress, tailProgress)
         castBar.tailMask:SetWidth(aw)
     end
 
-    -- Manejar tails según estilo
     if not db.enableTails or self.AnimationStyles.withoutTails[style] then
         if castBar.sparkTail then castBar.sparkTail:Hide() end
         if castBar.sparkTail2 then castBar.sparkTail2:Hide() end
@@ -682,17 +626,13 @@ function AscensionCastBar:UpdateSpark(progress, tailProgress)
         if castBar.sparkTail4 then castBar.sparkTail4:Hide() end
     end
 
-    -- Llamar a la función de animación correspondiente
     local animFunc = self.AnimationStyles[style]
     if animFunc and type(animFunc) == "function" then
-        -- Proteger contra errores en la función de animación
         local success, err = pcall(animFunc, self, castBar, db, progress, tP, time, offset, w, b)
         if not success then
-            -- Si hay error, usar Comet como fallback
             self.AnimationStyles.Comet(self, castBar, db, progress, tP, time, offset, w, b)
         end
     else
-        -- Fallback a Comet si no se encuentra la función
         self.AnimationStyles.Comet(self, castBar, db, progress, tP, time, offset, w, b)
     end
 end

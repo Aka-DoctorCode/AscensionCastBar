@@ -45,10 +45,15 @@ function AscensionCastBar:OnEnable()
     self:RegisterChatCommand("ascensioncastbar", "OpenConfig")
 
     self:RefreshConfig()
+
+    if self.castBar then
+        self.castBar:Hide()
+        self:UpdateAnchor()
+    end
 end
 
 function AscensionCastBar:RefreshConfig()
-    self:ValidateAnimationParams() -- Añadir esta línea
+    self:ValidateAnimationParams()
     self:UpdateAnchor()
     self:UpdateSparkSize()
     self:UpdateIcon()
@@ -145,13 +150,9 @@ end
 
 function AscensionCastBar:ValidateAnimationParams()
     local db = self.db.profile
-
-    -- Asegurarse de que animationParams exista
     if not db.animationParams then
         db.animationParams = {}
     end
-
-    -- Inicializar cada estilo si no existe
     for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS or {}) do
         if not db.animationParams[styleName] then
             db.animationParams[styleName] = {}
@@ -159,7 +160,6 @@ function AscensionCastBar:ValidateAnimationParams()
                 db.animationParams[styleName][key] = value
             end
         else
-            -- Asegurar que todos los parámetros existan
             for key, value in pairs(defaults) do
                 if db.animationParams[styleName][key] == nil then
                     db.animationParams[styleName][key] = value
@@ -168,22 +168,18 @@ function AscensionCastBar:ValidateAnimationParams()
         end
     end
 
-    -- Validar valores específicos
     local style = db.animStyle
     if style and db.animationParams[style] then
         local params = db.animationParams[style]
 
-        -- Para Pulse, asegurar que rippleCycle no sea 0
         if style == "Pulse" then
             if not params.rippleCycle or params.rippleCycle <= 0 then
                 params.rippleCycle = 1.0
             end
         end
 
-        -- Para cualquier parámetro numérico, asegurar que sea válido
         for key, value in pairs(params) do
             if type(value) == "number" then
-                -- Reemplazar valores NaN o infinitos
                 if value ~= value or math.abs(value) == math.huge then
                     params[key] = self.ANIMATION_STYLE_PARAMS[style][key] or 1.0
                 end

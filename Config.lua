@@ -8,7 +8,6 @@ local LSM = LibStub("LibSharedMedia-3.0")
 
 local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
 
--- Función auxiliar para copiar tablas
 local function CopyTable(orig)
     local copy = {}
     for key, value in pairs(orig) do
@@ -731,12 +730,19 @@ function AscensionCastBar:SetupOptions()
                     font = {
                         name = "Font",
                         type = "select",
-                        dialogControl = 'LSM30_Font',
-                        values = LSM:HashTable("font"),
+                        values = function()
+                            local fonts = {}
+                            for _, name in ipairs(LSM:List("font")) do
+                                fonts[name] = name
+                            end
+                            return fonts
+                        end,
                         order = 12,
                         get = function(info) return self.db.profile.spellNameFontLSM end,
                         set = function(info, val)
-                            self.db.profile.spellNameFontLSM = val; self.db.profile.timerFontLSM = val; self:ApplyFont()
+                            self.db.profile.spellNameFontLSM = val
+                            self.db.profile.timerFontLSM = val
+                            self:ApplyFont()
                         end,
                     },
                 }
