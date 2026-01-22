@@ -123,10 +123,9 @@ end
 function AscensionCastBar:GetCDMTargetFrame()
     local target = self.db.profile.cdmTarget
     
-    if target == "Buffs" then return _G["TrackedBuffsViewer"]
+    if target == "Buffs" then return _G["BuffIconCooldownViewer"]
     elseif target == "Essential" then return _G["EssentialCooldownViewer"]
     elseif target == "Utility" then return _G["UtilityCooldownViewer"]
-    
     elseif target == "PlayerFrame" then return _G["PlayerFrame"]
     elseif target == "ActionBar1" then return _G["MainMenuBar"]
     elseif target == "ActionBar2" then return _G["MultiBarBottomLeft"]
@@ -136,6 +135,7 @@ function AscensionCastBar:GetCDMTargetFrame()
     elseif target == "ActionBar6" then return _G["MultiBar5"]
     elseif target == "ActionBar7" then return _G["MultiBar6"]
     elseif target == "ActionBar8" then return _G["MultiBar7"]
+    elseif target == "PersonalResource" then return _G["PersonalResourceDisplayFrame"]
     end
     
     return nil
@@ -151,10 +151,6 @@ function AscensionCastBar:UpdateAnchor()
         self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
         self.castBar:SetWidth(db.manualWidth or 270)
         return
-    end
-
-    if db.cdmTarget == "PersonalResource" then
-        return 
     end
 
     if db.cdmTarget == "ActionBar1" then
@@ -247,13 +243,12 @@ function AscensionCastBar:InitCDMHooks()
         return
     end
 
-    -- 3. TARGET SEARCH LOGIC (Aggressive)
+    -- 3. TARGET SEARCH LOGIC
     local targetFrame = self:GetCDMTargetFrame()
 
     if targetFrame then
         -- === CASE A: FRAME FOUND ===
         if self.lastHookedFrame ~= targetFrame then
-            print("|cff00ff00AscensionCastBar:|r Found CDM Frame: " .. (targetFrame:GetName() or "Anonymous"))
             self.lastHookedFrame = targetFrame
             
             local updateFunc = function() 
@@ -275,7 +270,7 @@ function AscensionCastBar:InitCDMHooks()
             self:UpdateAnchor()
         end
         
-        -- Stop the search timer if it exists
+        -- Stop the search timer if it exists (Success)
         if self.cdmFinderTimer then
             self.cdmFinderTimer:Cancel()
             self.cdmFinderTimer = nil
@@ -283,15 +278,14 @@ function AscensionCastBar:InitCDMHooks()
         
     else
         -- === CASE B: FRAME NOT FOUND YET ===
-        -- Create a ticker to search every 1 second
+        -- Create a ticker to search every 1 second (Max 60 seconds)
         if not self.cdmFinderTimer then
-            print("|cffFFFF00AscensionCastBar:|r CDM Frame not found yet. Searching...")
             self.cdmFinderTimer = C_Timer.NewTicker(1, function()
                 local tf = self:GetCDMTargetFrame()
                 if tf then
                     self:InitCDMHooks() -- Call myself to hook it
                 end
-            end, 60) -- Stop after 60 attempts (1 minute)
+            end, 60)
         end
     end
 end
@@ -324,11 +318,22 @@ function AscensionCastBar:UpdateBarColor()
     cb.glowFrame:Hide()
 
     -- 1. EMPOWERED
-    if cb.isEmpowered and cb.currentStage then
+    -- if cb.isEmpowered and cb.currentStage then
+    --     local s = cb.currentStage
+    --     local c = db.empowerStage1Color
+    --     local scaleMultiplier = 1 + ((s - 1) * 0.05)
+    --     cb:SetScale(scaleMultiplier)
+        if cb.isEmpowered and cb.currentStage then
         local s = cb.currentStage
         local c = db.empowerStage1Color
-        local scaleMultiplier = 1 + ((s - 1) * 0.05)
-        cb:SetScale(scaleMultiplier)
+        
+        -- Reset scale to normal to avoid conflicts
+        cb:SetScale(1.0) 
+        
+        -- Calculate 5% width increase per stage based on manualWidth
+        local baseWidth = db.manualWidth or 270
+        local widthMultiplier = 1 + ((s - 1) * 0.05)
+        cb:SetWidth(baseWidth * widthMultiplier)
 
         if s >= 5 then
             c = db.empowerStage5Color
