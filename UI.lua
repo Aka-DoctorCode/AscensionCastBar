@@ -120,105 +120,178 @@ end
 -- ==========================================================
 
 -- AscensionCastBar/UI.lua
+function AscensionCastBar:GetCDMTargetFrame()
+    local target = self.db.profile.cdmTarget
+    
+    if target == "Buffs" then return _G["TrackedBuffsViewer"]
+    elseif target == "Essential" then return _G["EssentialCooldownViewer"]
+    elseif target == "Utility" then return _G["UtilityCooldownViewer"]
+    
+    elseif target == "PlayerFrame" then return _G["PlayerFrame"]
+    elseif target == "ActionBar1" then return _G["MainMenuBar"]
+    elseif target == "ActionBar2" then return _G["MultiBarBottomLeft"]
+    elseif target == "ActionBar3" then return _G["MultiBarBottomRight"]
+    elseif target == "ActionBar4" then return _G["MultiBarRight"]
+    elseif target == "ActionBar5" then return _G["MultiBarLeft"]
+    elseif target == "ActionBar6" then return _G["MultiBar5"]
+    elseif target == "ActionBar7" then return _G["MultiBar6"]
+    elseif target == "ActionBar8" then return _G["MultiBar7"]
+    end
+    
+    return nil
+end
 
 function AscensionCastBar:UpdateAnchor()
+    if not self.castBar then return end
+    
     local db = self.db.profile
-    if not self.anchorFrame or not self.castBar then return end
+    
+    if not db.attachToCDM then
+        self.castBar:ClearAllPoints()
+        self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
+        self.castBar:SetWidth(db.manualWidth or 270)
+        return
+    end
 
-    -- Ensure the anchor frame is always shown and has a high frame level
-    self.anchorFrame:Show()
-    self.anchorFrame:SetFrameStrata("MEDIUM")
-    self.anchorFrame:SetFrameLevel(10)
+    if db.cdmTarget == "PersonalResource" then
+        return 
+    end
 
-    local targetFrame = nil
-    local useAttached = false
-
-    if db.testAttached or db.attachToCDM then
-        -- (CDM frame detection logic here...)
-        -- ...
-        if db.testAttached and not isValidFrame then
-            if not self.testAttachedFrame then
-                self.testAttachedFrame = CreateFrame("Frame", nil, UIParent)
-                self.testAttachedFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
-                self.testAttachedFrame:SetSize(db.manualWidth or 270, 30)
+    if db.cdmTarget == "ActionBar1" then
+        if not self.actionBar1Proxy then
+            self.actionBar1Proxy = CreateFrame("Frame", nil, UIParent)
+            self.actionBar1Proxy:SetSize(1,1)
+        end
+        
+        local minX, maxX, minY, maxY
+        
+        local buttonsFound = false
+        for i = 1, 12 do
+            local btn = _G["ActionButton" .. i]
+            if btn and btn:IsShown() then
+                local l, r, t, b = btn:GetLeft(), btn:GetRight(), btn:GetTop(), btn:GetBottom()
+                if l and r and t and b then
+                    if not minX or l < minX then minX = l end
+                    if not maxX or r > maxX then maxX = r end
+                    if not minY or b < minY then minY = b end
+                    if not maxY or t > maxY then maxY = t end
+                    buttonsFound = true
+                end
             end
-            self.testAttachedFrame:Show()
-            targetFrame = self.testAttachedFrame
+        end
+
+        if buttonsFound then
+            local width = maxX - minX
+            local height = maxY - minY
+            local centerX = (minX + maxX) / 2
+            local centerY = (minY + maxY) / 2
+            
+            self.actionBar1Proxy:ClearAllPoints()
+            self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
+            self.actionBar1Proxy:SetSize(width, height)
+            
+            self.castBar:ClearAllPoints()
+            self.castBar:SetPoint("BOTTOM", self.actionBar1Proxy, "TOP", 0, db.cdmYOffset or 0)
+            self.castBar:SetWidth(width > 10 and width or (db.manualWidth or 270))
+            return
+        else
+            self.castBar:ClearAllPoints()
+            self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
+            self.castBar:SetWidth(db.manualWidth or 270)
+            return
         end
     end
 
-    if useAttached and targetFrame and targetFrame.SetPoint then
-        self.anchorFrame:ClearAllPoints()
-        self.anchorFrame:SetPoint("TOP", targetFrame, "BOTTOM", 0, db.cdmYOffset or 0)
-        local width = targetFrame:GetWidth()
-        self.castBar:SetWidth((width and width > 10) and width or (db.manualWidth or 270))
+    local targetFrame = self:GetCDMTargetFrame()
+    
+    if targetFrame then
+        self.castBar:ClearAllPoints()
+        self.castBar:SetPoint("BOTTOM", targetFrame, "TOP", 0, db.cdmYOffset or 0)
+        
+        local tWidth = targetFrame:GetWidth()
+        local maxWidth = UIParent:GetWidth()
+        
+        if tWidth and tWidth > 10 and tWidth <= maxWidth then
+            self.castBar:SetWidth(tWidth)
+        else
+            self.castBar:SetWidth(db.manualWidth or 270)
+        end
     else
-        if self.testAttachedFrame then self.testAttachedFrame:Hide() end
-        self.anchorFrame:ClearAllPoints()
-        self.anchorFrame:SetPoint(db.point or "CENTER", UIParent, db.relativePoint or "CENTER", db.manualX or 0, db.manualY or -85)
+        self.castBar:ClearAllPoints()
+        self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
         self.castBar:SetWidth(db.manualWidth or 270)
-        self.castBar:SetHeight(db.manualHeight or 24)
     end
-
-    -- Force visibility and correct parenting
-    self.castBar:SetParent(self.anchorFrame)
-    self.castBar:ClearAllPoints()
-    self.castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
-    self.castBar:SetAlpha(1.0)
-    self.castBar:SetScale(1.0)
 end
 
 function AscensionCastBar:InitCDMHooks()
     local db = self.db.profile
-    if not db.attachToCDM then
-        if self.lastHookedFrame then
-            -- Note: We can't easily unhook hooksecurefunc, but we can stop reacting to it.
-            self.lastHookedFrame = nil
+    if not db.attachToCDM then return end
+
+    -- 1. Setup Edit Mode events (just in case)
+    if not self.editModeEventsRegistered then
+        pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_APPLIED", "UpdateAnchor") end)
+        pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_UPDATED", "UpdateAnchor") end)
+        self.editModeEventsRegistered = true
+    end
+
+    -- 2. Clean up Personal Resource events if not used
+    if db.cdmTarget ~= "PersonalResource" then
+        if self.UnregisterEvent then
+            pcall(function() self:UnregisterEvent("NAME_PLATE_UNIT_ADDED") end)
+            pcall(function() self:UnregisterEvent("NAME_PLATE_UNIT_REMOVED") end)
         end
+    else
+        self:RegisterEvent("NAME_PLATE_UNIT_ADDED", "UpdateAnchor")
+        self:RegisterEvent("NAME_PLATE_UNIT_REMOVED", "UpdateAnchor")
+        self:UpdateAnchor()
         return
     end
 
-    local targetFrame
-    if db.cdmTarget == "Auto" then
-        targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
-    elseif db.cdmTarget == "Buffs" then
-        targetFrame = _G["TrackedBuffsViewer"] or _G["TrackedBuffsFrame"]
-    elseif db.cdmTarget == "Essential" then
-        targetFrame = _G["EssentialCooldownViewer"] or _G["EssentialCooldownsFrame"]
-    elseif db.cdmTarget == "Utility" then
-        targetFrame = _G["UtilityCooldownViewer"] or _G["UtilityCooldownsFrame"]
-    else
-        targetFrame = _G[db.cdmFrameName]
-    end
+    -- 3. TARGET SEARCH LOGIC (Aggressive)
+    local targetFrame = self:GetCDMTargetFrame()
 
-    if targetFrame and type(targetFrame) == "table" then
+    if targetFrame then
+        -- === CASE A: FRAME FOUND ===
         if self.lastHookedFrame ~= targetFrame then
+            print("|cff00ff00AscensionCastBar:|r Found CDM Frame: " .. (targetFrame:GetName() or "Anonymous"))
             self.lastHookedFrame = targetFrame
-
-            -- Use hooksecurefunc for perfect sync
-            local hookFunc = function()
-                if self.db.profile.attachToCDM and self.lastHookedFrame == targetFrame then
-                    self:UpdateAnchor()
-                end
+            
+            local updateFunc = function() 
+                if self.db.profile.attachToCDM then self:UpdateAnchor() end 
             end
-
+            
             pcall(function()
-                hooksecurefunc(targetFrame, "SetSize", hookFunc)
-                hooksecurefunc(targetFrame, "Show", hookFunc)
-                hooksecurefunc(targetFrame, "Hide", hookFunc)
-                -- Keep script hooks just in case
-                self:HookScript(targetFrame, "OnShow", "UpdateAnchor")
-                self:HookScript(targetFrame, "OnHide", "UpdateAnchor")
-                self:HookScript(targetFrame, "OnSizeChanged", "UpdateAnchor")
+                hooksecurefunc(targetFrame, "SetPoint", updateFunc)
+                hooksecurefunc(targetFrame, "Show", updateFunc)
+                hooksecurefunc(targetFrame, "Hide", updateFunc)
+                hooksecurefunc(targetFrame, "SetSize", updateFunc)
+                hooksecurefunc(targetFrame, "SetWidth", updateFunc)
+                hooksecurefunc(targetFrame, "SetHeight", updateFunc)
+                if targetFrame.HasScript and targetFrame:HasScript("OnSizeChanged") then
+                    targetFrame:HookScript("OnSizeChanged", updateFunc)
+                end
             end)
+            
+            self:UpdateAnchor()
         end
-        self:UpdateAnchor()
-        self.cdmRetryCount = 0
+        
+        -- Stop the search timer if it exists
+        if self.cdmFinderTimer then
+            self.cdmFinderTimer:Cancel()
+            self.cdmFinderTimer = nil
+        end
+        
     else
-        -- Retry with safety counter
-        self.cdmRetryCount = (self.cdmRetryCount or 0) + 1
-        if self.cdmRetryCount < 15 then
-            C_Timer.After(2, function() self:InitCDMHooks() end)
+        -- === CASE B: FRAME NOT FOUND YET ===
+        -- Create a ticker to search every 1 second
+        if not self.cdmFinderTimer then
+            print("|cffFFFF00AscensionCastBar:|r CDM Frame not found yet. Searching...")
+            self.cdmFinderTimer = C_Timer.NewTicker(1, function()
+                local tf = self:GetCDMTargetFrame()
+                if tf then
+                    self:InitCDMHooks() -- Call myself to hook it
+                end
+            end, 60) -- Stop after 60 attempts (1 minute)
         end
     end
 end
@@ -494,4 +567,131 @@ function AscensionCastBar:UpdateLatencyBar(castBar)
     local c = db.latencyColor
     castBar.latency:SetColorTexture(c[1], c[2], c[3], c[4])
     castBar.latency:Show()
+end
+
+function AscensionCastBar:CreateActionBar1Proxy()
+    if self.actionBar1Proxy and self.actionBar1Proxy:IsVisible() then
+        return self.actionBar1Proxy
+    end
+    
+    -- Crear frame proxy invisible
+    self.actionBar1Proxy = CreateFrame("Frame", "AscensionCastBar_ActionBar1Proxy", UIParent)
+    self.actionBar1Proxy:SetSize(1, 1)
+    
+    -- Encontrar todos los botones de la Action Bar 1
+    local buttons = {}
+    for i = 1, 12 do
+        local button = _G["ActionButton"..i]
+        if button and button:IsVisible() then
+            table.insert(buttons, button)
+        end
+    end
+    
+    if #buttons == 0 then
+        -- Fallback: usar posición por defecto de la Action Bar 1
+        self.actionBar1Proxy:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 40)
+        self.actionBar1Proxy:SetSize(500, 50)
+        return self.actionBar1Proxy
+    end
+    
+    -- Calcular bounding box de todos los botones
+    local minX, maxX, minY, maxY
+    
+    for i, button in ipairs(buttons) do
+        local left = button:GetLeft()
+        local right = button:GetRight()
+        local bottom = button:GetBottom()
+        local top = button:GetTop()
+        
+        if left and right and bottom and top then
+            if not minX or left < minX then minX = left end
+            if not maxX or right > maxX then maxX = right end
+            if not minY or bottom < minY then minY = bottom end
+            if not maxY or top > maxY then maxY = top end
+        end
+    end
+    
+    if minX and maxX and minY and maxY then
+        -- Posicionar el proxy en el centro del bounding box
+        local centerX = (minX + maxX) / 2
+        local centerY = (minY + maxY) / 2
+        local width = maxX - minX
+        local height = maxY - minY
+        
+        self.actionBar1Proxy:ClearAllPoints()
+        self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
+        self.actionBar1Proxy:SetSize(width, height)
+    else
+        -- Fallback si no podemos calcular las posiciones
+        self.actionBar1Proxy:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 40)
+        self.actionBar1Proxy:SetSize(500, 50)
+    end
+    
+    -- Configurar actualización periódica
+    self.actionBar1Proxy.updateTimer = 0
+    self.actionBar1Proxy:SetScript("OnUpdate", function(self, elapsed)
+        self.updateTimer = self.updateTimer + elapsed
+        if self.updateTimer > 0.5 then  -- Actualizar cada 0.5 segundos
+            self.updateTimer = 0
+            AscensionCastBar:UpdateActionBar1Proxy()
+        end
+    end)
+    
+    return self.actionBar1Proxy
+end
+
+-- Función para actualizar la posición del proxy
+function AscensionCastBar:UpdateActionBar1Proxy()
+    if not self.actionBar1Proxy then
+        return
+    end
+    
+    local buttons = {}
+    for i = 1, 12 do
+        local button = _G["ActionButton"..i]
+        if button and button:IsVisible() then
+            table.insert(buttons, button)
+        end
+    end
+    
+    if #buttons == 0 then return end
+    
+    local minX, maxX, minY, maxY
+    
+    for i, button in ipairs(buttons) do
+        local left = button:GetLeft()
+        local right = button:GetRight()
+        local bottom = button:GetBottom()
+        local top = button:GetTop()
+        
+        if left and right and bottom and top then
+            if not minX or left < minX then minX = left end
+            if not maxX or right > maxX then maxX = right end
+            if not minY or bottom < minY then minY = bottom end
+            if not maxY or top > maxY then maxY = top end
+        end
+    end
+    
+    if minX and maxX and minY and maxY then
+        local centerX = (minX + maxX) / 2
+        local centerY = (minY + maxY) / 2
+        local width = maxX - minX
+        local height = maxY - minY
+        
+        self.actionBar1Proxy:ClearAllPoints()
+        self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
+        self.actionBar1Proxy:SetSize(width, height)
+        
+        -- SOLO si la cast bar está visible y adjuntada a ActionBar1, actualizarla
+        if self.castBar and self.castBar:IsShown() and 
+           self.db.profile.attachToCDM and self.db.profile.cdmTarget == "ActionBar1" then
+            -- Actualizar la posición sin crear un bucle
+            self.castBar:ClearAllPoints()
+            self.castBar:SetPoint("BOTTOM", self.actionBar1Proxy, "TOP", 0, self.db.profile.cdmYOffset or 0)
+            
+            if width > 50 then
+                self.castBar:SetWidth(width)
+            end
+        end
+    end
 end

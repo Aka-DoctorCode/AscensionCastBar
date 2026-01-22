@@ -1,3 +1,19 @@
-## Version: 4.4.8
-- I have been bussy with LEMIX and other projects, so I haven't been able to update AscensionBars in a while. I will prepare a new update soon.
-- There are new project on the oven as well, but I will wait for 12.0 to launch before working on them.
+lightweight tag 126fd0dc79bff04b4f7c8b48d4be7727a80942c3 V5.0.0
+Author:	Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
+Date:	Wed Jan 21 02:08:47 2026 -0400
+
+commit 126fd0dc79bff04b4f7c8b48d4be7727a80942c3
+Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
+Date:   Wed Jan 21 02:08:47 2026 -0400
+
+    Update AscensionCastBar.toc
+
+commit 56afbebb810323f12be7acc87b936cc88d23c8a4
+Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
+Date:   Wed Jan 21 02:07:02 2026 -0400
+
+    V6.1.0
+    
+    - Changes to for compatibility with 12.0.0
+    - TOC update.
+

@@ -1,5 +1,5 @@
 -- ==========================================================
--- AscensionCastBar - Version 4.4.0
+-- AscensionCastBar - Version 5.0.0
 -- ==========================================================
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
@@ -25,6 +25,7 @@ function AscensionCastBar:OnEnable()
     self:InitCDMHooks()
 
     -- Register Events
+    self:RegisterEvent("ADDON_LOADED", "InitCDMHooks")
     self:RegisterEvent("UNIT_SPELLCAST_START", "HandleCastStart")
     self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", "HandleCastStart")
     self:RegisterEvent("UNIT_SPELLCAST_STOP", "HandleCastStop")
@@ -32,8 +33,10 @@ function AscensionCastBar:OnEnable()
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "HandleCastStop")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED", "HandleCastStop")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateDefaultCastBarVisibility")
+    self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 
-    -- Empowered Events (Retail 11.0+)
+    -- Empowered Events
     pcall(function()
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START", "HandleCastStart")
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "HandleCastStop")
@@ -50,6 +53,7 @@ function AscensionCastBar:OnEnable()
         self.castBar:Hide()
         self:UpdateAnchor()
     end
+
 end
 
 function AscensionCastBar:RefreshConfig()
@@ -102,6 +106,20 @@ function AscensionCastBar:UpdateDefaultCastBarVisibility()
                 frame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
             end
         end
+    end
+end
+
+function AscensionCastBar:NAME_PLATE_UNIT_ADDED(event, unit)
+    -- If the player's Personal Resource Display appears, update anchor immediately
+    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
+        self:UpdateAnchor()
+    end
+end
+
+function AscensionCastBar:NAME_PLATE_UNIT_REMOVED(event, unit)
+    -- Fallback/Safety check if PRD disappears
+    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
+        self:UpdateAnchor()
     end
 end
 
@@ -185,5 +203,17 @@ function AscensionCastBar:ValidateAnimationParams()
                 end
             end
         end
+    end
+end
+
+function AscensionCastBar:NAME_PLATE_UNIT_ADDED(event, unit)
+    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
+        self:UpdateAnchor()
+    end
+end
+
+function AscensionCastBar:NAME_PLATE_UNIT_REMOVED(event, unit)
+    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
+        self:UpdateAnchor()
     end
 end

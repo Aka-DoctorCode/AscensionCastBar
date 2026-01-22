@@ -2,39 +2,50 @@
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
+-- Helper to normalize CastInfo return values into a consistent structure
 local function GetSafeCastInfo(unit, channel)
-    local p1, p2, p3, p4, p5, p6, p7, p8, p9
+    if not unit then return nil end
+
+    local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID
+    
     if channel then
-        p1, p2, p3, p4, p5, p6, p7, p8 = UnitChannelInfo(unit)
+        name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID = UnitChannelInfo(unit)
     else
-        p1, p2, p3, p4, p5, p6, p7, p8, p9 = UnitCastingInfo(unit)
+        name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
     end
 
-    if not p1 then return nil end
+    if type(name) == "table" then
+        local data = name
+        if not data.name then return nil end 
 
-    if type(p1) == "table" then
-        return p1
+        return {
+            name = data.name,
+            text = data.text,
+            texture = data.icon or data.texture,
+            startTime = data.startTime,
+            endTime = data.endTime,
+            isTradeSkill = data.isTradeSkill,
+            castID = data.castID,
+            notInterruptible = (data.isInterruptible == false) or data.notInterruptible,
+            spellID = data.spellID,
+            numStages = data.numStages or 0,
+        }
     end
 
-    local info = {
-        name = p1,
-        text = p2,
-        texture = p3,
-        startTime = p4,
-        endTime = p5,
-        isTradeSkill = p6,
+    if not name then return nil end
+
+    return {
+        name = name,
+        text = text,
+        texture = texture,
+        startTime = startTime,
+        endTime = endTime,
+        isTradeSkill = isTradeSkill,
+        spellID = spellID,
+        notInterruptible = notInterruptible,
+        castID = castID,
+        numStages = 0,
     }
-
-    if channel then
-        info.notInterruptible = p7
-        info.spellID = p8
-    else
-        info.castID = p7
-        info.notInterruptible = p8
-        info.spellID = p9
-    end
-
-    return info
 end
 
 function AscensionCastBar:HandleCastStart(event, unit, ...)
@@ -68,7 +79,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local endMS = info.endTime
     local notInt = info.notInterruptible
     local spellID = info.spellID
-    local numStages = info.numStages
+    local numStages = info.numStages or 0
 
     -- ... (Rest of the logic using these local variables)
     self:UpdateAnchor()
@@ -82,7 +93,8 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
 
     if empowered then
         local hasFontOfMagic = IsPlayerSpell(408083)
-        local baseStages = (type(numStages) == "number" and numStages > 0) and numStages or (hasFontOfMagic and 4 or 3)
+        local validNumStages = (type(numStages) == "number" and numStages > 0) and numStages or 0
+        local baseStages = validNumStages > 0 and validNumStages or (hasFontOfMagic and 4 or 3)
         cb.numStages = baseStages + 1
         cb.duration = rawDuration * (cb.numStages / baseStages)
         cb.endTime = startTime + cb.duration
