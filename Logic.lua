@@ -89,7 +89,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local rawDuration = (endMS - startMS) / 1000
 
     if empowered then
-        local hasFontOfMagic = IsPlayerSpell(411212)
+        local hasFontOfMagic = IsPlayerSpell(411212) or IsPlayerSpell(408083) or IsPlayerSpell(375783)
         local validNumStages = (type(numStages) == "number" and numStages > 0) and numStages or 0
         local baseStages = validNumStages > 0 and validNumStages or (hasFontOfMagic and 4 or 3)
         cb.numStages = baseStages + 1
@@ -144,7 +144,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     self:UpdateBackground()
     self:UpdateIcon()
     self:UpdateSparkColors()
-    self:UpdateTicks(empowered and cb.numStages or (channel and name or nil), cb.duration)
+    self:UpdateTicks(empowered and cb.numStages or 0, channel and spellID or nil, cb.duration)
 end
 
 -- AscensionCastBar/Logic.lua
@@ -247,9 +247,9 @@ function AscensionCastBar:ToggleTestMode(val)
         if cb.isEmpowered then
             local hasFontOfMagic = IsPlayerSpell(408083)
             cb.numStages = hasFontOfMagic and 5 or 4
-            self:UpdateTicks(cb.numStages, cb.duration)
+            self:UpdateTicks(cb.numStages, nil, cb.duration)
         elseif cb.channeling then
-            self:UpdateTicks("Test", cb.duration)
+            self:UpdateTicks(0, nil, cb.duration) 
         else
             self:HideTicks()
         end
@@ -361,7 +361,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
                     self:UpdateBarColor()
-                    self:UpdateTicks(selfFrame.numStages, selfFrame.duration)
+                    self:UpdateTicks(selfFrame.numStages, nil, selfFrame.duration)
                 end
 
             selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
