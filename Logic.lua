@@ -48,6 +48,7 @@ local function GetSafeCastInfo(unit, channel)
     }
 end
 
+-- En AscensionCastBar/Logic.lua
 function AscensionCastBar:HandleCastStart(event, unit, ...)
     local channel = (event == "UNIT_SPELLCAST_CHANNEL_START")
     local empowered = (event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
@@ -59,10 +60,8 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local cb = self.castBar
     if not cb then return end
 
-    -- Use improved helper to handle both table (12.0?) and standard return values
     local info = GetSafeCastInfo("player", channel)
 
-    -- Nil check to prevent 'attempt to call a nil value'
     if not info or not info.name then 
         cb.casting = false
         cb.channeling = false
@@ -72,7 +71,6 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
         return 
     end
 
-    -- Extract values directly from the table returned by the game
     local name = info.name
     local texture = info.texture
     local startMS = info.startTime
@@ -81,7 +79,6 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local spellID = info.spellID
     local numStages = info.numStages or 0
 
-    -- ... (Rest of the logic using these local variables)
     self:UpdateAnchor()
     cb.casting = not channel
     cb.channeling = channel
@@ -92,11 +89,27 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local rawDuration = (endMS - startMS) / 1000
 
     if empowered then
-        local hasFontOfMagic = IsPlayerSpell(408083)
+        local hasFontOfMagic = IsPlayerSpell(411212)
         local validNumStages = (type(numStages) == "number" and numStages > 0) and numStages or 0
         local baseStages = validNumStages > 0 and validNumStages or (hasFontOfMagic and 4 or 3)
         cb.numStages = baseStages + 1
-        cb.duration = rawDuration * (cb.numStages / baseStages)
+        local weights = self:GetEmpoweredStageWeights(cb.numStages)
+        local castWeight = 0
+        local totalWeight = 0
+
+        for i, w in ipairs(weights) do
+            totalWeight = totalWeight + w
+            if i < cb.numStages then
+                castWeight = castWeight + w
+            end
+        end
+
+        local multiplier = 1
+        if castWeight > 0 then
+            multiplier = totalWeight / castWeight
+        end
+
+        cb.duration = rawDuration * multiplier
         cb.endTime = startTime + cb.duration
     else
         cb.numStages = 0
@@ -109,9 +122,8 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     cb.currentStage = 1
     cb:SetScale(1.0)
     cb:SetAlpha(1.0)
-    cb:Show() -- Ensure visibility
+    cb:Show()
 
-    -- Update visuals
     local displayName = name
     if db.truncateSpellName and string.len(displayName) > (db.truncateLength or 20) then
         displayName = string.sub(displayName, 1, db.truncateLength or 20) .. "..."
@@ -125,13 +137,14 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     end
     
     cb.shield:Hide()
-    self:UpdateTicks(empowered and cb.numStages or (channel and name or nil), cb.duration)
+    
     self:ApplyFont()
     self:UpdateBarColor(notInt)
     self:UpdateBorder()
     self:UpdateBackground()
     self:UpdateIcon()
     self:UpdateSparkColors()
+    self:UpdateTicks(empowered and cb.numStages or (channel and name or nil), cb.duration)
 end
 
 -- AscensionCastBar/Logic.lua
@@ -334,21 +347,27 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
 
                 for i, w in ipairs(weights) do
                     cumulative = cumulative + (w / totalWeight)
-                    if pct <= cumulative then
+                    -- Usamos 0.001 para detectar mejor el cambio de etapa
+                    if pct <= (cumulative + 0.001) then
                         currentStage = i
                         break
                     end
                 end
-                if pct > 0.99 then currentStage = stages end
+
+                if pct >= 0.98 then 
+                    currentStage = stages 
+                end
 
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
                     self:UpdateBarColor()
+                    self:UpdateTicks(selfFrame.numStages, selfFrame.duration)
                 end
 
-                selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
-                Upd(elap, duration, false)
-            elseif db.reverseChanneling then
+            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
+            Upd(elap, duration, false)
+
+            elseif db.reverseChanneling then 
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
                 Upd(elap, duration, false)
             else

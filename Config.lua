@@ -191,14 +191,6 @@ AscensionCastBar.defaults = {
 function AscensionCastBar:SetupOptions()
     local anchors = {
         ["CENTER"] = "Center",
-        ["TOP"] = "Top",
-        ["BOTTOM"] = "Bottom",
-        ["LEFT"] = "Left",
-        ["RIGHT"] = "Right",
-        ["TOPLEFT"] = "Top Left",
-        ["TOPRIGHT"] = "Top Right",
-        ["BOTTOMLEFT"] = "Bottom Left",
-        ["BOTTOMRIGHT"] = "Bottom Right",
     }
 
     local options = {
@@ -211,31 +203,145 @@ function AscensionCastBar:SetupOptions()
                 type = "group",
                 order = 1,
                 args = {
-                    -- ==========================================
-                    -- 1. ATTACHED SETTINGS
-                    -- ==========================================
-                    headerAttached = {
-                        name = "Attached Settings (Active when CDM is used)",
-                        type = "header",
-                        order = 0,
-                        hidden = function() return not self.db.profile.attachToCDM end
+                    headerCommon = { name = "Test Mode", type = "header", order = 10 },
+                    hideDefaultCastbar = {
+                        name = "Hide Default Cast Bar",
+                        desc = "Hides the standard Blizzard casting bar.",
+                        type = "toggle",
+                        order = 11,
+                        get = function(info) return self.db.profile.hideDefaultCastbar end,
+                        set = function(info, val)
+                            self.db.profile.hideDefaultCastbar = val
+                            self:UpdateDefaultCastBarVisibility()
+                        end,
                     },
-                    -- testAttached = {
-                    --     name = "Test Attached Mode",
-                    --     desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
-                    --     type = "toggle",
-                    --     order = 0.5,
-                    --     hidden = function() return not self.db.profile.attachToCDM end,
-                    --     get = function(info) return self.db.profile.testAttached end,
-                    --     set = function(info, val)
-                    --         self.db.profile.testAttached = val
-                    --         self.db.profile.previewEnabled = val -- Auto-enable preview
-                    --         self:ToggleTestMode(val)
-                    --         self:UpdateAnchor()                  -- Force update
-                    --     end,
-                    -- },
+                    preview = {
+                        name = "Test Mode",
+                        desc = "Show a preview cast to configure visuals.",
+                        type = "toggle",
+                        order = 12,
+                        get = function(info) return self.db.profile.previewEnabled end,
+                        set = function(info, val)
+                            self.db.profile.previewEnabled = val
+                            if not val then self.db.profile.testAttached = false end -- Disable attached test if main off
+                            self:ToggleTestMode(val)
+                        end,
+                    },
+                    testModeState = {
+                        name = "Test Animation",
+                        desc = "Select the type of spell to preview.",
+                        type = "select",
+                        values = { ["Cast"] = "Cast", ["Channel"] = "Channel", ["Empowered"] = "Empowered" },
+                        order = 13,
+                        disabled = function() return not self.db.profile.previewEnabled end,
+                        get = function(info) return self.db.profile.testModeState end,
+                        set = function(info, val)
+                            self.db.profile.testModeState = val
+                            if self.db.profile.previewEnabled then self:ToggleTestMode(true) end
+                        end,
+                    },
+                    headerManual = {
+                        name = "Manual Position & Size",
+                        type = "header",
+                        order = 20,
+                    },
+                    point = {
+                        name = "Anchor Point",
+                        type = "select",
+                        values = anchors,
+                        order = 21,
+                        get = function(info) return self.db.profile.point end,
+                        set = function(info, val)
+                            self.db.profile.point = val; self:UpdateAnchor()
+                        end,
+                    },
+                    manualX = {
+                        name = "X Offset",
+                        type = "range",
+                        min = -2000,
+                        max = 2000,
+                        step = 1,
+                        order = 22,
+                        get = function(info) return self.db.profile.manualX end,
+                        set = function(info, val)
+                            self.db.profile.manualX = val; self:UpdateAnchor()
+                        end,
+                    },
+                    manualY = {
+                        name = "Y Offset",
+                        type = "range",
+                        min = -2000,
+                        max = 2000,
+                        step = 1,
+                        order = 23,
+                        get = function(info) return self.db.profile.manualY end,
+                        set = function(info, val)
+                            self.db.profile.manualY = val; self:UpdateAnchor()
+                        end,
+                    },
+                    manualWidth = {
+                        name = "Width",
+                        type = "range",
+                        min = 100,
+                        max = 1000,
+                        step = 1,
+                        order = 24,
+                        get = function(info) return self.db.profile.manualWidth end,
+                        set = function(info, val)
+                            self.db.profile.manualWidth = val; self:UpdateAnchor()
+                        end,
+                    },
+                    manualHeight = {
+                        name = "Height",
+                        type = "range",
+                        min = 10,
+                        max = 100,
+                        step = 1,
+                        order = 25,
+                        get = function(info) return self.db.profile.manualHeight end,
+                        set = function(info, val)
+                            self.db.profile.manualHeight = val
+                            if not self.db.profile.attachToCDM then
+                                self.castBar:SetHeight(val)
+                                self:UpdateSparkSize()
+                                self:UpdateIcon()
+                            end
+                        end,
+                    },
+                }
+            },
+            attachment = {
+                name = "Attachment",
+                type = "group",
+                order = 2,
+                args = {
+                    testAttached = {
+                        name = "Test Attached Mode",
+                        desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
+                        type = "toggle",
+                        order = 0.5,
+                        hidden = function() return not self.db.profile.attachToCDM end,
+                        get = function(info) return self.db.profile.testAttached end,
+                        set = function(info, val)
+                            self.db.profile.testAttached = val
+                            self.db.profile.previewEnabled = val -- Auto-enable preview
+                            self:ToggleTestMode(val)
+                            self:UpdateAnchor()                  -- Force update
+                        end,
+                    },
+                    attachToCDM = {
+                        name = "Enable Attachment",
+                        desc = "Attempt to attach the cast bar to another frame (e.g. Player Frame, Action Bar).",
+                        type = "toggle",
+                        width = "full",
+                        order = 1,
+                        get = function(info) return self.db.profile.attachToCDM end,
+                        set = function(info, val)
+                            self.db.profile.attachToCDM = val; self:InitCDMHooks(); self:UpdateAnchor()
+                        end,
+                    },
                     height = {
-                        name = "Height (Attached)",
+                        name = "Height",
                         type = "range",
                         min = 10,
                         max = 100,
@@ -250,123 +356,49 @@ function AscensionCastBar:SetupOptions()
                             self:UpdateIcon()
                         end,
                     },
-
-                    -- ==========================================
-                    -- 2. MANUAL SETTINGS
-                    -- ==========================================
-                    headerManual = {
-                        name = "Manual Position & Size (Fallback / Default)",
-                        type = "header",
-                        order = 10,
-                    },
-                    -- Position Controls
-                    point = {
-                        name = "Anchor Point",
+                    cdmTarget = {
+                        name = "Attach Target",
                         type = "select",
-                        values = anchors,
-                        order = 11,
-                        get = function(info) return self.db.profile.point end,
+                        style = "dropdown",
+                        values = { 
+                            ["Buffs"] = "Tracked Buffs (CDM)", 
+                            ["Essential"] = "Essential Cooldowns (CDM)", 
+                            ["Utility"] = "Utility Cooldowns (CDM)", 
+                            ["PlayerFrame"] = "Player Frame",
+                            ["PersonalResource"] = "Personal Resource Display",
+                            ["ActionBar1"] = "Action Bar 1",
+                            ["ActionBar2"] = "Action Bar 2",
+                            ["ActionBar3"] = "Action Bar 3",
+                            ["ActionBar4"] = "Action Bar 4",
+                            ["ActionBar5"] = "Action Bar 5",
+                            ["ActionBar6"] = "Action Bar 6",
+                            ["ActionBar7"] = "Action Bar 7",
+                            ["ActionBar8"] = "Action Bar 8",
+                            ["BT4Bonus"] = "Bonus Action Bar (BT4)",
+                            ["BT4Class1"] = "Class Bar 1 (BT4)",
+                            ["BT4Class2"] = "Class Bar 2 (BT4)",
+                            ["BT4Class3"] = "Class Bar 3 (BT4)",
+                            ["BT4Class4"] = "Class Bar 4 (BT4)"
+                        },
+                        order = 2,
+                        get = function(info) return self.db.profile.cdmTarget end,
                         set = function(info, val)
-                            self.db.profile.point = val; self:UpdateAnchor()
+                            self.db.profile.cdmTarget = val; self:InitCDMHooks(); self:UpdateAnchor()
                         end,
                     },
-                    manualX = {
-                        name = "X Offset",
-                        type = "range",
-                        min = -2000,
-                        max = 2000,
-                        step = 1,
-                        order = 12,
-                        get = function(info) return self.db.profile.manualX end,
-                        set = function(info, val)
-                            self.db.profile.manualX = val; self:UpdateAnchor()
-                        end,
-                    },
-                    manualY = {
+                    cdmYOffset = {
                         name = "Y Offset",
                         type = "range",
-                        min = -2000,
-                        max = 2000,
+                        min = -200,
+                        max = 200,
                         step = 1,
-                        order = 13,
-                        get = function(info) return self.db.profile.manualY end,
+                        order = 3,
+                        get = function(info) return self.db.profile.cdmYOffset end,
                         set = function(info, val)
-                            self.db.profile.manualY = val; self:UpdateAnchor()
+                            self.db.profile.cdmYOffset = val; self:UpdateAnchor()
                         end,
                     },
-                    -- Size Controls
-                    manualWidth = {
-                        name = "Width",
-                        type = "range",
-                        min = 100,
-                        max = 1000,
-                        step = 1,
-                        order = 14,
-                        get = function(info) return self.db.profile.manualWidth end,
-                        set = function(info, val)
-                            self.db.profile.manualWidth = val; self:UpdateAnchor()
-                        end,
-                    },
-                    manualHeight = {
-                        name = "Height",
-                        type = "range",
-                        min = 10,
-                        max = 100,
-                        step = 1,
-                        order = 15,
-                        get = function(info) return self.db.profile.manualHeight end,
-                        set = function(info, val)
-                            self.db.profile.manualHeight = val
-                            if not self.db.profile.attachToCDM then
-                                self.castBar:SetHeight(val)
-                                self:UpdateSparkSize()
-                                self:UpdateIcon()
-                            end
-                        end,
-                    },
-
-                    -- ==========================================
-                    -- 3. COMMON OPTIONS
-                    -- ==========================================
-                    headerCommon = { name = "Options", type = "header", order = 20 },
-
-                    hideDefaultCastbar = {
-                        name = "Hide Default Cast Bar",
-                        desc = "Hides the standard Blizzard casting bar.",
-                        type = "toggle",
-                        order = 21,
-                        get = function(info) return self.db.profile.hideDefaultCastbar end,
-                        set = function(info, val)
-                            self.db.profile.hideDefaultCastbar = val
-                            self:UpdateDefaultCastBarVisibility()
-                        end,
-                    },
-                    preview = {
-                        name = "Test Mode",
-                        desc = "Show a preview cast to configure visuals.",
-                        type = "toggle",
-                        order = 22,
-                        get = function(info) return self.db.profile.previewEnabled end,
-                        set = function(info, val)
-                            self.db.profile.previewEnabled = val
-                            if not val then self.db.profile.testAttached = false end -- Disable attached test if main off
-                            self:ToggleTestMode(val)
-                        end,
-                    },
-                    testModeState = {
-                        name = "Test Animation",
-                        desc = "Select the type of spell to preview.",
-                        type = "select",
-                        values = { ["Cast"] = "Cast", ["Channel"] = "Channel", ["Empowered"] = "Empowered" },
-                        order = 23,
-                        disabled = function() return not self.db.profile.previewEnabled end,
-                        get = function(info) return self.db.profile.testModeState end,
-                        set = function(info, val)
-                            self.db.profile.testModeState = val
-                            if self.db.profile.previewEnabled then self:ToggleTestMode(true) end
-                        end,
-                    },
-                }
+                },
             },
             visuals = {
                 name = "Visuals",
@@ -507,7 +539,6 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     headerCombat = { name = "Combat & Channels", type = "header", order = 30 },
-
                     -- CHANNELS
                     spacer1 = { name = " ", type = "description", order = 35 },
                     showChannelTicks = {
@@ -543,7 +574,6 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     headerEmpower = { name = "Empowered Spells", type = "header", order = 45 },
-
                     empowerStage1Color = {
                         name = "Stage 1 (Start)",
                         type = "color",
@@ -633,7 +663,6 @@ function AscensionCastBar:SetupOptions()
                         end,
                         set = function(info, r, g, b, a) self.db.profile.channelGlowColor = { r, g, b, a }; end,
                     },
-
                     reverseChanneling = {
                         name = "Reverse Channeling",
                         desc = "Fill bar instead of empty for channels.",
@@ -782,7 +811,6 @@ function AscensionCastBar:SetupOptions()
                             end
                         end,
                     },
-
                     -- PARÁMETROS ESPECÍFICOS POR ESTILO
                     styleSpecificGroup = {
                         name = "Style Specific Settings",
@@ -849,7 +877,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].glowPulse = val
                                 end,
                             },
-
                             -- Pulse Settings
                             pulseMaxScale = {
                                 name = "Max Ripple Scale",
@@ -886,7 +913,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].rippleCycle = val
                                 end,
                             },
-
                             -- Starfall Settings
                             starfallFallSpeed = {
                                 name = "Fall Speed",
@@ -922,7 +948,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].swayAmount = val
                                 end,
                             },
-
                             -- Flux Settings
                             fluxJitterY = {
                                 name = "Vertical Jitter",
@@ -958,7 +983,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].jitterX = val
                                 end,
                             },
-
                             -- Helix Settings
                             helixDriftMultiplier = {
                                 name = "Drift Multiplier",
@@ -1012,7 +1036,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].waveSpeed = val
                                 end,
                             },
-
                             -- Wave Settings
                             waveCount = {
                                 name = "Number of Waves",
@@ -1120,7 +1143,6 @@ function AscensionCastBar:SetupOptions()
                                     self.db.profile.animationParams[style].maxOffset = val
                                 end,
                             },
-
                             -- Lightning Settings
                             lightningChance = {
                                 name = "Lightning Chance",
@@ -1159,7 +1181,6 @@ function AscensionCastBar:SetupOptions()
                             },
                         }
                     },
-
                     headerTailSettings = { name = "Tail Settings", type = "header", order = 10 },
                     sparkIntensity = {
                         name = "Intensity",
@@ -1380,7 +1401,6 @@ function AscensionCastBar:SetupOptions()
                             },
                         }
                     },
-
                     -- Botón de reset
                     resetStyleSettings = {
                         name = "Reset Current Style",
@@ -1398,80 +1418,6 @@ function AscensionCastBar:SetupOptions()
                     },
                 }
             },
-            integration = {
-                        name = "Integration",
-                        type = "group",
-                        order = 2,
-                        args = {
-                            testAttached = {
-                                name = "Test Attached Mode",
-                                desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
-                                type = "toggle",
-                                order = 0.5,
-                                hidden = function() return not self.db.profile.attachToCDM end,
-                                get = function(info) return self.db.profile.testAttached end,
-                                set = function(info, val)
-                                    self.db.profile.testAttached = val
-                                    self.db.profile.previewEnabled = val -- Auto-enable preview
-                                    self:ToggleTestMode(val)
-                                    self:UpdateAnchor()                  -- Force update
-                                end,
-                            },
-                            attachToCDM = {
-                                name = "Enable Attachment",
-                                desc = "Attempt to attach the cast bar to another frame (e.g. Player Frame, Action Bar).",
-                                type = "toggle",
-                                width = "full",
-                                order = 1,
-                                get = function(info) return self.db.profile.attachToCDM end,
-                                set = function(info, val)
-                                    self.db.profile.attachToCDM = val; self:InitCDMHooks(); self:UpdateAnchor()
-                                end,
-                            },
-                            cdmTarget = {
-                                name = "Attach Target",
-                                type = "select",
-                                style = "dropdown",
-                                values = { 
-                                    ["PersonalResource"] = "Personal Resource Display",
-                                    ["PlayerFrame"] = "Player Frame",
-                                    ["ActionBar1"] = "Action Bar 1",
-                                    ["ActionBar2"] = "Action Bar 2",
-                                    ["ActionBar3"] = "Action Bar 3",
-                                    ["ActionBar4"] = "Action Bar 4",
-                                    ["ActionBar5"] = "Action Bar 5",
-                                    ["ActionBar6"] = "Action Bar 6",
-                                    ["ActionBar7"] = "Action Bar 7",
-                                    ["ActionBar8"] = "Action Bar 8",
-                                    ["BT4Bonus"] = "Bonus Action Bar (BT4)",
-                                    ["BT4Class1"] = "Class Bar 1 (BT4)",
-                                    ["BT4Class2"] = "Class Bar 2 (BT4)",
-                                    ["BT4Class3"] = "Class Bar 3 (BT4)",
-                                    ["BT4Class4"] = "Class Bar 4 (BT4)",
-                                    ["Buffs"] = "Buffs (CDM)", 
-                                    ["Essential"] = "Essential (CDM)", 
-                                    ["Utility"] = "Utility (CDM)" 
-                                },
-                                order = 2,
-                                get = function(info) return self.db.profile.cdmTarget end,
-                                set = function(info, val)
-                                    self.db.profile.cdmTarget = val; self:InitCDMHooks(); self:UpdateAnchor()
-                                end,
-                            },
-                            cdmYOffset = {
-                                name = "Y Offset",
-                                type = "range",
-                                min = -200,
-                                max = 200,
-                                step = 1,
-                                order = 3,
-                                get = function(info) return self.db.profile.cdmYOffset end,
-                                set = function(info, val)
-                                    self.db.profile.cdmYOffset = val; self:UpdateAnchor()
-                                end,
-                            },
-                        }
-                    },
             profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
         }
     }

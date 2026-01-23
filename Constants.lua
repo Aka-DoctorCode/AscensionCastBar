@@ -28,17 +28,6 @@ AscensionCastBar.CHANNEL_TICKS = {
     ["Himno divino"] = 4,
     ["Disintegrate"] = 4,
     ["Desintegrar"] = 4,
-    -- Dracthyr / Empowered (Usually have stages)
-    ["Fire Breath"] = 4,
-    ["Aliento de fuego"] = 4,
-    ["Eternity Surge"] = 4,
-    ["Oleada de eternidad"] = 4,
-    ["Dream Breath"] = 4,
-    ["Aliento onírico"] = 4,
-    ["Spiritbloom"] = 4,
-    ["Flor de espíritu"] = 4,
-    ["Upheaval"] = 4,
-    ["Agitación"] = 4,
 }
 
 AscensionCastBar.ANIMATION_STYLE_PARAMS = {

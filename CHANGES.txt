@@ -1,19 +1,12 @@
-lightweight tag 126fd0dc79bff04b4f7c8b48d4be7727a80942c3 V5.0.0
+lightweight tag 673c7290b4f9c5b3383fa16232da055aa316cee1 V5.3.0
 Author:	Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:	Wed Jan 21 02:08:47 2026 -0400
+Date:	Thu Jan 22 21:14:59 2026 -0400
 
-commit 126fd0dc79bff04b4f7c8b48d4be7727a80942c3
+commit 673c7290b4f9c5b3383fa16232da055aa316cee1
 Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:   Wed Jan 21 02:08:47 2026 -0400
+Date:   Thu Jan 22 21:14:59 2026 -0400
 
-    Update AscensionCastBar.toc
-
-commit 56afbebb810323f12be7acc87b936cc88d23c8a4
-Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:   Wed Jan 21 02:07:02 2026 -0400
-
-    V6.1.0
+    V5.3.0
     
-    - Changes to for compatibility with 12.0.0
-    - TOC update.
+    Implemented Bartender 4 attachment.
 

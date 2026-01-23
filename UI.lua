@@ -329,33 +329,35 @@ function AscensionCastBar:UpdateBarColor()
     -- 1. EMPOWERED
     if cb.isEmpowered and cb.currentStage then
         local s = cb.currentStage
-        local c = db.empowerStage1Color
+        local c = db.empowerStage1Color or {0, 1, 0, 1} -- Fallback
         
-        -- Reset scale to normal to avoid conflicts
+        -- Reset scale
         cb:SetScale(1.0) 
         
-        -- Calculate 5% width increase per stage based on manualWidth
+        -- Calculate width increase: 5% per stage
         local baseWidth = db.manualWidth or 270
         local widthMultiplier = 1 + ((s - 1) * 0.05)
         cb:SetWidth(baseWidth * widthMultiplier)
 
+        -- Check stages in descending order with SAFETY FALLBACKS
         if s >= 5 then
-            c = db.empowerStage5Color
+            c = db.empowerStage5Color or {0.8, 0.3, 1, 1} -- Púrpura si falta config
         elseif s == 4 then
-            c = db.empowerStage4Color
+            c = db.empowerStage4Color or {1, 0, 0, 1}
         elseif s == 3 then
-            c = db.empowerStage3Color
+            c = db.empowerStage3Color or {1, 0.5, 0, 1}
         elseif s == 2 then
-            c = db.empowerStage2Color
+            c = db.empowerStage2Color or {1, 1, 0, 1}
         end
 
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
 
-        if s >= cb.numStages then
+        -- Show glow if we are at the Hold Stage (Last stage)
+        if s >= (cb.numStages or 4) then
             cb.glowFrame:SetBackdropBorderColor(c[1], c[2], c[3], 1)
             cb.glowFrame:Show()
         end
-        return
+        return -- Salimos aquí para no ejecutar lógica de canalizado normal
     else
         cb:SetScale(1.0)
     end
@@ -370,13 +372,13 @@ function AscensionCastBar:UpdateBarColor()
             cb.glowFrame:Show()
         end
 
-        -- 3. NORMAL CAST (Class Color)
+    -- 3. NORMAL CAST (Class Color)
     elseif db.useClassColor then
         local _, playerClass = UnitClass("player")
         local classColor = C_ClassColor.GetClassColor(playerClass) or { r = 1, g = 1, b = 1 }
         cb:SetStatusBarColor(classColor.r, classColor.g, classColor.b, 1)
 
-        -- 4. NORMAL CAST (Custom Color)
+    -- 4. NORMAL CAST (Custom Color)
     else
         local c = db.barColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
