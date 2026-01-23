@@ -1,4 +1,15 @@
--- Constants.lua
+-------------------------------------------------------------------------------
+-- Project: AscensionCastBar
+-- Author: Aka-DoctorCode 
+-- File: Constants.lua
+-- Version: 12.0.0
+-------------------------------------------------------------------------------
+-- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
+--
+-- This software and its source code are the exclusive property of the author.
+-- No part of this file may be copied, modified, redistributed, or used in 
+-- derivative works without express written permission.
+-------------------------------------------------------------------------------
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 

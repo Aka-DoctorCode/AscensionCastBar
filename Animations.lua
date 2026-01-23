@@ -1,3 +1,15 @@
+-------------------------------------------------------------------------------
+-- Project: AscensionCastBar
+-- Author: Aka-DoctorCode 
+-- File: Animations.lua
+-- Version: 12.0.0
+-------------------------------------------------------------------------------
+-- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
+--
+-- This software and its source code are the exclusive property of the author.
+-- No part of this file may be copied, modified, redistributed, or used in 
+-- derivative works without express written permission.
+-------------------------------------------------------------------------------
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
 local LSM = LibStub("LibSharedMedia-3.0")
 
