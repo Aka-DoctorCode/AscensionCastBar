@@ -220,20 +220,20 @@ function AscensionCastBar:SetupOptions()
                         order = 0,
                         hidden = function() return not self.db.profile.attachToCDM end
                     },
-                    testAttached = {
-                        name = "Test Attached Mode",
-                        desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
-                        type = "toggle",
-                        order = 0.5,
-                        hidden = function() return not self.db.profile.attachToCDM end,
-                        get = function(info) return self.db.profile.testAttached end,
-                        set = function(info, val)
-                            self.db.profile.testAttached = val
-                            self.db.profile.previewEnabled = val -- Auto-enable preview
-                            self:ToggleTestMode(val)
-                            self:UpdateAnchor()                  -- Force update
-                        end,
-                    },
+                    -- testAttached = {
+                    --     name = "Test Attached Mode",
+                    --     desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
+                    --     type = "toggle",
+                    --     order = 0.5,
+                    --     hidden = function() return not self.db.profile.attachToCDM end,
+                    --     get = function(info) return self.db.profile.testAttached end,
+                    --     set = function(info, val)
+                    --         self.db.profile.testAttached = val
+                    --         self.db.profile.previewEnabled = val -- Auto-enable preview
+                    --         self:ToggleTestMode(val)
+                    --         self:UpdateAnchor()                  -- Force update
+                    --     end,
+                    -- },
                     height = {
                         name = "Height (Attached)",
                         type = "range",
@@ -1403,6 +1403,20 @@ function AscensionCastBar:SetupOptions()
                         type = "group",
                         order = 2,
                         args = {
+                            testAttached = {
+                                name = "Test Attached Mode",
+                                desc = "Force the bar to show in the 'Attached' position (simulated) to adjust settings.",
+                                type = "toggle",
+                                order = 0.5,
+                                hidden = function() return not self.db.profile.attachToCDM end,
+                                get = function(info) return self.db.profile.testAttached end,
+                                set = function(info, val)
+                                    self.db.profile.testAttached = val
+                                    self.db.profile.previewEnabled = val -- Auto-enable preview
+                                    self:ToggleTestMode(val)
+                                    self:UpdateAnchor()                  -- Force update
+                                end,
+                            },
                             attachToCDM = {
                                 name = "Enable Attachment",
                                 desc = "Attempt to attach the cast bar to another frame (e.g. Player Frame, Action Bar).",
@@ -1419,16 +1433,21 @@ function AscensionCastBar:SetupOptions()
                                 type = "select",
                                 style = "dropdown",
                                 values = { 
-                                    ["PlayerFrame"] = "Player Frame", 
-                                    ["PersonalResource"] = "Personal Resources Display",
-                                    ["ActionBar1"] = "Action Bar 1", 
-                                    ["ActionBar2"] = "Action Bar 2", 
-                                    ["ActionBar3"] = "Action Bar 3", 
-                                    ["ActionBar4"] = "Action Bar 4", 
-                                    ["ActionBar5"] = "Action Bar 5", 
-                                    ["ActionBar6"] = "Action Bar 6", 
-                                    ["ActionBar7"] = "Action Bar 7", 
-                                    ["ActionBar8"] = "Action Bar 8", 
+                                    ["PersonalResource"] = "Personal Resource Display",
+                                    ["PlayerFrame"] = "Player Frame",
+                                    ["ActionBar1"] = "Action Bar 1",
+                                    ["ActionBar2"] = "Action Bar 2",
+                                    ["ActionBar3"] = "Action Bar 3",
+                                    ["ActionBar4"] = "Action Bar 4",
+                                    ["ActionBar5"] = "Action Bar 5",
+                                    ["ActionBar6"] = "Action Bar 6",
+                                    ["ActionBar7"] = "Action Bar 7",
+                                    ["ActionBar8"] = "Action Bar 8",
+                                    ["BT4Bonus"] = "Bonus Action Bar (BT4)",
+                                    ["BT4Class1"] = "Class Bar 1 (BT4)",
+                                    ["BT4Class2"] = "Class Bar 2 (BT4)",
+                                    ["BT4Class3"] = "Class Bar 3 (BT4)",
+                                    ["BT4Class4"] = "Class Bar 4 (BT4)",
                                     ["Buffs"] = "Buffs (CDM)", 
                                     ["Essential"] = "Essential (CDM)", 
                                     ["Utility"] = "Utility (CDM)" 

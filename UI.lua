@@ -2,6 +2,21 @@
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 local LSM = LibStub("LibSharedMedia-3.0")
+local BAR_BUTTON_CONFIG = {
+    ["ActionBar1"] = { btStart=1, btEnd=12 },
+    ["ActionBar2"] = { btStart=61, btEnd=72 },
+    ["ActionBar3"] = { btStart=49, btEnd=60 },
+    ["ActionBar4"] = { btStart=25, btEnd=36 },
+    ["ActionBar5"] = { btStart=37, btEnd=48 },
+    ["ActionBar6"] = { btStart=145, btEnd=156 },
+    ["ActionBar7"] = { btStart=157, btEnd=168 },
+    ["ActionBar8"] = { btStart=169, btEnd=181 },
+    ["BT4Bonus"]   = { btStart=13, btEnd=24 },
+    ["BT4Class1"]  = { btStart=73, btEnd=84 },
+    ["BT4Class2"]  = { btStart=85, btEnd=96 },
+    ["BT4Class3"]  = { btStart=97, btEnd=108 },
+    ["BT4Class4"]  = { btStart=109, btEnd=120 },
+}
 
 -- ==========================================================
 -- FRAME CREATION
@@ -122,11 +137,13 @@ end
 -- AscensionCastBar/UI.lua
 function AscensionCastBar:GetCDMTargetFrame()
     local target = self.db.profile.cdmTarget
+    local isBT4 = C_AddOns.IsAddOnLoaded("Bartender4")
     
     if target == "Buffs" then return _G["BuffIconCooldownViewer"]
     elseif target == "Essential" then return _G["EssentialCooldownViewer"]
     elseif target == "Utility" then return _G["UtilityCooldownViewer"]
     elseif target == "PlayerFrame" then return _G["PlayerFrame"]
+    elseif isBT4 and (BAR_BUTTON_CONFIG[target] or target:find("BT4")) then
     elseif target == "ActionBar1" then return _G["MainMenuBar"]
     elseif target == "ActionBar2" then return _G["MultiBarBottomLeft"]
     elseif target == "ActionBar3" then return _G["MultiBarBottomRight"]
@@ -145,7 +162,6 @@ function AscensionCastBar:UpdateAnchor()
     if not self.castBar then return end
     
     local db = self.db.profile
-    
     if not db.attachToCDM then
         self.castBar:ClearAllPoints()
         self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
@@ -153,69 +169,84 @@ function AscensionCastBar:UpdateAnchor()
         return
     end
 
-    if db.cdmTarget == "ActionBar1" then
-        if not self.actionBar1Proxy then
-            self.actionBar1Proxy = CreateFrame("Frame", nil, UIParent)
-            self.actionBar1Proxy:SetSize(1,1)
-        end
+    local target = db.cdmTarget
+    local isBT4 = C_AddOns.IsAddOnLoaded("Bartender4")
+    local btConfig = BAR_BUTTON_CONFIG[target]
+
+    -- Determine Mode: Proxy (Buttons) vs Direct Frame
+    local useProxy = false
+    local startBtn, endBtn, btnPrefix
+
+    if isBT4 and btConfig then
+        -- === BARTENDER MODE ===
+        useProxy = true
+        startBtn = btConfig.btStart
+        endBtn = btConfig.btEnd
         
-        local minX, maxX, minY, maxY
-        
-        local buttonsFound = false
-        for i = 1, 12 do
-            local btn = _G["ActionButton" .. i]
-            if btn and btn:IsShown() then
-                local l, r, t, b = btn:GetLeft(), btn:GetRight(), btn:GetTop(), btn:GetBottom()
-                if l and r and t and b then
-                    if not minX or l < minX then minX = l end
-                    if not maxX or r > maxX then maxX = r end
-                    if not minY or b < minY then minY = b end
-                    if not maxY or t > maxY then maxY = t end
-                    buttonsFound = true
-                end
-            end
+        -- DETECCIÓN AUTOMÁTICA DEL PREFIJO:
+        -- Bartender usa por defecto "BT4Button", pero comprobamos si existe.
+        -- Si no, probamos con "BTButton" (tu configuración anterior).
+        if _G["BT4Button" .. startBtn] then
+            btnPrefix = "BT4Button"
+        elseif _G["BTButton" .. startBtn] then
+            btnPrefix = "BTButton"
+        else
+            -- Fallback por defecto si no se encuentra ninguno aun (puede que cargue tarde)
+            btnPrefix = "BT4Button"
         end
 
-        if buttonsFound then
-            local width = maxX - minX
-            local height = maxY - minY
-            local centerX = (minX + maxX) / 2
-            local centerY = (minY + maxY) / 2
-            
-            self.actionBar1Proxy:ClearAllPoints()
-            self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
-            self.actionBar1Proxy:SetSize(width, height)
-            
+    elseif target == "ActionBar1" and not isBT4 then
+        -- === STANDARD ACTION BAR 1 MODE ===
+        useProxy = true
+        startBtn = 1
+        endBtn = 12
+        btnPrefix = "ActionButton"
+    end
+
+    if useProxy then
+        -- === PROXY MODE ===
+        if not self.actionBarProxy then
+            self.actionBarProxy = CreateFrame("Frame", nil, UIParent)
+            self.actionBarProxy:SetSize(1,1)
+            -- Update loop to handle bar movement/visibility changes
+            self.actionBarProxy:SetScript("OnUpdate", function(f, elapsed)
+                f.timer = (f.timer or 0) + elapsed
+                if f.timer > 0.2 then -- Check every 0.2s
+                    f.timer = 0
+                    self:UpdateProxyFrame()
+                end
+            end)
+        end
+        
+        -- Store config in the proxy frame for the OnUpdate script
+        self.actionBarProxy.btnConfig = { prefix = btnPrefix, startBtn = startBtn, endBtn = endBtn }
+        self.actionBarProxy:Show()
+        
+        -- Trigger immediate update
+        self:UpdateProxyFrame()
+
+    else
+        -- === STANDARD FRAME MODE ===
+        if self.actionBarProxy then self.actionBarProxy:Hide() end
+
+        local targetFrame = self:GetCDMTargetFrame()
+        
+        if targetFrame then
             self.castBar:ClearAllPoints()
-            self.castBar:SetPoint("BOTTOM", self.actionBar1Proxy, "TOP", 0, db.cdmYOffset or 0)
-            self.castBar:SetWidth(width > 10 and width or (db.manualWidth or 270))
-            return
+            self.castBar:SetPoint("BOTTOM", targetFrame, "TOP", 0, db.cdmYOffset or 0)
+            
+            local tWidth = targetFrame:GetWidth()
+            if tWidth and tWidth > 10 and tWidth <= UIParent:GetWidth() then
+                self.castBar:SetWidth(tWidth)
+            else
+                self.castBar:SetWidth(db.manualWidth or 270)
+            end
         else
+            -- Fallback
             self.castBar:ClearAllPoints()
             self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
             self.castBar:SetWidth(db.manualWidth or 270)
-            return
         end
-    end
-
-    local targetFrame = self:GetCDMTargetFrame()
-    
-    if targetFrame then
-        self.castBar:ClearAllPoints()
-        self.castBar:SetPoint("BOTTOM", targetFrame, "TOP", 0, db.cdmYOffset or 0)
-        
-        local tWidth = targetFrame:GetWidth()
-        local maxWidth = UIParent:GetWidth()
-        
-        if tWidth and tWidth > 10 and tWidth <= maxWidth then
-            self.castBar:SetWidth(tWidth)
-        else
-            self.castBar:SetWidth(db.manualWidth or 270)
-        end
-    else
-        self.castBar:ClearAllPoints()
-        self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
-        self.castBar:SetWidth(db.manualWidth or 270)
     end
 end
 
@@ -223,68 +254,46 @@ function AscensionCastBar:InitCDMHooks()
     local db = self.db.profile
     if not db.attachToCDM then return end
 
-    -- 1. Setup Edit Mode events (just in case)
+    -- 1. Setup Edit Mode events
     if not self.editModeEventsRegistered then
         pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_APPLIED", "UpdateAnchor") end)
         pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_UPDATED", "UpdateAnchor") end)
         self.editModeEventsRegistered = true
     end
 
-    -- 2. Clean up Personal Resource events if not used
-    if db.cdmTarget ~= "PersonalResource" then
-        if self.UnregisterEvent then
-            pcall(function() self:UnregisterEvent("NAME_PLATE_UNIT_ADDED") end)
-            pcall(function() self:UnregisterEvent("NAME_PLATE_UNIT_REMOVED") end)
-        end
-    else
-        self:RegisterEvent("NAME_PLATE_UNIT_ADDED", "UpdateAnchor")
-        self:RegisterEvent("NAME_PLATE_UNIT_REMOVED", "UpdateAnchor")
+    -- 2. Check for Proxy Mode (Bartender or ActionBar1)
+    local isBT4 = C_AddOns.IsAddOnLoaded("Bartender4")
+    local isProxy = (isBT4 and (BAR_BUTTON_CONFIG[db.cdmTarget] or db.cdmTarget:find("BT4"))) or (db.cdmTarget == "ActionBar1" and not isBT4)
+
+    if isProxy then
+        -- In Proxy Mode, we rely on the OnUpdate script, not hooks
         self:UpdateAnchor()
         return
     end
 
-    -- 3. TARGET SEARCH LOGIC
+    -- 3. Standard Frame Search
     local targetFrame = self:GetCDMTargetFrame()
 
     if targetFrame then
-        -- === CASE A: FRAME FOUND ===
         if self.lastHookedFrame ~= targetFrame then
             self.lastHookedFrame = targetFrame
-            
             local updateFunc = function() 
                 if self.db.profile.attachToCDM then self:UpdateAnchor() end 
             end
-            
             pcall(function()
                 hooksecurefunc(targetFrame, "SetPoint", updateFunc)
                 hooksecurefunc(targetFrame, "Show", updateFunc)
                 hooksecurefunc(targetFrame, "Hide", updateFunc)
                 hooksecurefunc(targetFrame, "SetSize", updateFunc)
-                hooksecurefunc(targetFrame, "SetWidth", updateFunc)
-                hooksecurefunc(targetFrame, "SetHeight", updateFunc)
-                if targetFrame.HasScript and targetFrame:HasScript("OnSizeChanged") then
-                    targetFrame:HookScript("OnSizeChanged", updateFunc)
-                end
             end)
-            
             self:UpdateAnchor()
         end
-        
-        -- Stop the search timer if it exists (Success)
-        if self.cdmFinderTimer then
-            self.cdmFinderTimer:Cancel()
-            self.cdmFinderTimer = nil
-        end
-        
+        if self.cdmFinderTimer then self.cdmFinderTimer:Cancel(); self.cdmFinderTimer = nil end
     else
-        -- === CASE B: FRAME NOT FOUND YET ===
-        -- Create a ticker to search every 1 second (Max 60 seconds)
         if not self.cdmFinderTimer then
             self.cdmFinderTimer = C_Timer.NewTicker(1, function()
                 local tf = self:GetCDMTargetFrame()
-                if tf then
-                    self:InitCDMHooks() -- Call myself to hook it
-                end
+                if tf then self:InitCDMHooks() end
             end, 60)
         end
     end
@@ -318,12 +327,7 @@ function AscensionCastBar:UpdateBarColor()
     cb.glowFrame:Hide()
 
     -- 1. EMPOWERED
-    -- if cb.isEmpowered and cb.currentStage then
-    --     local s = cb.currentStage
-    --     local c = db.empowerStage1Color
-    --     local scaleMultiplier = 1 + ((s - 1) * 0.05)
-    --     cb:SetScale(scaleMultiplier)
-        if cb.isEmpowered and cb.currentStage then
+    if cb.isEmpowered and cb.currentStage then
         local s = cb.currentStage
         local c = db.empowerStage1Color
         
@@ -574,128 +578,62 @@ function AscensionCastBar:UpdateLatencyBar(castBar)
     castBar.latency:Show()
 end
 
-function AscensionCastBar:CreateActionBar1Proxy()
-    if self.actionBar1Proxy and self.actionBar1Proxy:IsVisible() then
-        return self.actionBar1Proxy
-    end
+function AscensionCastBar:UpdateProxyFrame()
+    if not self.actionBarProxy or not self.actionBarProxy.btnConfig then return end
     
-    -- Crear frame proxy invisible
-    self.actionBar1Proxy = CreateFrame("Frame", "AscensionCastBar_ActionBar1Proxy", UIParent)
-    self.actionBar1Proxy:SetSize(1, 1)
-    
-    -- Encontrar todos los botones de la Action Bar 1
-    local buttons = {}
-    for i = 1, 12 do
-        local button = _G["ActionButton"..i]
-        if button and button:IsVisible() then
-            table.insert(buttons, button)
-        end
-    end
-    
-    if #buttons == 0 then
-        -- Fallback: usar posición por defecto de la Action Bar 1
-        self.actionBar1Proxy:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 40)
-        self.actionBar1Proxy:SetSize(500, 50)
-        return self.actionBar1Proxy
-    end
-    
-    -- Calcular bounding box de todos los botones
+    local cfg = self.actionBarProxy.btnConfig
     local minX, maxX, minY, maxY
+    local found = false
     
-    for i, button in ipairs(buttons) do
-        local left = button:GetLeft()
-        local right = button:GetRight()
-        local bottom = button:GetBottom()
-        local top = button:GetTop()
-        
-        if left and right and bottom and top then
-            if not minX or left < minX then minX = left end
-            if not maxX or right > maxX then maxX = right end
-            if not minY or bottom < minY then minY = bottom end
-            if not maxY or top > maxY then maxY = top end
-        end
-    end
-    
-    if minX and maxX and minY and maxY then
-        -- Posicionar el proxy en el centro del bounding box
-        local centerX = (minX + maxX) / 2
-        local centerY = (minY + maxY) / 2
-        local width = maxX - minX
-        local height = maxY - minY
-        
-        self.actionBar1Proxy:ClearAllPoints()
-        self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
-        self.actionBar1Proxy:SetSize(width, height)
-    else
-        -- Fallback si no podemos calcular las posiciones
-        self.actionBar1Proxy:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 40)
-        self.actionBar1Proxy:SetSize(500, 50)
-    end
-    
-    -- Configurar actualización periódica
-    self.actionBar1Proxy.updateTimer = 0
-    self.actionBar1Proxy:SetScript("OnUpdate", function(self, elapsed)
-        self.updateTimer = self.updateTimer + elapsed
-        if self.updateTimer > 0.5 then  -- Actualizar cada 0.5 segundos
-            self.updateTimer = 0
-            AscensionCastBar:UpdateActionBar1Proxy()
-        end
-    end)
-    
-    return self.actionBar1Proxy
-end
+    -- Necesitamos la escala de la UI principal para convertir al final
+    local uiScale = UIParent:GetEffectiveScale()
 
--- Función para actualizar la posición del proxy
-function AscensionCastBar:UpdateActionBar1Proxy()
-    if not self.actionBar1Proxy then
-        return
-    end
-    
-    local buttons = {}
-    for i = 1, 12 do
-        local button = _G["ActionButton"..i]
-        if button and button:IsVisible() then
-            table.insert(buttons, button)
-        end
-    end
-    
-    if #buttons == 0 then return end
-    
-    local minX, maxX, minY, maxY
-    
-    for i, button in ipairs(buttons) do
-        local left = button:GetLeft()
-        local right = button:GetRight()
-        local bottom = button:GetBottom()
-        local top = button:GetTop()
-        
-        if left and right and bottom and top then
-            if not minX or left < minX then minX = left end
-            if not maxX or right > maxX then maxX = right end
-            if not minY or bottom < minY then minY = bottom end
-            if not maxY or top > maxY then maxY = top end
-        end
-    end
-    
-    if minX and maxX and minY and maxY then
-        local centerX = (minX + maxX) / 2
-        local centerY = (minY + maxY) / 2
-        local width = maxX - minX
-        local height = maxY - minY
-        
-        self.actionBar1Proxy:ClearAllPoints()
-        self.actionBar1Proxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
-        self.actionBar1Proxy:SetSize(width, height)
-        
-        -- SOLO si la cast bar está visible y adjuntada a ActionBar1, actualizarla
-        if self.castBar and self.castBar:IsShown() and 
-           self.db.profile.attachToCDM and self.db.profile.cdmTarget == "ActionBar1" then
-            -- Actualizar la posición sin crear un bucle
-            self.castBar:ClearAllPoints()
-            self.castBar:SetPoint("BOTTOM", self.actionBar1Proxy, "TOP", 0, self.db.profile.cdmYOffset or 0)
+    for i = cfg.startBtn, cfg.endBtn do
+        local btn = _G[cfg.prefix .. i]
+        if btn and btn:IsShown() then
+            -- CORRECCIÓN MATEMÁTICA:
+            -- 1. Obtenemos la escala individual de este botón (Bartender suele escalar sus barras)
+            local btnScale = btn:GetEffectiveScale()
             
-            if width > 50 then
-                self.castBar:SetWidth(width)
+            -- 2. Convertimos las coordenadas a "Píxeles Reales de Pantalla" multiplicando por su escala
+            local l = btn:GetLeft() * btnScale
+            local r = btn:GetRight() * btnScale
+            local t = btn:GetTop() * btnScale
+            local b = btn:GetBottom() * btnScale
+            
+            if l and r and t and b then
+                if not minX or l < minX then minX = l end
+                if not maxX or r > maxX then maxX = r end
+                if not minY or b < minY then minY = b end
+                if not maxY or t > maxY then maxY = t end
+                found = true
+            end
+        end
+    end
+
+    if found then
+        -- 3. Convertimos los "Píxeles Reales" al espacio de coordenadas de UIParent
+        local width = (maxX - minX) / uiScale
+        local height = (maxY - minY) / uiScale
+        
+        local screenCenterX = (minX + maxX) / 2
+        local screenCenterY = (minY + maxY) / 2
+        
+        local anchorX = screenCenterX / uiScale
+        local anchorY = screenCenterY / uiScale
+        
+        self.actionBarProxy:ClearAllPoints()
+        -- Usamos BOTTOMLEFT de UIParent (0,0) como referencia absoluta
+        self.actionBarProxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", anchorX, anchorY)
+        self.actionBarProxy:SetSize(width, height)
+
+        -- Update CastBar
+        if self.castBar then
+            self.castBar:ClearAllPoints()
+            self.castBar:SetPoint("BOTTOM", self.actionBarProxy, "TOP", 0, self.db.profile.cdmYOffset or 0)
+            
+            if width > 10 then 
+                self.castBar:SetWidth(width) 
             end
         end
     end
