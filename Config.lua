@@ -34,9 +34,12 @@ end
 
 AscensionCastBar.defaults = {
     profile = {
-        -- Attached Settings
+        showChannelTicks = true,
+        -- channelTicksColor = {0, 0, 0, 1}, -- Color de ticks 
+        channelTicksThickness = 1,
+        
         height = 24,
-        testAttached = false, -- Nuevo: Para probar modo pegado
+        testAttached = false,
 
         -- Manual / Fallback Settings
         manualWidth = 270,

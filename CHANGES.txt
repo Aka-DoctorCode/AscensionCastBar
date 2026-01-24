@@ -1,12 +1,12 @@
-lightweight tag 673c7290b4f9c5b3383fa16232da055aa316cee1 V5.3.0
+lightweight tag 1c92c0c7e4d9e966c4e23b2d865fb092f201a80a V5.4.1
 Author:	Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:	Thu Jan 22 21:14:59 2026 -0400
+Date:	Fri Jan 23 09:52:30 2026 -0400
 
-commit 673c7290b4f9c5b3383fa16232da055aa316cee1
+commit 1c92c0c7e4d9e966c4e23b2d865fb092f201a80a
 Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:   Thu Jan 22 21:14:59 2026 -0400
+Date:   Fri Jan 23 09:52:30 2026 -0400
 
-    V5.3.0
+    License change
     
-    Implemented Bartender 4 attachment.
+    License change to all right reserved
 

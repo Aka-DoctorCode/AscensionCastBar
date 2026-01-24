@@ -176,7 +176,8 @@ function AscensionCastBar:UpdateAnchor()
     if not db.attachToCDM then
         self.castBar:ClearAllPoints()
         self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
-        self.castBar:SetWidth(db.manualWidth or 270)
+        self.castBar.baseWidth = db.manualWidth or 270
+        self:UpdateBarColor()
         return
     end
 
@@ -248,15 +249,17 @@ function AscensionCastBar:UpdateAnchor()
             
             local tWidth = targetFrame:GetWidth()
             if tWidth and tWidth > 10 and tWidth <= UIParent:GetWidth() then
-                self.castBar:SetWidth(tWidth)
+                self.castBar.baseWidth = tWidth
             else
-                self.castBar:SetWidth(db.manualWidth or 270)
+                self.castBar.baseWidth = db.manualWidth or 270
             end
+            self:UpdateBarColor()
         else
             -- Fallback
             self.castBar:ClearAllPoints()
             self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
-            self.castBar:SetWidth(db.manualWidth or 270)
+            self.castBar.baseWidth = db.manualWidth or 270
+            self:UpdateBarColor()
         end
     end
 end
@@ -346,7 +349,7 @@ function AscensionCastBar:UpdateBarColor()
         cb:SetScale(1.0) 
         
         -- Calculate width increase: 5% per stage
-        local baseWidth = db.manualWidth or 270
+        local baseWidth = cb.baseWidth or db.manualWidth or 270
         local widthMultiplier = 1 + ((s - 1) * 0.05)
         cb:SetWidth(baseWidth * widthMultiplier)
 
@@ -371,6 +374,7 @@ function AscensionCastBar:UpdateBarColor()
         return -- Salimos aquí para no ejecutar lógica de canalizado normal
     else
         cb:SetScale(1.0)
+        cb:SetWidth(cb.baseWidth or db.manualWidth or 270)
     end
 
     -- 2. CHANNEL
@@ -482,17 +486,20 @@ function AscensionCastBar:HideTicks()
     for _, tick in ipairs(self.castBar.ticks) do tick:Hide() end
 end
 
-function AscensionCastBar:UpdateTicks(countOrName, duration)
+function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
     self:HideTicks()
     if not self.db.profile.showChannelTicks then return end
 
     local count = 0
-    local isEmpowered = type(countOrName) == "number"
+    local isEmpowered = (numStages and numStages > 0)
 
     if isEmpowered then
-        count = countOrName
-    else
-        count = self.CHANNEL_TICKS[countOrName]
+        count = numStages
+    elseif spellID then
+        count = self.CHANNEL_TICKS[spellID]
+        if type(count) == "function" then
+            count = count(duration)
+        end
     end
 
     if not count or count < 1 then return end
@@ -646,7 +653,8 @@ function AscensionCastBar:UpdateProxyFrame()
             self.castBar:SetPoint("BOTTOM", self.actionBarProxy, "TOP", 0, self.db.profile.cdmYOffset or 0)
             
             if width > 10 then 
-                self.castBar:SetWidth(width) 
+                self.castBar.baseWidth = width
+                self:UpdateBarColor()
             end
         end
     end

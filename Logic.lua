@@ -89,6 +89,15 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     local notInt = info.notInterruptible
     local spellID = info.spellID
     local numStages = info.numStages or 0
+    
+    -- if channel then
+    --     print("|cff00ff00[Ascension Debug]|r Iniciando Canalizado. Nombre:", name, "ID Detectado:", spellID)
+    --     if self.CHANNEL_TICKS and self.CHANNEL_TICKS[spellID] then
+    --         print(" -> ¡ID encontrado en Constants! Ticks configurados:", type(self.CHANNEL_TICKS[spellID]) == "function" and "DINAMICO" or self.CHANNEL_TICKS[spellID])
+    --     else
+    --         print(" -> ATENCION: Este ID NO existe en Constants.lua. No se mostraran ticks.")
+    --     end
+    -- end
 
     self:UpdateAnchor()
     cb.casting = not channel
@@ -155,7 +164,7 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     self:UpdateBackground()
     self:UpdateIcon()
     self:UpdateSparkColors()
-    self:UpdateTicks(empowered and cb.numStages or 0, channel and spellID or nil, cb.duration)
+    self:UpdateTicks(channel and spellID or nil, empowered and cb.numStages or 0, cb.duration)
 end
 
 -- AscensionCastBar/Logic.lua
@@ -258,9 +267,9 @@ function AscensionCastBar:ToggleTestMode(val)
         if cb.isEmpowered then
             local hasFontOfMagic = IsPlayerSpell(408083)
             cb.numStages = hasFontOfMagic and 5 or 4
-            self:UpdateTicks(cb.numStages, nil, cb.duration)
+            self:UpdateTicks(nil, cb.numStages, cb.duration)
         elseif cb.channeling then
-            self:UpdateTicks(0, nil, cb.duration) 
+            self:UpdateTicks(2341, 0, cb.duration) -- Drain Life ID for test
         else
             self:HideTicks()
         end
@@ -372,7 +381,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
                     self:UpdateBarColor()
-                    self:UpdateTicks(selfFrame.numStages, nil, selfFrame.duration)
+                    self:UpdateTicks(nil, selfFrame.numStages, selfFrame.duration)
                 end
 
             selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
