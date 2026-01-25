@@ -177,16 +177,20 @@ function AscensionCastBar:HandleCastStop(event, unit)
     
     local cName = castData and castData.name
     local chName = channelData and channelData.name
+    
     local currentSpell = self.castBar and self.castBar.lastSpellName
 
-    if cName and cName ~= currentSpell then
-        self:HandleCastStart("UNIT_SPELLCAST_START", "player")
-        return
-    end
-
-    if chName and chName ~= currentSpell then
-        self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
-        return
+    if cName or chName then
+        if (cName and cName == currentSpell) or (chName and chName == currentSpell) then
+            return 
+        else
+            if chName then
+                self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
+            else
+                self:HandleCastStart("UNIT_SPELLCAST_START", "player")
+            end
+            return
+        end
     end
 
     if self.castBar then
@@ -196,6 +200,8 @@ function AscensionCastBar:HandleCastStop(event, unit)
         self.castBar.isEmpowered = false
         self.castBar.lastSpellName = nil
         self.castBar:Hide()
+        
+        self:UpdateSpark(0, 0)
     end
 end
 
@@ -203,7 +209,6 @@ function AscensionCastBar:StopCast()
     local cb = self.castBar
     if not cb then return end
 
-    -- Check Channel
     local channelInfo = GetSafeCastInfo("player", true)
     if channelInfo and channelInfo.name then
         self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
@@ -232,12 +237,11 @@ function AscensionCastBar:StopCast()
 end
 
 function AscensionCastBar:GetEmpoweredStageWeights(numStages)
-    if numStages == 4 then     -- 3 Levels + 1 Hold
+    if numStages == 4 then
         return { 1.5, 1.0, 1.0, 1.5 }
-    elseif numStages == 5 then -- 4 Levels + 1 Hold
+    elseif numStages == 5 then
         return { 1.5, 1.0, 1.0, 1.0, 1.5 }
     end
-    -- Fallback: Equal duration
     local w = {}
     if numStages and numStages > 0 then
         for i = 1, numStages do w[i] = 1 end
@@ -269,13 +273,13 @@ function AscensionCastBar:ToggleTestMode(val)
             cb.numStages = hasFontOfMagic and 5 or 4
             self:UpdateTicks(nil, cb.numStages, cb.duration)
         elseif cb.channeling then
-            self:UpdateTicks(2341, 0, cb.duration) -- Drain Life ID for test
+            self:UpdateTicks(234153, 0, cb.duration)
         else
             self:HideTicks()
         end
 
         self:UpdateBarColor()
-        self:UpdateAnchor() -- Make sure anchor is updated for test mode
+        self:UpdateAnchor()
         cb:Show()
     else
         cb.casting = false
@@ -283,7 +287,6 @@ function AscensionCastBar:ToggleTestMode(val)
         cb.isEmpowered = false
         cb.lastSpellName = nil
 
-        -- Clean up test attached frame
         if self.testAttachedFrame then
             self.testAttachedFrame:Hide()
         end
@@ -349,7 +352,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
             selfFrame.timer:SetText(GetFmtTimer(endTime - now, duration))
             Upd(elap, duration)
             self:UpdateLatencyBar(selfFrame)
-        else -- Channeling
+        else
             local rem = endTime - now
             rem = math.max(0, rem)
             local elap = now - start
@@ -359,7 +362,6 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
                 local stages = selfFrame.numStages or 1
                 local weights = self:GetEmpoweredStageWeights(stages)
 
-                -- Calculate current stage based on weights
                 local currentStage = 1
                 local cumulative = 0
                 local totalWeight = 0
@@ -367,16 +369,13 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
 
                 for i, w in ipairs(weights) do
                     cumulative = cumulative + (w / totalWeight)
-                    -- Usamos 0.001 para detectar mejor el cambio de etapa
                     if pct <= (cumulative + 0.001) then
                         currentStage = i
                         break
                     end
                 end
 
-                if pct >= 0.98 then 
-                    currentStage = stages 
-                end
+                if pct >= 0.98 then currentStage = stages end
 
                 if currentStage ~= selfFrame.currentStage then
                     selfFrame.currentStage = currentStage
@@ -384,8 +383,8 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
                     self:UpdateTicks(nil, selfFrame.numStages, selfFrame.duration)
                 end
 
-            selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
-            Upd(elap, duration, false)
+                selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
+                Upd(elap, duration, false)
 
             elseif db.reverseChanneling then 
                 selfFrame.timer:SetText(db.hideTimerOnChannel and "" or GetFmtTimer(rem, duration))
@@ -399,7 +398,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         return
     end
 
-    if not db.previewEnabled then
+    if not db.previewEnabled and selfFrame:IsShown() then
         selfFrame:SetValue(0); selfFrame.spellName:SetText(""); selfFrame.timer:SetText("")
         selfFrame.icon:Hide(); selfFrame.shield:Hide()
         self:HideTicks()
