@@ -1,12 +1,13 @@
-lightweight tag 1c92c0c7e4d9e966c4e23b2d865fb092f201a80a V5.4.1
+lightweight tag 979444bb5d56544e186e2fba796178ddce6c762e V5.5.1
 Author:	Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:	Fri Jan 23 09:52:30 2026 -0400
+Date:	Sun Jan 25 17:43:19 2026 -0400
 
-commit 1c92c0c7e4d9e966c4e23b2d865fb092f201a80a
+commit 979444bb5d56544e186e2fba796178ddce6c762e
 Author: Aka-DoctorCode <37858279+Aka-DoctorCode@users.noreply.github.com>
-Date:   Fri Jan 23 09:52:30 2026 -0400
+Date:   Sun Jan 25 17:43:19 2026 -0400
 
-    License change
+    V5.5.1
     
-    License change to all right reserved
+    Bug fix:
+    - The bar would disappear if a cast button was spammed, even though there was still a cast happening.
 
