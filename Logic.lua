@@ -180,9 +180,13 @@ function AscensionCastBar:HandleCastStop(event, unit)
     
     local currentSpell = self.castBar and self.castBar.lastSpellName
 
+    local isEmpowerStop = (event == "UNIT_SPELLCAST_EMPOWER_STOP")
+
     if cName or chName then
         if (cName and cName == currentSpell) or (chName and chName == currentSpell) then
-            return 
+            if not isEmpowerStop then
+                return 
+            end
         else
             if chName then
                 self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
