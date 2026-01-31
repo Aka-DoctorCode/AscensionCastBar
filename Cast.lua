@@ -1,0 +1,47 @@
+-------------------------------------------------------------------------------
+-- Project: AscensionCastBar
+-- File: Cast.lua
+-------------------------------------------------------------------------------
+local ADDON_NAME = "Ascension Cast Bar"
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+
+function AscensionCastBar:CastStart(info)
+    local cb = self.castBar
+    local db = self.db.profile
+    
+    cb.casting = true
+    cb.channeling = false
+    cb.isEmpowered = false
+    cb.lastSpellName = info.name
+    
+    cb.startTime = info.startTime / 1000
+    cb.duration = (info.endTime - info.startTime) / 1000
+    cb.endTime = cb.startTime + cb.duration
+    
+    cb:Show()
+    
+    self:SetupCastBarShared(info)
+    self:UpdateBarColor(info.notInterruptible)
+    self:UpdateTicks(nil, 0, cb.duration)
+end
+
+function AscensionCastBar:CastUpdate(now, db)
+    local cb = self.castBar
+    local start = cb.startTime
+    local duration = cb.duration
+    local endTime = cb.endTime
+
+    local elap = now - start
+    elap = math.max(0, math.min(elap, duration))
+    
+    cb.timer:SetText(self:GetFormattedTimer(endTime - now, duration))
+    
+    cb:SetMinMaxValues(0, duration)
+    cb:SetValue(elap)
+    
+    local prog = 0
+    if duration > 0 then prog = elap / duration end
+    self:UpdateSpark(prog, prog)
+    
+    self:UpdateLatencyBar(cb)
+end

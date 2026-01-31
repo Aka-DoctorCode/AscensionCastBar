@@ -1,5 +1,7 @@
 package-as: AscensionCastBar
 
+enable-nolib-creation: no
+
 ignore:
     - .git
     - .gitignore
@@ -7,6 +9,7 @@ ignore:
     - __MACOSX
     - .DS_Store
     - .pkgmeta
+    - *.txt
 
 externals:
   Libs/LibStub: https://repos.wowace.com/wow/libstub/mainline/trunk

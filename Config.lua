@@ -72,6 +72,8 @@ AscensionCastBar.defaults = {
         timerFontSize = 14,
         fontPath = BAR_DEFAULT_FONT_PATH,
         fontColor = { 0.8078, 1, 0.9529, 1 },
+        outlineColor = { 0, 0, 0, 1 },
+        outlineThickness = 1,
         showSpellText = true,
         showTimerText = true,
         spellNameFontLSM = "Expressway, Bold",
@@ -785,6 +787,20 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.spellNameFontLSM = val
                             self.db.profile.timerFontLSM = val
+                            self:ApplyFont()
+                        end,
+                    },
+                    fontColor = {
+                        name = "Font Color",
+                        type = "color",
+                        hasAlpha = true,
+                        order = 13,
+                        get = function(info)
+                            local c = self.db.profile.fontColor or { 0.8078, 1, 0.9529, 1 }
+                            return c[1], c[2], c[3], c[4]
+                        end,
+                        set = function(info, r, g, b, a)
+                            self.db.profile.fontColor = { r, g, b, a }
                             self:ApplyFont()
                         end,
                     },
