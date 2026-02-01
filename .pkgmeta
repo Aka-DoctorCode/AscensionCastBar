@@ -9,7 +9,6 @@ ignore:
     - __MACOSX
     - .DS_Store
     - .pkgmeta
-    - changes.txt
     - cambios.txt
 
 externals:
