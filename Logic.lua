@@ -25,35 +25,37 @@ local function GetSafeCastInfo(unit, channel)
         name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
     end
 
+    -- Handle table-based API return (Version 11.0+)
     if type(name) == "table" then
-        local data = name
-        if not data.name then return nil end 
+        local castData = name
+        if not castData.name then return nil end 
 
         return {
-            name = data.name,
-            text = data.text,
-            texture = data.icon or data.texture,
-            startTime = data.startTime,
-            endTime = data.endTime,
-            isTradeSkill = data.isTradeSkill,
-            castID = data.castID,
-            notInterruptible = (data.isInterruptible == false) or data.notInterruptible,
-            spellID = data.spellID,
-            numStages = data.numStages or 0,
+            name = castData.name,
+            text = castData.text or "",
+            texture = castData.icon or castData.texture or 0,
+            startTime = castData.startTime or 0,
+            endTime = castData.endTime or 0,
+            isTradeSkill = castData.isTradeSkill or false,
+            castID = castData.castID,
+            notInterruptible = (castData.isInterruptible == false) or (castData.notInterruptible == true),
+            spellID = castData.spellID or 0,
+            numStages = castData.numStages or 0,
         }
     end
 
+    -- Handle classic multi-value return
     if not name then return nil end
 
     return {
         name = name,
-        text = text,
-        texture = texture,
-        startTime = startTime,
-        endTime = endTime,
-        isTradeSkill = isTradeSkill,
-        spellID = spellID,
-        notInterruptible = notInterruptible,
+        text = text or "",
+        texture = texture or 0,
+        startTime = startTime or 0,
+        endTime = endTime or 0,
+        isTradeSkill = isTradeSkill or false,
+        spellID = spellID or 0,
+        notInterruptible = notInterruptible or false,
         castID = castID,
         numStages = 0,
     }

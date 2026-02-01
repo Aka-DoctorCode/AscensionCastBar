@@ -9,7 +9,8 @@ ignore:
     - __MACOSX
     - .DS_Store
     - .pkgmeta
-    - .txt
+    - changes.txt
+    - cambios.txt
 
 externals:
   Libs/LibStub: https://repos.wowace.com/wow/libstub/mainline/trunk

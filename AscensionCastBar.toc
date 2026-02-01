@@ -2,7 +2,7 @@
 ## Title: Ascension Cast Bar
 ## Author: AkaDoctorCode
 ## Notes: Customised casting bar with integration for Cooldown Manager.
-## Version: 33
+## Version: 34
 ## SavedVariables: AscensionCastBarDB
 ## OptionalDeps: Ace3, LibSharedMedia-3.0
 ## IconTexture: Interface\AddOns\AscensionCastBar\Media\AkaDoctorCode.png
@@ -27,4 +27,7 @@ Constants.lua
 Config.lua
 Animations.lua
 UI.lua
+Cast.lua
+Channel.lua
+Empower.lua
 Logic.lua

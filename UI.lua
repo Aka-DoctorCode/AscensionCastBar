@@ -613,15 +613,13 @@ function AscensionCastBar:UpdateProxyFrame()
         if btn and btn:IsShown() then
             -- CORRECCIÓN MATEMÁTICA:
             -- 1. Obtenemos la escala individual de este botón (Bartender suele escalar sus barras)
-            local btnScale = btn:GetEffectiveScale()
-            
-            -- 2. Convertimos las coordenadas a "Píxeles Reales de Pantalla" multiplicando por su escala
-            local l = btn:GetLeft() * btnScale
-            local r = btn:GetRight() * btnScale
-            local t = btn:GetTop() * btnScale
-            local b = btn:GetBottom() * btnScale
+            local btnScale = btn:GetEffectiveScale() or 1
+            local l, r, t, b = btn:GetLeft(), btn:GetRight(), btn:GetTop(), btn:GetBottom()
             
             if l and r and t and b then
+                -- Convert to real screen pixels
+                l, r, t, b = l * btnScale, r * btnScale, t * btnScale, b * btnScale
+            
                 if not minX or l < minX then minX = l end
                 if not maxX or r > maxX then maxX = r end
                 if not minY or b < minY then minY = b end
