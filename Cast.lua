@@ -7,13 +7,14 @@ local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 function AscensionCastBar:CastStart(info)
     local cb = self.castBar
-    local db = self.db.profile
-    
+    -- Safety check for time values
+    if not info.startTime or not info.endTime then return end
+
     cb.casting = true
     cb.channeling = false
     cb.isEmpowered = false
     cb.lastSpellName = info.name
-    
+    -- Ensure explicit number conversion
     cb.startTime = info.startTime / 1000
     cb.duration = (info.endTime - info.startTime) / 1000
     cb.endTime = cb.startTime + cb.duration
@@ -22,7 +23,8 @@ function AscensionCastBar:CastStart(info)
     
     self:SetupCastBarShared(info)
     self:UpdateBarColor(info.notInterruptible)
-    self:UpdateTicks(nil, 0, cb.duration)
+    -- Fixed: Passing info.spellID instead of nil to correctly calculate ticks
+    self:UpdateTicks(info.spellID, 0, cb.duration)
 end
 
 function AscensionCastBar:CastUpdate(now, db)

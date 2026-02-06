@@ -11,6 +11,10 @@ Plans:
 - edit icon border (Masque support?)
 - Cuando no hay nada a donde attach la barra se dezplaza a la izquierda
 - Per spec profiles.
+- Track changes per sesion
+- Change other bars to use this one
 
 FIXES
 - When falling back to position a size without attachment casta bat is been shift to the left
+
+Changelog

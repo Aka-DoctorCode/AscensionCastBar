@@ -471,15 +471,39 @@ end
 function AscensionCastBar:ApplyFont()
     local db = self.db.profile
     local cb = self.castBar
+    
+    local outline = db.outline or "OUTLINE"
+    
+    -- Spell Name
     local r, g, b, a = unpack(db.fontColor)
     local sP = LSM:Fetch("font", db.spellNameFontLSM) or self.BAR_DEFAULT_FONT_PATH
-    local tP = LSM:Fetch("font", db.timerFontLSM) or self.BAR_DEFAULT_FONT_PATH
-
-    cb.spellName:SetFont(sP, db.spellNameFontSize, "OUTLINE")
+    cb.spellName:SetFont(sP, db.spellNameFontSize, outline)
     cb.spellName:SetTextColor(r, g, b, a)
 
-    cb.timer:SetFont(tP, db.timerFontSize, "OUTLINE")
+    -- Timer
+    if not db.useSharedColor and db.timerColor then
+        r, g, b, a = unpack(db.timerColor)
+    end
+    
+    local tP = LSM:Fetch("font", db.timerFontLSM) or self.BAR_DEFAULT_FONT_PATH
+    cb.timer:SetFont(tP, db.timerFontSize, outline)
     cb.timer:SetTextColor(r, g, b, a)
+end
+
+function AscensionCastBar:UpdateTextVisibility()
+    local cb = self.castBar
+    if not cb then return end
+    
+    local db = self.db.profile
+    if db.showSpellText then
+        local displayName = cb.lastSpellName or ""
+        if db.truncateSpellName and string.len(displayName) > (db.truncateLength or 20) then
+            displayName = string.sub(displayName, 1, db.truncateLength or 20) .. "..."
+        end
+        cb.spellName:SetText(displayName)
+    else
+        cb.spellName:SetText("")
+    end
 end
 
 function AscensionCastBar:HideTicks()
@@ -502,7 +526,7 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
         end
     end
 
-    if not count or count < 1 then return end
+    if not count or type(count) ~= "number" or count < 1 then return end
 
     local db = self.db.profile
     local c = db.channelTicksColor
@@ -605,14 +629,14 @@ function AscensionCastBar:UpdateProxyFrame()
     local minX, maxX, minY, maxY
     local found = false
     
-    -- Necesitamos la escala de la UI principal para convertir al final
+    -- Safety check: GetEffectiveScale can return nil in rare loading states
     local uiScale = UIParent:GetEffectiveScale()
+    if not uiScale or uiScale <= 0 then uiScale = 1 end
 
     for i = cfg.startBtn, cfg.endBtn do
         local btn = _G[cfg.prefix .. i]
         if btn and btn:IsShown() then
-            -- CORRECCIÓN MATEMÁTICA:
-            -- 1. Obtenemos la escala individual de este botón (Bartender suele escalar sus barras)
+            -- Safety check: Ensure button scale is valid
             local btnScale = btn:GetEffectiveScale() or 1
             local l, r, t, b = btn:GetLeft(), btn:GetRight(), btn:GetTop(), btn:GetBottom()
             
@@ -630,9 +654,13 @@ function AscensionCastBar:UpdateProxyFrame()
     end
 
     if found then
-        -- 3. Convertimos los "Píxeles Reales" al espacio de coordenadas de UIParent
+        -- Convert Real Pixels to UIParent coordinate space
         local width = (maxX - minX) / uiScale
         local height = (maxY - minY) / uiScale
+        
+        -- Sanity check for dimensions to prevent ScriptRegion errors
+        if width < 1 then width = 1 end
+        if height < 1 then height = 1 end
         
         local screenCenterX = (minX + maxX) / 2
         local screenCenterY = (minY + maxY) / 2
@@ -641,7 +669,6 @@ function AscensionCastBar:UpdateProxyFrame()
         local anchorY = screenCenterY / uiScale
         
         self.actionBarProxy:ClearAllPoints()
-        -- Usamos BOTTOMLEFT de UIParent (0,0) como referencia absoluta
         self.actionBarProxy:SetPoint("CENTER", UIParent, "BOTTOMLEFT", anchorX, anchorY)
         self.actionBarProxy:SetSize(width, height)
 

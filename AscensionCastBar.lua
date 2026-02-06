@@ -75,6 +75,7 @@ function AscensionCastBar:RefreshConfig()
     self:UpdateBackground()
     self:UpdateBorder()
     self:UpdateTextLayout()
+    self:UpdateTextVisibility()
     self:UpdateSparkColors()
     self:UpdateDefaultCastBarVisibility()
 end
@@ -212,17 +213,5 @@ function AscensionCastBar:ValidateAnimationParams()
                 end
             end
         end
-    end
-end
-
-function AscensionCastBar:NAME_PLATE_UNIT_ADDED(event, unit)
-    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
-        self:UpdateAnchor()
-    end
-end
-
-function AscensionCastBar:NAME_PLATE_UNIT_REMOVED(event, unit)
-    if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
-        self:UpdateAnchor()
     end
 end

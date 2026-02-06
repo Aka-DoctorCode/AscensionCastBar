@@ -78,6 +78,9 @@ AscensionCastBar.defaults = {
         showTimerText = true,
         spellNameFontLSM = "Expressway, Bold",
         timerFontLSM = "Boris Black Bloxx",
+        outline = "OUTLINE",
+        useSharedColor = true,
+        timerColor = { 0.8078, 1, 0.9529, 1 },
         detachText = false,
         textX = 0,
         textY = 40,
@@ -707,7 +710,10 @@ function AscensionCastBar:SetupOptions()
                         type = "toggle",
                         order = 1,
                         get = function(info) return self.db.profile.showSpellText end,
-                        set = function(info, val) self.db.profile.showSpellText = val end,
+                        set = function(info, val) 
+                            self.db.profile.showSpellText = val 
+                            self:UpdateTextVisibility()
+                        end,
                     },
                     showTimerText = {
                         name = "Show Timer",
@@ -790,18 +796,48 @@ function AscensionCastBar:SetupOptions()
                             self:ApplyFont()
                         end,
                     },
+                    outline = {
+                        name = "Font Outline",
+                        type = "select",
+                        values = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline", ["MONOCHROME"] = "Monochrome" },
+                        order = 12.5,
+                        get = function(info) return self.db.profile.outline or "OUTLINE" end,
+                        set = function(info, val) self.db.profile.outline = val; self:ApplyFont() end,
+                    },
+                    useSharedColor = {
+                        name = "Use Shared Color",
+                        desc = "Use the same color for Spell Name and Timer.",
+                        type = "toggle",
+                        order = 13,
+                        get = function(info) return self.db.profile.useSharedColor end,
+                        set = function(info, val) self.db.profile.useSharedColor = val; self:ApplyFont() end,
+                    },
                     fontColor = {
                         name = "Font Color",
+                        desc = "Color for the Spell Name (and Timer if shared).",
                         type = "color",
                         hasAlpha = true,
-                        order = 13,
+                        order = 13.1,
                         get = function(info)
                             local c = self.db.profile.fontColor or { 0.8078, 1, 0.9529, 1 }
                             return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.fontColor = { r, g, b, a }
-                            self:ApplyFont()
+                            self.db.profile.fontColor = { r, g, b, a }; self:ApplyFont()
+                        end,
+                    },
+                    timerColor = {
+                        name = "Timer Color",
+                        type = "color",
+                        hasAlpha = true,
+                        order = 13.2,
+                        disabled = function() return self.db.profile.useSharedColor end,
+                        get = function(info)
+                            local c = self.db.profile.timerColor or {1, 1, 1, 1}
+                            return c[1], c[2], c[3], c[4]
+                        end,
+                        set = function(info, r, g, b, a)
+                            self.db.profile.timerColor = {r, g, b, a}; self:ApplyFont()
                         end,
                     },
                 }
