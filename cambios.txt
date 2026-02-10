@@ -1,15 +1,12 @@
 Plans:
 - Add falback configuration.
-- Change color for spell and timer
 - animation for chaneling
 - GCD
 - Channel glow not working
-- sustitute every cast bar in the game
 - implementar: AceGUI-3.0-SharedMediaWidgets
 - zoom para el icono
 - X Y silers text inside bar
 - edit icon border (Masque support?)
-- Cuando no hay nada a donde attach la barra se dezplaza a la izquierda
 - Per spec profiles.
 - Track changes per sesion
 - Change other bars to use this one

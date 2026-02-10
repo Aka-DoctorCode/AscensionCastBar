@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: UI.lua
--- Version: 12.0.0
+-- Version: 36
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -40,16 +40,13 @@ function AscensionCastBar:CreateBar()
     end
     self.anchorFrame:SetSize(1, 1) -- Minimal size, just for positioning
 
-    -- IMPORTANT: The cast bar is now a child of 'self.anchorFrame'
     local castBar = CreateFrame("StatusBar", "AscensionCastBarFrame", self.anchorFrame)
     castBar:SetClipsChildren(false)
     
-    -- FIXED: Changed 'width' to 'manualWidth' and added safety defaults
     local width = self.db.profile.manualWidth or 270
     local height = self.db.profile.manualHeight or 24
     castBar:SetSize(width, height)
 
-    -- The bar always stays in the exact center (0,0) of its invisible parent
     castBar:ClearAllPoints()
     castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
 
@@ -113,8 +110,11 @@ function AscensionCastBar:CreateBar()
     castBar.sparkGlow:SetBlendMode("ADD")
 
     -- Text Context
-    castBar.textCtx = CreateFrame("Frame", nil, castBar); castBar.textCtx:SetFrameLevel(20)
-    castBar.textCtx.bg = castBar.textCtx:CreateTexture(nil, "BACKGROUND"); castBar.textCtx.bg:SetAllPoints()
+    castBar.textCtx = CreateFrame("Frame", "AscensionCastBarTextFrame", UIParent)
+    castBar.textCtx:SetFrameStrata("MEDIUM")
+    castBar.textCtx:SetFrameLevel(25)
+    castBar.textCtx.bg = castBar.textCtx:CreateTexture(nil, "BACKGROUND")
+    castBar.textCtx.bg:SetAllPoints()
 
     castBar.spellName = castBar.textCtx:CreateFontString(nil, "OVERLAY");
     castBar.spellName:SetDrawLayer("OVERLAY", 7);
@@ -139,13 +139,15 @@ function AscensionCastBar:CreateBar()
 
     -- OnUpdate Loop
     castBar:SetScript("OnUpdate", function(f, elapsed) self:OnFrameUpdate(f, elapsed) end)
+    
+    -- Inicializar layout del texto
+    self:UpdateTextLayout()
 end
 
 -- ==========================================================
 -- LAYOUT & ANCHORING
 -- ==========================================================
 
--- AscensionCastBar/UI.lua
 function AscensionCastBar:GetCDMTargetFrame()
     local target = self.db.profile.cdmTarget
     local isBT4 = C_AddOns.IsAddOnLoaded("Bartender4")
@@ -173,7 +175,8 @@ function AscensionCastBar:UpdateAnchor()
     if not self.castBar then return end
     
     local db = self.db.profile
-    if not db.attachToCDM then
+    local testOverride = (self.db.profile.previewEnabled and not self.db.profile.testAttached)
+    if not db.attachToCDM or testOverride then
         self.castBar:ClearAllPoints()
         self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
         self.castBar.baseWidth = db.manualWidth or 270
@@ -196,14 +199,11 @@ function AscensionCastBar:UpdateAnchor()
         endBtn = btConfig.btEnd
         
         -- DETECCIÓN AUTOMÁTICA DEL PREFIJO:
-        -- Bartender usa por defecto "BT4Button", pero comprobamos si existe.
-        -- Si no, probamos con "BTButton" (tu configuración anterior).
         if _G["BT4Button" .. startBtn] then
             btnPrefix = "BT4Button"
         elseif _G["BTButton" .. startBtn] then
             btnPrefix = "BTButton"
         else
-            -- Fallback por defecto si no se encuentra ninguno aun (puede que cargue tarde)
             btnPrefix = "BT4Button"
         end
 
@@ -338,24 +338,23 @@ function AscensionCastBar:UpdateBarColor()
     local cb = self.castBar
 
     if not cb.glowFrame then return end
+    
+    -- Reiniciar estado del glow (se oculta por defecto)
     cb.glowFrame:Hide()
 
-    -- 1. EMPOWERED
+    -- 1. EMPOWERED (Lógica especial, mantiene su propio return)
     if cb.isEmpowered and cb.currentStage then
         local s = cb.currentStage
-        local c = db.empowerStage1Color or {0, 1, 0, 1} -- Fallback
+        local c = db.empowerStage1Color or {0, 1, 0, 1}
         
-        -- Reset scale
         cb:SetScale(1.0) 
         
-        -- Calculate width increase: 5% per stage
         local baseWidth = cb.baseWidth or db.manualWidth or 270
         local widthMultiplier = 1 + ((s - 1) * 0.05)
         cb:SetWidth(baseWidth * widthMultiplier)
 
-        -- Check stages in descending order with SAFETY FALLBACKS
         if s >= 5 then
-            c = db.empowerStage5Color or {0.8, 0.3, 1, 1} -- Púrpura si falta config
+            c = db.empowerStage5Color or {0.8, 0.3, 1, 1}
         elseif s == 4 then
             c = db.empowerStage4Color or {1, 0, 0, 1}
         elseif s == 3 then
@@ -366,39 +365,44 @@ function AscensionCastBar:UpdateBarColor()
 
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
 
-        -- Show glow if we are at the Hold Stage (Last stage)
+        -- Mostrar glow si estamos en la etapa de mantener (Hold)
         if s >= (cb.numStages or 4) then
             cb.glowFrame:SetBackdropBorderColor(c[1], c[2], c[3], 1)
             cb.glowFrame:Show()
         end
-        return -- Salimos aquí para no ejecutar lógica de canalizado normal
+        return -- Salimos para no aplicar lógica estándar
     else
+        -- Restaurar tamaño estándar si no es Empowered
         cb:SetScale(1.0)
         cb:SetWidth(cb.baseWidth or db.manualWidth or 270)
     end
 
-    -- 2. CHANNEL
+    ----------------------------------------------------------
+    -- 2. DETERMINAR COLOR DE LA BARRA (Prioridad de colores)
+    ----------------------------------------------------------
     if cb.channeling and db.useChannelColor then
+        -- Caso A: Canalizando con color personalizado
         local c = db.channelColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
-        if db.channelBorderGlow then
-            local gc = db.channelGlowColor
-            cb.glowFrame:SetBackdropBorderColor(gc[1], gc[2], gc[3], gc[4])
-            cb.glowFrame:Show()
-        end
-
-    -- 3. NORMAL CAST (Class Color)
     elseif db.useClassColor then
+        -- Caso B: Color de clase (aplica a cast normal o canalizado si no hay custom color)
         local _, playerClass = UnitClass("player")
         local classColor = C_ClassColor.GetClassColor(playerClass) or { r = 1, g = 1, b = 1 }
         cb:SetStatusBarColor(classColor.r, classColor.g, classColor.b, 1)
-
-    -- 4. NORMAL CAST (Custom Color)
     else
+        -- Caso C: Color estándar de la barra
         local c = db.barColor
         cb:SetStatusBarColor(c[1], c[2], c[3], c[4])
     end
 
+    ----------------------------------------------------------
+    -- 3. GLOW (Removed Channel Glow per user request)
+    ----------------------------------------------------------
+    cb.glowFrame:Hide()
+
+    ----------------------------------------------------------
+    -- 4. TEXTURE
+    ----------------------------------------------------------
     local tex = LSM:Fetch("statusbar", db.barLSMName) or "Interface\\TARGETINGFRAME\\UI-StatusBar"
     cb:SetStatusBarTexture(tex)
 end
@@ -434,21 +438,33 @@ end
 function AscensionCastBar:UpdateTextLayout()
     local db = self.db.profile
     local cb = self.castBar
-    if not cb.textCtx then return end
+    if not cb or not cb.textCtx then return end
 
     if db.detachText then
         cb.textCtx:ClearAllPoints()
         cb.textCtx:SetPoint("CENTER", UIParent, "CENTER", db.textX, db.textY)
-        cb.textCtx:SetSize(db.textWidth, db.spellNameFontSize + 6)
+        cb.textCtx:SetSize(db.textWidth, db.spellNameFontSize + 10)
+        
         local c = db.textBackdropColor
-        cb.textCtx.bg:SetColorTexture(c[1], c[2], c[3], db.textBackdropEnabled and c[4] or 0)
+        if db.textBackdropEnabled then
+            cb.textCtx.bg:SetColorTexture(c[1], c[2], c[3], c[4])
+        else
+            cb.textCtx.bg:SetColorTexture(0, 0, 0, 0)
+        end
 
-        cb.spellName:ClearAllPoints(); cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 5, 0); cb.spellName:SetPoint(
-            "RIGHT", cb.timer, "LEFT", -5, 0)
-        cb.timer:ClearAllPoints(); cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", -5, 0)
+        cb.spellName:ClearAllPoints()
+        cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 5, 0)
+        cb.spellName:SetPoint("RIGHT", cb.timer, "LEFT", -5, 0)
+        
+        cb.timer:ClearAllPoints()
+        cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", -5, 0)
     else
-        cb.textCtx:ClearAllPoints(); cb.textCtx:SetAllPoints(cb); cb.textCtx.bg:SetColorTexture(0, 0, 0, 0)
-        cb.spellName:ClearAllPoints(); cb.timer:ClearAllPoints()
+        cb.textCtx:ClearAllPoints()
+        cb.textCtx:SetAllPoints(cb)
+        cb.textCtx.bg:SetColorTexture(0, 0, 0, 0)
+        
+        cb.spellName:ClearAllPoints()
+        cb.timer:ClearAllPoints()
 
         local iconW = 0
         if db.showIcon and not db.detachIcon then iconW = db.height end
@@ -471,7 +487,6 @@ end
 function AscensionCastBar:ApplyFont()
     local db = self.db.profile
     local cb = self.castBar
-    
     local outline = db.outline or "OUTLINE"
     
     -- Spell Name
@@ -514,13 +529,23 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
     self:HideTicks()
     if not self.db.profile.showChannelTicks then return end
 
+    -- Ensure ticksFrame is properly authorized (CRITICAL FIX FROM PREVIOUS ATTEMPTS)
+    if self.castBar.ticksFrame then
+        self.castBar.ticksFrame:SetFrameLevel(self.castBar:GetFrameLevel() + 10)
+        self.castBar.ticksFrame:Show()
+    end
+
     local count = 0
     local isEmpowered = (numStages and numStages > 0)
 
     if isEmpowered then
         count = numStages
     elseif spellID then
-        count = self.CHANNEL_TICKS[spellID]
+        if spellID == 234153 then -- Test Mode ID check added back for consistency with Logic.lua/Channel.lua logic
+             count = 5
+        elseif self.CHANNEL_TICKS then
+             count = self.CHANNEL_TICKS[spellID]
+        end
         if type(count) == "function" then
             count = count(duration)
         end
@@ -532,6 +557,9 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
     local c = db.channelTicksColor
     local thickness = db.channelTicksThickness or 1
     local width = self.castBar:GetWidth()
+    
+    -- Fallback width if bar is hidden/initializing
+    if width <= 10 then width = db.manualWidth or 270 end
 
     if isEmpowered then
         local weights = self:GetEmpoweredStageWeights(count)
@@ -561,12 +589,31 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
                 self.castBar.ticks[i] = tick
             end
             tick:ClearAllPoints()
-            tick:SetPoint("CENTER", self.castBar, "LEFT", w * i, 0)
             tick:SetSize(thickness, self.castBar:GetHeight())
+            
+            local pos = w * i
+            if db.reverseChanneling then
+                pos = width - pos
+            end
+            
+            tick:SetPoint("CENTER", self.castBar, "LEFT", pos, 0)
             tick:SetColorTexture(c[1], c[2], c[3], c[4])
             tick:Show()
         end
     end
+end
+
+function AscensionCastBar:GetEmpoweredStageWeights(numStages)
+    if numStages == 4 then
+        return { 1.5, 1.0, 1.0, 1.5 }
+    elseif numStages == 5 then
+        return { 1.5, 1.0, 1.0, 1.0, 1.5 }
+    end
+    local w = {}
+    if numStages and numStages > 0 then
+        for i = 1, numStages do w[i] = 1 end
+    end
+    return w
 end
 
 function AscensionCastBar:UpdateLatencyBar(castBar)
@@ -582,6 +629,13 @@ function AscensionCastBar:UpdateLatencyBar(castBar)
 
     local _, _, homeMS, worldMS = GetNetStats()
     local ms = math.max(homeMS or 0, worldMS or 0)
+    
+    -- FAKE LATENCY FOR TEST MODE
+    if self.castBar.lastSpellName == "Test Spell" then
+        ms = (castBar.duration or 1) * 1000 * (db.latencyMaxPercent or 0.2)
+        ms = 10000 
+    end
+
     if ms <= 0 then
         castBar.latency:Hide()
         return

@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: Logic.lua
--- Version: 12.0.0
+-- Version: 36
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -79,6 +79,8 @@ function AscensionCastBar:SetupCastBarShared(info)
     local cb = self.castBar
     local db = self.db.profile
     
+    if cb.textCtx then cb.textCtx:Show() end
+    
     cb.currentStage = 1
     cb:SetScale(1.0)
     cb:SetAlpha(1.0)
@@ -111,7 +113,7 @@ end
 function AscensionCastBar:HandleCastStart(event, unit, ...)
     local channel = (event == "UNIT_SPELLCAST_CHANNEL_START")
     local empowered = (event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
-    if empowered then channel = true end
+    -- if empowered then channel = true end -- REMOVED: Empowered spells use UnitCastingInfo, not UnitChannelInfo
 
     if unit and unit ~= "player" then return end
 
@@ -120,6 +122,11 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     if not cb then return end
 
     local info = GetSafeCastInfo("player", channel)
+
+    -- FALLBACK FOR EMPOWERED: Some environments might report it as channel or not ready as cast yet
+    if empowered and (not info or not info.name) then
+        info = GetSafeCastInfo("player", true)
+    end
 
     if not info or not info.name then 
         cb.casting = false
@@ -177,7 +184,14 @@ function AscensionCastBar:HandleCastStop(event, unit)
         self.castBar.channeling = false
         self.castBar.isEmpowered = false
         self.castBar.lastSpellName = nil
+        
         self.castBar:Hide()
+        if self.castBar.textCtx then self.castBar.textCtx:Hide() end
+        self.castBar.spellName:SetText("")
+        self.castBar.timer:SetText("")
+        self.castBar.icon:Hide()
+        self.castBar.shield:Hide()
+        self:HideTicks()
         
         self:UpdateSpark(0, 0)
     end
@@ -222,12 +236,13 @@ function AscensionCastBar:ToggleTestMode(val)
     if val then
         local state = db.testModeState or "Cast"
         
+        -- Fake Cast Info
         local info = {
             name = "Test " .. state,
             texture = "Interface\\Icons\\Spell_Nature_Lightning",
             startTime = GetTime() * 1000,
             endTime = (GetTime() + 10) * 1000,
-            spellID = 234153, -- Example spell ID
+            spellID = 234153, -- Fake ID for Test
             notInterruptible = false,
             numStages = state == "Empowered" and (IsPlayerSpell(408083) and 5 or 4) or 0
         }
@@ -236,12 +251,18 @@ function AscensionCastBar:ToggleTestMode(val)
             self:EmpowerStart(info)
         elseif state == "Channel" then
             self:ChannelStart(info)
+            -- FORCE TICKS UPDATE FOR TEST MODE
+            self:UpdateTicks(234153, 0, 10) 
         else
             self:CastStart(info)
+            self:HideTicks()
         end
         
-        cb.lastSpellName = "Test Spell" -- Flag for test mode
+        cb.lastSpellName = "Test Spell"
+        
         self:UpdateAnchor()
+        self:UpdateTextLayout()
+        self:UpdateIcon()
     else
         cb.casting = false
         cb.channeling = false
@@ -254,6 +275,7 @@ function AscensionCastBar:ToggleTestMode(val)
 
         if not db.previewEnabled then
             cb:Hide()
+            if cb.textCtx then cb.textCtx:Hide() end
         end
     end
 end
@@ -261,6 +283,7 @@ end
 -- ==========================================================
 -- ON UPDATE (ANIMATION LOOP)
 -- ==========================================================
+
 
 function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
     local now = GetTime()
@@ -294,8 +317,12 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
     end
 
     if not db.previewEnabled and selfFrame:IsShown() then
-        selfFrame:SetValue(0); selfFrame.spellName:SetText(""); selfFrame.timer:SetText("")
-        selfFrame.icon:Hide(); selfFrame.shield:Hide()
+        selfFrame:SetValue(0)
+        selfFrame.spellName:SetText("")
+        selfFrame.timer:SetText("")
+        selfFrame.icon:Hide()
+        selfFrame.shield:Hide()
+        if selfFrame.textCtx then selfFrame.textCtx:Hide() end -- Hide the detached text frame
         self:HideTicks()
         self:UpdateSpark(0, 0)
         selfFrame:Hide()

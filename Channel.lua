@@ -1,6 +1,14 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
+-- Author: Aka-DoctorCode 
 -- File: Channel.lua
+-- Version: 36
+-------------------------------------------------------------------------------
+-- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
+--
+-- This software and its source code are the exclusive property of the author.
+-- No part of this file may be copied, modified, redistributed, or used in 
+-- derivative works without express written permission.
 -------------------------------------------------------------------------------
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
@@ -15,9 +23,27 @@ function AscensionCastBar:ChannelStart(info)
     cb.lastSpellName = info.name
     
     cb.startTime = info.startTime / 1000
+    cb.endTime = info.endTime / 1000
+    cb.duration = cb.endTime - cb.startTime
+    cb.maxValue = cb.duration
+
     cb.duration = (info.endTime - info.startTime) / 1000
     cb.endTime = cb.startTime + cb.duration
     
+    -- CALCULATION FOR PULSE ANIMATION (Restored from Logic.lua)
+    local ticks = 0
+    if info.spellID == 234153 then -- Test Mode ID
+        ticks = 5 
+    elseif info.spellID and self.CHANNEL_TICKS then
+        local tData = self.CHANNEL_TICKS[info.spellID]
+        if type(tData) == "function" then
+            ticks = tData(cb.duration)
+        else
+            ticks = tData or 0
+        end
+    end
+    cb.totalTicks = (ticks > 0) and ticks or 1 
+
     cb:Show()
     
     self:SetupCastBarShared(info)
@@ -52,4 +78,9 @@ function AscensionCastBar:ChannelUpdate(now, db)
     end
     
     self:UpdateLatencyBar(cb)
+
+    self:UpdateLatencyBar(cb)
+
+    -- === GLOW PULSE ANIMATION (REMOVED) ===
+    if cb.glowFrame then cb.glowFrame:Hide() end
 end
