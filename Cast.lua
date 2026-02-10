@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: Cast.lua
--- Version: 36
+-- Version: 37
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
