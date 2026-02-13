@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: Animations.lua
--- Version: 40
+-- Version: 41
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -12,6 +12,16 @@
 -------------------------------------------------------------------------------
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
 local LSM = LibStub("LibSharedMedia-3.0")
+
+-- Optimization: Local references for math functions (Upvalues)
+local math_sin = math.sin
+local math_cos = math.cos
+local math_abs = math.abs
+local math_max = math.max
+local math_min = math.min
+local math_pi  = math.pi
+local math_random = math.random
+local empty_table = {}
 
 -- ==========================================================
 -- ANIMATION UTILITIES
@@ -56,15 +66,15 @@ AscensionCastBar.AnimationStyles.validStyles = {
 
 function AscensionCastBar.AnimationStyles.Orb(self, castBar, db, progress, tailProgress, time, offset, w, b)
     castBar.sparkGlow:Show()
-    local params = db.animationParams.Orb or {}
+    local params = db.animationParams.Orb or empty_table
     local rotSpeed = time * SafeValue(params.rotationSpeed, 8)
     local radius = db.height * SafeValue(params.radiusMultiplier, 0.4)
 
     local function SpinOrb(tex, angleOffset, intense)
         if not tex then return end
         tex:ClearAllPoints()
-        local x = math.cos(rotSpeed + angleOffset) * radius
-        local y = math.sin(rotSpeed + angleOffset) * radius
+        local x = math_cos(rotSpeed + angleOffset) * radius
+        local y = math_sin(rotSpeed + angleOffset) * radius
         tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", x, y)
         tex:SetAlpha(self:ClampAlpha(intense) * 1.0)
         tex:Show()
@@ -84,13 +94,13 @@ end
 
 function AscensionCastBar.AnimationStyles.Pulse(self, castBar, db, progress, tailProgress, time, offset, w, b)
     castBar.sparkGlow:Show()
-    local params = db.animationParams.Pulse or {}
+    local params = db.animationParams.Pulse or empty_table
     local maxScale = SafeValue(params.maxScale, 2.5)
     local rippleCycle = SafeValue(params.rippleCycle, 1.0)
     local fadeSpeed = SafeValue(params.fadeSpeed, 1.0)
 
-    rippleCycle = math.max(0.1, rippleCycle)
-    fadeSpeed = math.max(0.1, fadeSpeed)
+    rippleCycle = math_max(0.1, rippleCycle)
+    fadeSpeed = math_max(0.1, fadeSpeed)
 
     local function Ripple(tex, offsetTime, intense)
         if not tex then return end
@@ -99,15 +109,15 @@ function AscensionCastBar.AnimationStyles.Pulse(self, castBar, db, progress, tai
         tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
 
         local totalTime = time + SafeValue(offsetTime, 0)
-        local rawCycle = (totalTime % math.max(rippleCycle, 0.1)) / math.max(rippleCycle, 0.1)
-        local cycle = math.max(0, math.min(1, rawCycle))
+        local rawCycle = (totalTime % math_max(rippleCycle, 0.1)) / math_max(rippleCycle, 0.1)
+        local cycle = math_max(0, math_min(1, rawCycle))
         local baseSize = db.height * 2
         local scaleFactor = 0.2 + cycle * maxScale
-        local size = baseSize * math.max(0.1, scaleFactor)
+        local size = baseSize * math_max(0.1, scaleFactor)
         tex:SetSize(size, size)
 
         local fade = 1 - (cycle * cycle * fadeSpeed)
-        fade = math.max(0, math.min(1, fade))
+        fade = math_max(0, math_min(1, fade))
 
         local alpha = self:ClampAlpha(intense) * fade
         tex:SetAlpha(alpha)
@@ -124,7 +134,7 @@ end
 
 function AscensionCastBar.AnimationStyles.Starfall(self, castBar, db, progress, tailProgress, time, offset, w, b)
     castBar.sparkGlow:Hide()
-    local params = db.animationParams.Starfall or {}
+    local params = db.animationParams.Starfall or empty_table
     local h = db.height
 
     local function Fall(tex, driftBase, speed, intense)
@@ -141,8 +151,8 @@ function AscensionCastBar.AnimationStyles.Starfall(self, castBar, db, progress, 
         tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", driftBase + sway, fallY)
 
         local alphaIntensity = self:ClampAlpha(intense)
-        local distanceFactor = 1 - math.abs(fallY) / (h * 1.5)
-        distanceFactor = math.max(0, distanceFactor)
+        local distanceFactor = 1 - math_abs(fallY) / (h * 1.5)
+        distanceFactor = math_max(0, distanceFactor)
 
         tex:SetAlpha(alphaIntensity * distanceFactor)
         tex:Show()
@@ -158,7 +168,7 @@ end
 
 function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tailProgress, time, offset, w, b)
     castBar.sparkGlow:Hide()
-    local params = db.animationParams.Flux or {}
+    local params = db.animationParams.Flux or empty_table
 
     local dm = w * SafeValue(params.driftMultiplier, 0.05)
     local jitterY = SafeValue(params.jitterY, 3.5)
@@ -172,7 +182,7 @@ function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tail
         local rX = (math.random() * jitterX * 2) - jitterX
 
         local xPos = offset - baseOff + drift + rX + (db.tailOffset or 0)
-        xPos = math.max(b, math.min(w - b, xPos))
+        xPos = math_max(b, math_min(w - b, xPos))
 
         tex:SetPoint("CENTER", castBar.tailMask, "LEFT", xPos, rY)
         tex:SetAlpha(self:ClampAlpha(intense) * tailProgress)
@@ -189,7 +199,7 @@ end
 
 function AscensionCastBar.AnimationStyles.Helix(self, castBar, db, progress, tailProgress, time, offset, w, b)
     castBar.sparkGlow:Show()
-    local params = db.animationParams.Helix or {}
+    local params = db.animationParams.Helix or empty_table
 
     local dm = w * SafeValue(params.driftMultiplier, 0.1)
     local amp = db.height * SafeValue(params.amplitude, 0.4)
@@ -203,7 +213,7 @@ function AscensionCastBar.AnimationStyles.Helix(self, castBar, db, progress, tai
 
         tex:ClearAllPoints()
         local x = offset - baseOff + drift + (db.tailOffset or 0)
-        x = math.max(b, math.min(w - b, x))
+        x = math_max(b, math_min(w - b, x))
 
         tex:SetPoint("CENTER", castBar.tailMask, "LEFT", x, yOff)
         tex:SetAlpha(self:ClampAlpha(intense) * tailProgress)
@@ -222,8 +232,8 @@ function AscensionCastBar.AnimationStyles.Wave(self, castBar, db, progress, tail
     castBar.sparkGlow:Hide()
     castBar.sparkHead:Hide()
 
-    local params = db.animationParams.Wave or {}
-    local waveCount = math.max(1, math.min(10, SafeValue(params.waveCount, 3)))
+    local params = db.animationParams.Wave or empty_table
+    local waveCount = math_max(1, math_min(10, SafeValue(params.waveCount, 3)))
     local waveSpeed = SafeValue(params.waveSpeed, 0.4)
     local amplitude = SafeValue(params.amplitude, 0.05)
     local waveWidth = SafeValue(params.waveWidth, 0.25)

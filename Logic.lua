@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: Logic.lua
--- Version: 40
+-- Version: 41
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -13,7 +13,8 @@
 local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
--- Helper to normalize CastInfo return values into a consistent structure
+local reusableCastInfo = {}
+
 local function GetSafeCastInfo(unit, channel)
     if not unit then return nil end
 
@@ -25,40 +26,37 @@ local function GetSafeCastInfo(unit, channel)
         name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
     end
 
-    -- Handle table-based API return (Version 11.0+)
     if type(name) == "table" then
         local castData = name
         if not castData.name then return nil end 
 
-        return {
-            name = castData.name,
-            text = castData.text or "",
-            texture = castData.icon or castData.texture or 0,
-            startTime = castData.startTime or 0,
-            endTime = castData.endTime or 0,
-            isTradeSkill = castData.isTradeSkill or false,
-            castID = castData.castID,
-            notInterruptible = (castData.isInterruptible == false) or (castData.notInterruptible == true),
-            spellID = castData.spellID or 0,
-            numStages = castData.numStages or 0,
-        }
+        reusableCastInfo.name = castData.name
+        reusableCastInfo.text = castData.text or ""
+        reusableCastInfo.texture = castData.icon or castData.texture or 0
+        reusableCastInfo.startTime = castData.startTime or 0
+        reusableCastInfo.endTime = castData.endTime or 0
+        reusableCastInfo.isTradeSkill = castData.isTradeSkill or false
+        reusableCastInfo.castID = castData.castID
+        reusableCastInfo.notInterruptible = (castData.isInterruptible == false) or (castData.notInterruptible == true)
+        reusableCastInfo.spellID = castData.spellID or 0
+        reusableCastInfo.numStages = castData.numStages or 0
+        
+        return reusableCastInfo
     end
 
-    -- Handle classic multi-value return
     if not name then return nil end
+    reusableCastInfo.name = name
+    reusableCastInfo.text = text or ""
+    reusableCastInfo.texture = texture or 0
+    reusableCastInfo.startTime = startTime or 0
+    reusableCastInfo.endTime = endTime or 0
+    reusableCastInfo.isTradeSkill = isTradeSkill or false
+    reusableCastInfo.spellID = spellID or 0
+    reusableCastInfo.notInterruptible = notInterruptible or false
+    reusableCastInfo.castID = castID
+    reusableCastInfo.numStages = 0
 
-    return {
-        name = name,
-        text = text or "",
-        texture = texture or 0,
-        startTime = startTime or 0,
-        endTime = endTime or 0,
-        isTradeSkill = isTradeSkill or false,
-        spellID = spellID or 0,
-        notInterruptible = notInterruptible or false,
-        castID = castID,
-        numStages = 0,
-    }
+    return reusableCastInfo
 end
 
 -- Logic Helpers

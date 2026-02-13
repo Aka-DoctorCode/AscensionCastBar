@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: UI.lua
--- Version: 40
+-- Version: 41
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -188,17 +188,14 @@ function AscensionCastBar:UpdateAnchor()
     local isBT4 = C_AddOns.IsAddOnLoaded("Bartender4")
     local btConfig = BAR_BUTTON_CONFIG[target]
 
-    -- Determine Mode: Proxy (Buttons) vs Direct Frame
     local useProxy = false
     local startBtn, endBtn, btnPrefix
 
     if isBT4 and btConfig then
-        -- === BARTENDER MODE ===
         useProxy = true
         startBtn = btConfig.btStart
         endBtn = btConfig.btEnd
         
-        -- DETECCIÓN AUTOMÁTICA DEL PREFIJO:
         if _G["BT4Button" .. startBtn] then
             btnPrefix = "BT4Button"
         elseif _G["BTButton" .. startBtn] then
@@ -208,7 +205,6 @@ function AscensionCastBar:UpdateAnchor()
         end
 
     elseif target == "ActionBar1" and not isBT4 then
-        -- === STANDARD ACTION BAR 1 MODE ===
         useProxy = true
         startBtn = 1
         endBtn = 12
@@ -220,21 +216,18 @@ function AscensionCastBar:UpdateAnchor()
         if not self.actionBarProxy then
             self.actionBarProxy = CreateFrame("Frame", nil, UIParent)
             self.actionBarProxy:SetSize(1,1)
-            -- Update loop to handle bar movement/visibility changes
+            -- OPTIMIZACION DE CPU: Comprobación cada 0.5s en lugar de 0.2s
             self.actionBarProxy:SetScript("OnUpdate", function(f, elapsed)
                 f.timer = (f.timer or 0) + elapsed
-                if f.timer > 0.2 then -- Check every 0.2s
+                if f.timer > 0.5 then 
                     f.timer = 0
                     self:UpdateProxyFrame()
                 end
             end)
         end
         
-        -- Store config in the proxy frame for the OnUpdate script
         self.actionBarProxy.btnConfig = { prefix = btnPrefix, startBtn = startBtn, endBtn = endBtn }
         self.actionBarProxy:Show()
-        
-        -- Trigger immediate update
         self:UpdateProxyFrame()
 
     else
@@ -246,7 +239,6 @@ function AscensionCastBar:UpdateAnchor()
         if targetFrame then
             self.castBar:ClearAllPoints()
             self.castBar:SetPoint("BOTTOM", targetFrame, "TOP", 0, db.cdmYOffset or 0)
-            
             local tWidth = targetFrame:GetWidth()
             if tWidth and tWidth > 10 and tWidth <= UIParent:GetWidth() then
                 self.castBar.baseWidth = tWidth
@@ -255,7 +247,6 @@ function AscensionCastBar:UpdateAnchor()
             end
             self:UpdateBarColor()
         else
-            -- Fallback
             self.castBar:ClearAllPoints()
             self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
             self.castBar.baseWidth = db.manualWidth or 270
@@ -630,10 +621,8 @@ function AscensionCastBar:UpdateLatencyBar(castBar)
     local _, _, homeMS, worldMS = GetNetStats()
     local ms = math.max(homeMS or 0, worldMS or 0)
     
-    -- FAKE LATENCY FOR TEST MODE
     if self.castBar.lastSpellName == "Test Spell" then
-        ms = (castBar.duration or 1) * 1000 * (db.latencyMaxPercent or 0.2)
-        ms = 10000 
+        ms = 100 
     end
 
     if ms <= 0 then
