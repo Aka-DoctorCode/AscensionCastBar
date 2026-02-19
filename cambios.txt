@@ -1,5 +1,6 @@
 Plans:
 - Add falback configuration.
+- Add strata level.
 - animation for chaneling
 - GCD
 - Channel glow not working

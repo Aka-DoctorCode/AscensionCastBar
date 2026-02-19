@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: Empower.lua
--- Version: 41
+-- Version: 42
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --

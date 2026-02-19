@@ -1,0 +1,4 @@
+<h1>V42</h1>
+<ul>
+    <li>Fixed: ADDON_ACTION_FORBIDDEN error</li>
+</ul>

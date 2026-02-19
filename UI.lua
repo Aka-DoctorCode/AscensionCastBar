@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode 
 -- File: UI.lua
--- Version: 41
+-- Version: 42
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
@@ -261,8 +261,9 @@ function AscensionCastBar:InitCDMHooks()
 
     -- 1. Setup Edit Mode events
     if not self.editModeEventsRegistered then
-        pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_APPLIED", "UpdateAnchor") end)
-        pcall(function() self:RegisterEvent("EDIT_MODE_LAYOUT_UPDATED", "UpdateAnchor") end)
+        if type(EventRegistry) == "table" and EventRegistry.RegisterCallback then
+            EventRegistry:RegisterCallback("EditMode.Exit", self.UpdateAnchor, self)
+        end
         self.editModeEventsRegistered = true
     end
 
