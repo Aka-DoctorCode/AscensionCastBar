@@ -1,8 +1,5 @@
-<h1>V44</h1>
+<h1>V45</h1>
 <ul>
-    <li>Libraries have been transfered to AscencionQoL which is going to function as hub for all my addons</li>
-    <li>Fixed: An discrepancy between the cast bar stages and the real stages of an empowered spell.</li>
-    <li>Nil check resolve</li>
-    <li>Undefied Globals resolve</li>
-    <li>TOC update</li>
+    <li>Re-added missing features from old config mode</li>
+    <li>Change the required dependencies to it's own add on AscensionSuit instead of AscensionQoL</li>
 </ul>

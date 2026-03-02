@@ -5,7 +5,7 @@
 ## Category: Interface Enhancements
 ## Version: @project-version@
 ## SavedVariables: AscensionCastBarDB
-## RequiredDeps: AscensionQoL
+## RequiredDeps: AscensionSuit
 ## IconTexture: Interface\AddOns\AscensionCastBar\Media\AkaDoctorCode.png
 ## X-Curse-Project-ID: 1405023
 # X-Wago-ID:
