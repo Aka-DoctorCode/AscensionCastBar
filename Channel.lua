@@ -30,10 +30,8 @@ function AscensionCastBar:ChannelStart(info)
 
     cb.duration = (info.endTime - info.startTime) / 1000
     cb.endTime = cb.startTime + cb.duration
-
-    -- CALCULATION FOR PULSE ANIMATION (Restored from Logic.lua)
     local ticks = 0
-    if info.spellID == 234153 then -- Test Mode ID
+    if info.spellID == 234153 then
         ticks = 5
     elseif info.spellID and self.CHANNEL_TICKS then
         local tData = self.CHANNEL_TICKS[info.spellID]

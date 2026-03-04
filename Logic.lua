@@ -11,6 +11,7 @@
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
 -------------------------------------------------------------------------------
+
 local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
@@ -61,7 +62,9 @@ local function GetSafeCastInfo(unit, channel)
     return reusableCastInfo
 end
 
--- Logic Helpers
+-------------------------------------------------------------------------------
+-- LOGIC HELPERS
+-------------------------------------------------------------------------------
 function AscensionCastBar:GetFormattedTimer(rem, dur)
     local db = self.db.profile
     if not db.showTimerText then return "" end
@@ -109,11 +112,9 @@ function AscensionCastBar:SetupCastBarShared(info)
     self:UpdateSparkColors()
 end
 
--- In AscensionCastBar/Logic.lua
 function AscensionCastBar:HandleCastStart(event, unit, ...)
     local channel = (event == "UNIT_SPELLCAST_CHANNEL_START")
     local empowered = (event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
-    -- if empowered then channel = true end -- REMOVED: Empowered spells use UnitCastingInfo, not UnitChannelInfo
 
     if unit and unit ~= "player" then return end
 
@@ -122,8 +123,6 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     if not cb then return end
 
     local info = GetSafeCastInfo("player", channel)
-
-    -- FALLBACK FOR EMPOWERED: Some environments might report it as channel or not ready as cast yet
     if empowered and (not info or not info.name) then
         info = GetSafeCastInfo("player", true)
     end
@@ -148,8 +147,9 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
     end
 end
 
--- AscensionCastBar/Logic.lua
-
+-------------------------------------------------------------------------------
+-- STOP LOGIC
+-------------------------------------------------------------------------------
 function AscensionCastBar:HandleCastStop(event, unit)
     if unit and unit ~= "player" then return end
 
@@ -237,14 +237,12 @@ function AscensionCastBar:ToggleTestMode(val)
     local db = self.db.profile
     if val then
         local state = db.testModeState or "Cast"
-
-        -- Fake Cast Info
         local info = {
             name = "Test " .. state,
             texture = "Interface\\Icons\\Spell_Nature_Lightning",
             startTime = GetTime() * 1000,
             endTime = (GetTime() + 10) * 1000,
-            spellID = 234153, -- Fake ID for Test
+            spellID = 234153,
             notInterruptible = false,
             numStages = state == "Empowered" and (IsPlayerSpell(408083) and 5 or 4) or 0
         }
@@ -253,7 +251,6 @@ function AscensionCastBar:ToggleTestMode(val)
             self:EmpowerStart(info)
         elseif state == "Channel" then
             self:ChannelStart(info)
-            -- FORCE TICKS UPDATE FOR TEST MODE
             self:UpdateTicks(234153, 0, 10)
         else
             self:CastStart(info)
@@ -282,9 +279,9 @@ function AscensionCastBar:ToggleTestMode(val)
     end
 end
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- ON UPDATE (ANIMATION LOOP)
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 
 function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
@@ -324,7 +321,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         selfFrame.timer:SetText("")
         selfFrame.icon:Hide()
         selfFrame.shield:Hide()
-        if selfFrame.textCtx then selfFrame.textCtx:Hide() end -- Hide the detached text frame
+        if selfFrame.textCtx then selfFrame.textCtx:Hide() end
         self:HideTicks()
         self:ClearEmpowerStages()
         self:UpdateSpark(0, 0)

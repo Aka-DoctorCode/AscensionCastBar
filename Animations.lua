@@ -13,8 +13,6 @@
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
 local LSM              = LibStub("LibSharedMedia-3.0")
-
--- Optimization: Local references for math functions (Upvalues)
 local math_sin         = math.sin
 local math_cos         = math.cos
 local math_abs         = math.abs
@@ -24,9 +22,9 @@ local math_pi          = math.pi
 local math_random      = math.random
 local empty_table      = {}
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- ANIMATION UTILITIES
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 local function ClampAlpha(v)
     v = tonumber(v) or 0
@@ -41,9 +39,9 @@ local function SafeValue(val, default)
     return val
 end
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- ANIMATION STYLES DISPATCH
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 AscensionCastBar.AnimationStyles = {}
 
@@ -393,9 +391,9 @@ function AscensionCastBar.AnimationStyles.Comet(self, castBar, db, progress, tai
     end
 end
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- MAIN ANIMATION FUNCTIONS
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 function AscensionCastBar:ClampAlpha(v)
     local num = tonumber(v)
@@ -539,7 +537,7 @@ function AscensionCastBar:CleanupOverlays()
     local db = self.db.profile
     local style = db.animStyle
     if not style or not self.AnimationStyles.validStyles[style] then
-        style = "Comet" -- Fallback
+        style = "Comet"
     end
 
     if style ~= "Wave" then
@@ -586,10 +584,6 @@ function AscensionCastBar:UpdateSpark(passedProgress, tailProgress)
     local castBar = self.castBar
 
     if not castBar then return end
-
-    -- === FOESCATCHYCASTBAR LOGIC ===
-    -- Extraemos el progreso visual DIRECTAMENTE del C++ (StatusBar),
-    -- ignorando el 'passedProgress' de Lua que causa asincronía y lo atasca a la derecha.
     local minVal, maxVal = castBar:GetMinMaxValues()
     local currentVal = castBar:GetValue()
     local visualProgress = 0
@@ -598,7 +592,6 @@ function AscensionCastBar:UpdateSpark(passedProgress, tailProgress)
         visualProgress = (currentVal - minVal) / (maxVal - minVal)
     end
 
-    -- Nos aseguramos que esté acotado entre 0 y 1 para evitar excesos
     visualProgress = math_max(0, math_min(1, visualProgress))
 
     if not db.enableSpark or visualProgress <= 0.001 or visualProgress >= 0.999 then
@@ -610,29 +603,24 @@ function AscensionCastBar:UpdateSpark(passedProgress, tailProgress)
 
     local style = db.animStyle
     if not style or not self.AnimationStyles.validStyles[style] then
-        style = "Comet" -- Fallback to default style
+        style = "Comet"
     end
 
     self:CleanupOverlays()
-
-    -- Asignamos el factor de atenuación
     local tP = self:ClampAlpha(tailProgress or visualProgress)
 
     local w = castBar:GetWidth()
     if w <= 0 then return end
 
-    -- Offsets reales calculados basados en el porcentaje que la barra visualmente indica
     local offset = w * visualProgress
     local time = GetTime()
 
-    -- Escalamiento condicional
     local baseWidth = db.manualWidth or 270
     local effOffset = (db.headLengthOffset or 0) * (w / math_max(baseWidth, 1))
     local customOffsetX = (db.sparkOffset or 0) + effOffset
 
     if castBar.sparkHead then
         castBar.sparkHead:ClearAllPoints()
-        -- Matemáticamente exacto a FoesCatchyCastbar y Blizzard
         castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + customOffsetX, 0)
         castBar.sparkHead:SetAlpha(self:ClampAlpha(db.sparkIntensity))
         castBar.sparkHead:Show()
@@ -644,7 +632,6 @@ function AscensionCastBar:UpdateSpark(passedProgress, tailProgress)
     end
 
     if castBar.tailMask then
-        -- Mantenemos la máscara sincronizada con el offset visual
         castBar.tailMask:SetWidth(math_max(0.001, offset))
     end
 

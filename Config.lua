@@ -15,9 +15,9 @@ local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 local LSM = LibStub("LibSharedMedia-3.0")
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- DEFAULTS
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
 
@@ -38,7 +38,7 @@ AscensionCastBar.defaults = {
         height = 24,
         testAttached = false,
 
-        -- Manual / Fallback Settings
+        -- Manual
         manualWidth = 270,
         manualHeight = 24,
         point = "CENTER",
@@ -200,12 +200,11 @@ AscensionCastBar.defaults = {
     }
 }
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- ACE CONFIG (OPTIONS)
--- ==========================================================
+-- -------------------------------------------------------------------------------
 function AscensionCastBar:SetupOptions()
     local defaults = self.defaults.profile
-    -- Helper to get fonts (Avoids errors if LSM doesn't load)
     local function GetFontList()
         local fonts = {}
         if LSM then
@@ -215,8 +214,6 @@ function AscensionCastBar:SetupOptions()
         end
         return fonts
     end
-
-    -- Helper to get textures (Avoids AceGUIWidgetLSMlists error)
     local function GetStatusBarList()
         local textures = {}
         if LSM then
@@ -244,9 +241,9 @@ function AscensionCastBar:SetupOptions()
         type = "group",
         childGroups = "tab", -- Tabbed interface
         args = {
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             -- TAB 1: GENERAL (Positioning, Size, Testing)
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             general = {
                 name = "General & Layout",
                 type = "group",
@@ -482,9 +479,9 @@ function AscensionCastBar:SetupOptions()
                 }
             },
 
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             -- TAB 2: APPEARANCE (Colors, Textures, Icons)
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             appearance = {
                 name = "Style & Colors",
                 type = "group",
@@ -679,9 +676,9 @@ function AscensionCastBar:SetupOptions()
                 }
             },
 
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             -- TAB 3: TEXT (Fonts, Labels)
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             text = {
                 name = "Text & Fonts",
                 type = "group",
@@ -924,9 +921,9 @@ function AscensionCastBar:SetupOptions()
                 }
             },
 
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             -- TAB 4: MECHANICS (Latency, Empower, Channels)
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             mechanics = {
                 name = "Mechanics",
                 type = "group",
@@ -1195,9 +1192,9 @@ function AscensionCastBar:SetupOptions()
                 }
             },
 
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             -- TAB 5: ANIMATION (Visual FX)
-            -- ==========================================================
+            -- -------------------------------------------------------------------------------
             animation = {
                 name = "Visual FX",
                 type = "group",

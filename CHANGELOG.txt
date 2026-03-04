@@ -1,4 +1,6 @@
 <h1>V46</h1>
 <ul>
     <li>Small optimization update</li>
+    <li>Remove unused code</li>
+    <li>Remove development code</li>
 </ul>

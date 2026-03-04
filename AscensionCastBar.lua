@@ -96,9 +96,9 @@ local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 local LSM = LibStub("LibSharedMedia-3.0")
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- INITIALIZATION
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 function AscensionCastBar:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AscensionCastBarDB", self.defaults, "Default")
@@ -113,18 +113,13 @@ function AscensionCastBar:OnInitialize()
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
     self:SetupOptions()
-
-    -- Call CreateBar defined in UI.lua
     self:CreateBar()
 end
 
 function AscensionCastBar:OnEnable()
     self:ValidateAnimationParams()
     self:UpdateDefaultCastBarVisibility()
-    self:InitCDMHooks() -- Defined in UI.lua
-
-    -- Register Events
-    -- These functions (HandleCastStart/Stop) will use the versions in Logic.lua
+    self:InitCDMHooks()
     self:RegisterEvent("ADDON_LOADED", "InitCDMHooks")
     self:RegisterEvent("UNIT_SPELLCAST_START", "HandleCastStart")
     self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", "HandleCastStart")
@@ -133,24 +128,16 @@ function AscensionCastBar:OnEnable()
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "HandleCastStop")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED", "HandleCastStop")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateDefaultCastBarVisibility")
-
-    -- Nameplate events for dynamic anchoring
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-
-    -- Empowered Events
     pcall(function()
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START", "HandleCastStart")
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "HandleCastStop")
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "HandleCastStart")
     end)
-
-    -- Chat Commands
     self:RegisterChatCommand("acb", "OpenConfig")
     self:RegisterChatCommand("ascensioncastbar", "OpenConfig")
-
     self:RefreshConfig()
-
     if self.castBar then
         self.castBar:Hide()
         self:UpdateAnchor()
@@ -158,7 +145,6 @@ function AscensionCastBar:OnEnable()
 end
 
 function AscensionCastBar:RefreshConfig()
-    -- All these functions must exist in UI.lua
     self:ValidateAnimationParams()
     self:UpdateAnchor()
     self:UpdateSparkSize()
@@ -173,14 +159,14 @@ function AscensionCastBar:RefreshConfig()
     self:UpdateDefaultCastBarVisibility()
 end
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- HELPER FUNCTIONS (Non-UI, Non-Logic)
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 function AscensionCastBar:ClampAlpha(v)
     v = tonumber(v) or 0
-    if v ~= v then return 0 end                   -- NaN
-    if math.abs(v) == math.huge then return 1 end -- Infinite
+    if v ~= v then return 0 end
+    if math.abs(v) == math.huge then return 1 end
     if v < 0 then v = 0 elseif v > 1 then v = 1 end
     return v
 end
@@ -233,9 +219,9 @@ function AscensionCastBar:OpenConfig()
     end
 end
 
--- ==========================================================
+-- -------------------------------------------------------------------------------
 -- ANIMATION PARAMETERS VALIDATION
--- ==========================================================
+-- -------------------------------------------------------------------------------
 
 function AscensionCastBar:ResetAnimationParams(style)
     if style and self.ANIMATION_STYLE_PARAMS[style] then
@@ -252,8 +238,6 @@ function AscensionCastBar:ValidateAnimationParams()
     if not self.db or not self.db.profile then return end
     local db = self.db.profile
     if not db.animationParams then db.animationParams = {} end
-
-    -- Ensure defaults exist
     if self.ANIMATION_STYLE_PARAMS then
         for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS) do
             if styleName and defaults then
@@ -270,11 +254,10 @@ function AscensionCastBar:ValidateAnimationParams()
     end
 end
 
--- Local helper for CopyTable if it doesn't exist
-local function CopyTable(orig)
-    local copy = {}
-    for key, value in pairs(orig) do
-        if type(value) == "table" then copy[key] = CopyTable(value) else copy[key] = value end
-    end
-    return copy
-end
+-- local function CopyTable(orig)
+--     local copy = {}
+--     for key, value in pairs(orig) do
+--         if type(value) == "table" then copy[key] = CopyTable(value) else copy[key] = value end
+--     end
+--     return copy
+-- end

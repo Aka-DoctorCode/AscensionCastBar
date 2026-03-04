@@ -37,15 +37,13 @@ function AscensionCastBar:EmpowerStart(info)
     end
 
     if numStages < 2 then
-        -- Fallback to old logic or hide if invalid
         self:CastStart(info)
         return
     end
 
-    cb.numStages = numStages + 1 -- Add final hold stage
+    cb.numStages = numStages + 1
     cb.startTime = info.startTime / 1000
 
-    -- Calculate true total duration and stage points
     local stageMaxMS = 0
     cb.stagePoints = {}
     for i = 1, cb.numStages do
@@ -72,7 +70,6 @@ function AscensionCastBar:EmpowerStart(info)
     self:SetupCastBarShared(info)
     self:UpdateBarColor(info.notInterruptible)
 
-    -- Visuals (Pips and Tiers) will be handled in UI.lua called by this or Logic
     self:AddEmpowerStages(numStages)
     
     if self.UpdateEmpowerStageHighlight then
@@ -109,7 +106,6 @@ function AscensionCastBar:EmpowerUpdate(now, db)
     if currentStage ~= cb.currentStage then
         cb.currentStage = currentStage
         self:UpdateBarColor()
-        -- Pulse animation logic could go here or in UI.lua
         if self.UpdateEmpowerStageHighlight then
             self:UpdateEmpowerStageHighlight(currentStage)
         end
