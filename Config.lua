@@ -14,6 +14,7 @@ local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 local LSM = LibStub("LibSharedMedia-3.0")
+local L = AscensionCastBar.L
 
 -- -------------------------------------------------------------------------------
 -- DEFAULTS
@@ -228,11 +229,11 @@ function AscensionCastBar:SetupOptions()
     local hasLSMWidgets = AceGUI and (AceGUI.WidgetRegistry["LSM30_Statusbar"] ~= nil)
 
     local anchors = {
-        ["CENTER"] = "Center",
-        ["TOP"] = "Top",
-        ["BOTTOM"] = "Bottom",
-        ["LEFT"] = "Left",
-        ["RIGHT"] = "Right",
+        ["CENTER"] = L["Center"],
+        ["TOP"] = L["Top"],
+        ["BOTTOM"] = L["Bottom"],
+        ["LEFT"] = L["Left"],
+        ["RIGHT"] = L["Right"],
     }
 
     local options = {
@@ -245,15 +246,15 @@ function AscensionCastBar:SetupOptions()
             -- TAB 1: GENERAL (Positioning, Size, Testing)
             -- -------------------------------------------------------------------------------
             general = {
-                name = "General & Layout",
+                name = L["General & Layout"],
                 type = "group",
                 order = 1,
                 args = {
                     -- SECTION: TEST MODE
-                    headerTest = { name = "Setup & Testing", type = "header", order = 1 },
+                    headerTest = { name = L["Setup & Testing"], type = "header", order = 1 },
                     preview = {
-                        name = "Enable Test Mode",
-                        desc = "Shows a preview bar to help you configure the layout.",
+                        name = L["Enable Test Mode"],
+                        desc = L["Shows a preview bar to help you configure the layout."],
                         type = "toggle",
                         width = "full",
                         order = 2,
@@ -265,10 +266,10 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     testModeState = {
-                        name = "Animation Type",
-                        desc = "Simulate different spell types.",
+                        name = L["Animation Type"],
+                        desc = L["Simulate different spell types."],
                         type = "select",
-                        values = { ["Cast"] = "Normal Cast", ["Channel"] = "Channel", ["Empowered"] = "Empowered" },
+                        values = { ["Cast"] = L["Normal Cast"], ["Channel"] = L["Channel"], ["Empowered"] = L["Empowered"] },
                         order = 3,
                         disabled = function() return not self.db.profile.previewEnabled end,
                         get = function(info) return self.db.profile.testModeState end,
@@ -278,7 +279,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     hideDefaultCastbar = {
-                        name = "Hide Blizzard Cast Bar",
+                        name = L["Hide Blizzard Cast Bar"],
                         type = "toggle",
                         order = 4,
                         get = function(info) return self.db.profile.hideDefaultCastbar end,
@@ -289,9 +290,9 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     -- SECTION: SIZE
-                    headerSize = { name = "Dimensions", type = "header", order = 10 },
+                    headerSize = { name = L["Dimensions"], type = "header", order = 10 },
                     manualWidth = {
-                        name = "Bar Width",
+                        name = L["Bar Width"],
                         type = "range",
                         min = 50,
                         max = 1000,
@@ -303,7 +304,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     height = {
-                        name = "Bar Height",
+                        name = L["Bar Height"],
                         type = "range",
                         min = 10,
                         max = 150,
@@ -320,10 +321,10 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     -- SECTION: POSITIONING
-                    headerPos = { name = "Positioning", type = "header", order = 20 },
+                    headerPos = { name = L["Positioning"], type = "header", order = 20 },
                     attachToCDM = {
-                        name = "Attach to UI Frame",
-                        desc = "Attaches the bar to UI elements (like PlayerFrame) automatically.",
+                        name = L["Attach to UI Frame"],
+                        desc = L["Attaches the bar to UI elements (like PlayerFrame) automatically."],
                         type = "toggle",
                         width = "full",
                         order = 21,
@@ -333,8 +334,8 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     testAttached = {
-                        name = "Test Attachment", -- Renamed
-                        desc = "Toggle between testing the attached position (ON) or the manual position (OFF).",
+                        name = L["Test Attachment"], -- Renamed
+                        desc = L["Toggle between testing the attached position (ON) or the manual position (OFF)."],
                         type = "toggle",
                         width = "full",
                         order = 22,
@@ -349,14 +350,14 @@ function AscensionCastBar:SetupOptions()
                     },
                     -- Coordinates Group
                     posGroup = {
-                        name = "Coordinates",
+                        name = L["Coordinates"],
                         type = "group",
                         inline = true,
                         order = 23,
                         args = {
                             -- Manual
                             point = {
-                                name = "Anchor Point",
+                                name = L["Anchor Point"],
                                 type = "select",
                                 values = anchors,
                                 order = 1,
@@ -367,8 +368,8 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             relativePoint = {
-                                name = "Relative Point",
-                                desc = "The point on the parent frame (or screen) to anchor to.",
+                                name = L["Relative Point"],
+                                desc = L["The point on the parent frame (or screen) to anchor to."],
                                 type = "select",
                                 values = anchors,
                                 order = 1.5,
@@ -379,7 +380,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             manualX = {
-                                name = "X Offset",
+                                name = L["X Offset"],
                                 type = "range",
                                 min = -2000,
                                 max = 2000,
@@ -392,7 +393,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             manualY = {
-                                name = "Y Offset",
+                                name = L["Y Offset"],
                                 type = "range",
                                 min = -2000,
                                 max = 2000,
@@ -406,7 +407,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Attached
                             cdmTarget = {
-                                name = "Attach Target",
+                                name = L["Attach Target"],
                                 type = "select",
                                 style = "dropdown",
                                 width = "normal",
@@ -420,37 +421,37 @@ function AscensionCastBar:SetupOptions()
                                 -- 1. THE DISPLAY NAMES (The text the user sees)
                                 values = {
                                     -- Standard Frames
-                                    ["PlayerFrame"] = "Player Frame",
-                                    ["PersonalResource"] = "Personal Resource Display",
+                                    ["PlayerFrame"] = L["Player Frame"],
+                                    ["PersonalResource"] = L["Personal Resource Display"],
 
                                     -- CDM Specific
-                                    ["Buffs"] = "Tracked Buffs (CDM)",
-                                    ["Essential"] = "Essential Cooldowns (CDM)",
-                                    ["Utility"] = "Utility Cooldowns (CDM)",
+                                    ["Buffs"] = L["Tracked Buffs (CDM)"],
+                                    ["Essential"] = L["Essential Cooldowns (CDM)"],
+                                    ["Utility"] = L["Utility Cooldowns (CDM)"],
 
                                     -- Standard Action Bars
-                                    ["ActionBar1"] = "Action Bar 1",
-                                    ["ActionBar2"] = "Action Bar 2",
-                                    ["ActionBar3"] = "Action Bar 3",
-                                    ["ActionBar4"] = "Action Bar 4",
-                                    ["ActionBar5"] = "Action Bar 5",
-                                    ["ActionBar6"] = "Action Bar 6",
-                                    ["ActionBar7"] = "Action Bar 7",
-                                    ["ActionBar8"] = "Action Bar 8",
+                                    ["ActionBar1"] = L["Action Bar 1"],
+                                    ["ActionBar2"] = L["Action Bar 2"],
+                                    ["ActionBar3"] = L["Action Bar 3"],
+                                    ["ActionBar4"] = L["Action Bar 4"],
+                                    ["ActionBar5"] = L["Action Bar 5"],
+                                    ["ActionBar6"] = L["Action Bar 6"],
+                                    ["ActionBar7"] = L["Action Bar 7"],
+                                    ["ActionBar8"] = L["Action Bar 8"],
 
                                     -- Bartender4 Support
-                                    ["BT4Bar1"] = "Bartender Bar 1",
-                                    ["BT4Bar2"] = "Bartender Bar 2",
-                                    ["BT4Bar3"] = "Bartender Bar 3",
-                                    ["BT4Bar4"] = "Bartender Bar 4",
-                                    ["BT4Bar5"] = "Bartender Bar 5",
-                                    ["BT4Bar6"] = "Bartender Bar 6",
-                                    ["BT4Bar7"] = "Bartender Bar 7",
-                                    ["BT4Bar8"] = "Bartender Bar 8",
-                                    ["BT4Bar9"] = "Bartender Bar 9",
-                                    ["BT4Bar10"] = "Bartender Bar 10",
-                                    ["BT4PetBar"] = "Bartender Pet Bar",
-                                    ["BT4StanceBar"] = "Bartender Stance Bar",
+                                    ["BT4Bar1"] = L["Bartender Bar 1"],
+                                    ["BT4Bar2"] = L["Bartender Bar 2"],
+                                    ["BT4Bar3"] = L["Bartender Bar 3"],
+                                    ["BT4Bar4"] = L["Bartender Bar 4"],
+                                    ["BT4Bar5"] = L["Bartender Bar 5"],
+                                    ["BT4Bar6"] = L["Bartender Bar 6"],
+                                    ["BT4Bar7"] = L["Bartender Bar 7"],
+                                    ["BT4Bar8"] = L["Bartender Bar 8"],
+                                    ["BT4Bar9"] = L["Bartender Bar 9"],
+                                    ["BT4Bar10"] = L["Bartender Bar 10"],
+                                    ["BT4PetBar"] = L["Bartender Pet Bar"],
+                                    ["BT4StanceBar"] = L["Bartender Stance Bar"],
                                 },
 
                                 -- 2. THE SORTING ORDER (The list of KEYS in the desired order)
@@ -462,7 +463,7 @@ function AscensionCastBar:SetupOptions()
                                 },
                             },
                             cdmYOffset = {
-                                name = "Vertical Offset",
+                                name = L["Vertical Offset"],
                                 type = "range",
                                 min = -200,
                                 max = 200,
@@ -483,13 +484,13 @@ function AscensionCastBar:SetupOptions()
             -- TAB 2: APPEARANCE (Colors, Textures, Icons)
             -- -------------------------------------------------------------------------------
             appearance = {
-                name = "Style & Colors",
+                name = L["Style & Colors"],
                 type = "group",
                 order = 2,
                 args = {
-                    headerBar = { name = "Bar Style", type = "header", order = 1 },
+                    headerBar = { name = L["Bar Style"], type = "header", order = 1 },
                     barTexture = {
-                        name = "Texture",
+                        name = L["Texture"],
                         type = "select",
                         dialogControl = hasLSMWidgets and "LSM30_Statusbar" or nil,
                         values = GetStatusBarList,
@@ -500,7 +501,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     useClassColor = {
-                        name = "Use Class Color",
+                        name = L["Use Class Color"],
                         type = "toggle",
                         order = 2.1,
                         get = function(info) return self.db.profile.useClassColor end,
@@ -509,7 +510,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     barColor = {
-                        name = "Bar Color",
+                        name = L["Bar Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 3,
@@ -522,7 +523,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     barColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 3.1,
@@ -531,7 +532,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     bgColor = {
-                        name = "Background Color",
+                        name = L["Background Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 4,
@@ -543,7 +544,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     bgColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 4.1,
@@ -552,9 +553,9 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    headerBorder = { name = "Border", type = "header", order = 10 },
+                    headerBorder = { name = L["Border"], type = "header", order = 10 },
                     borderEnabled = {
-                        name = "Enable Border",
+                        name = L["Enable Border"],
                         type = "toggle",
                         order = 11,
                         get = function(info) return self.db.profile.borderEnabled end,
@@ -563,7 +564,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     borderColor = {
-                        name = "Border Color",
+                        name = L["Border Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 12,
@@ -576,7 +577,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     borderColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 12.1,
@@ -586,7 +587,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     borderThickness = {
-                        name = "Thickness",
+                        name = L["Thickness"],
                         type = "range",
                         min = 1,
                         max = 10,
@@ -599,9 +600,9 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    headerIcon = { name = "Spell Icon", type = "header", order = 20 },
+                    headerIcon = { name = L["Spell Icon"], type = "header", order = 20 },
                     showIcon = {
-                        name = "Show Icon",
+                        name = L["Show Icon"],
                         type = "toggle",
                         order = 21,
                         get = function(info) return self.db.profile.showIcon end,
@@ -610,14 +611,14 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     iconGroup = {
-                        name = "Icon Settings",
+                        name = L["Icon Settings"],
                         type = "group",
                         inline = true,
                         order = 22,
                         hidden = function() return not self.db.profile.showIcon end,
                         args = {
                             detachIcon = {
-                                name = "Detach",
+                                name = L["Detach"],
                                 type = "toggle",
                                 order = 1,
                                 get = function(info) return self.db.profile.detachIcon end,
@@ -626,9 +627,9 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             iconAnchor = {
-                                name = "Position",
+                                name = L["Position"],
                                 type = "select",
-                                values = { ["Left"] = "Left", ["Right"] = "Right" },
+                                values = { ["Left"] = L["Left"], ["Right"] = L["Right"] },
                                 order = 2,
                                 get = function(info) return self.db.profile.iconAnchor end,
                                 set = function(info, val)
@@ -636,7 +637,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             iconSize = {
-                                name = "Size",
+                                name = L["Size"],
                                 type = "range",
                                 min = 10,
                                 max = 128,
@@ -648,7 +649,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             iconX = {
-                                name = "X Offset",
+                                name = L["X Offset"],
                                 type = "range",
                                 min = -200,
                                 max = 200,
@@ -660,7 +661,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             iconY = {
-                                name = "Y Offset",
+                                name = L["Y Offset"],
                                 type = "range",
                                 min = -200,
                                 max = 200,
@@ -680,13 +681,13 @@ function AscensionCastBar:SetupOptions()
             -- TAB 3: TEXT (Fonts, Labels)
             -- -------------------------------------------------------------------------------
             text = {
-                name = "Text & Fonts",
+                name = L["Text & Fonts"],
                 type = "group",
                 order = 3,
                 args = {
-                    headerFont = { name = "Global Font Settings", type = "header", order = 1 },
+                    headerFont = { name = L["Global Font Settings"], type = "header", order = 1 },
                     font = {
-                        name = "Font Face",
+                        name = L["Font Face"],
                         type = "select",
                         dialogControl = hasLSMWidgets and "LSM30_Font" or nil,
                         values = GetFontList,
@@ -697,18 +698,18 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     outline = {
-                        name = "Font Outline",
+                        name = L["Font Outline"],
                         type = "select",
-                        values = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline", ["MONOCHROME"] = "Monochrome" },
+                        values = { ["NONE"] = L["None"], ["OUTLINE"] = L["Outline"], ["THICKOUTLINE"] = L["Thick Outline"], ["MONOCHROME"] = L["Monochrome"] },
                         order = 3,
                         get = function(info) return self.db.profile.outline end,
                         set = function(info, val)
                             self.db.profile.outline = val; self:ApplyFont()
                         end,
                     },
-                    headerName = { name = "Spell Name", type = "header", order = 10 },
+                    headerName = { name = L["Spell Name"], type = "header", order = 10 },
                     showSpellText = {
-                        name = "Show Name",
+                        name = L["Show Name"],
                         type = "toggle",
                         order = 11,
                         get = function(info) return self.db.profile.showSpellText end,
@@ -717,14 +718,14 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     truncateSpellName = {
-                        name = "Truncate Name",
+                        name = L["Truncate Name"],
                         type = "toggle",
                         order = 11.1,
                         get = function(info) return self.db.profile.truncateSpellName end,
                         set = function(info, val) self.db.profile.truncateSpellName = val end,
                     },
                     truncateLength = {
-                        name = "Max Characters",
+                        name = L["Max Characters"],
                         type = "range",
                         min = 5,
                         max = 100,
@@ -735,7 +736,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.truncateLength = val end,
                     },
                     fontSizeSpell = {
-                        name = "Size",
+                        name = L["Size"],
                         type = "range",
                         min = 8,
                         max = 32,
@@ -747,7 +748,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     fontColor = {
-                        name = "Color",
+                        name = L["Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 13,
@@ -759,7 +760,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     fontColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 13.1,
@@ -767,31 +768,31 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.fontColor = { unpack(defaults.fontColor) }; self:ApplyFont()
                         end,
                     },
-                    headerTimer = { name = "Timer", type = "header", order = 20 },
+                    headerTimer = { name = L["Timer"], type = "header", order = 20 },
                     showTimerText = {
-                        name = "Show Timer",
+                        name = L["Show Timer"],
                         type = "toggle",
                         order = 21,
                         get = function(info) return self.db.profile.showTimerText end,
                         set = function(info, val) self.db.profile.showTimerText = val end,
                     },
                     hideTimerOnChannel = {
-                        name = "Hide on Channel",
+                        name = L["Hide on Channel"],
                         type = "toggle",
                         order = 21.1,
                         get = function(info) return self.db.profile.hideTimerOnChannel end,
                         set = function(info, val) self.db.profile.hideTimerOnChannel = val end,
                     },
                     timerFormat = {
-                        name = "Format",
+                        name = L["Format"],
                         type = "select",
-                        values = { ["Remaining"] = "Remaining", ["Duration"] = "Duration", ["Total"] = "Total" },
+                        values = { ["Remaining"] = L["Remaining"], ["Duration"] = L["Duration"], ["Total"] = L["Total"] },
                         order = 22,
                         get = function(info) return self.db.profile.timerFormat end,
                         set = function(info, val) self.db.profile.timerFormat = val end,
                     },
                     fontSizeTimer = {
-                        name = "Size",
+                        name = L["Size"],
                         type = "range",
                         min = 8,
                         max = 32,
@@ -803,8 +804,8 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     useSharedColor = {
-                        name = "Use Shared Color",
-                        desc = "Use same color as Spell Name.",
+                        name = L["Use Shared Color"],
+                        desc = L["Use same color as Spell Name."],
                         type = "toggle",
                         order = 24,
                         get = function(info) return self.db.profile.useSharedColor end,
@@ -813,7 +814,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     timerColor = {
-                        name = "Timer Color",
+                        name = L["Timer Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 25,
@@ -826,7 +827,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     timerColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 25.1,
@@ -836,9 +837,9 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     -- TEXT POSITIONING & BACKDROP
-                    headerTextPos = { name = "Positioning & Backdrop", type = "header", order = 30 },
+                    headerTextPos = { name = L["Positioning & Backdrop"], type = "header", order = 30 },
                     detachText = {
-                        name = "Detach Text",
+                        name = L["Detach Text"],
                         type = "toggle",
                         order = 31,
                         get = function(info) return self.db.profile.detachText end,
@@ -847,7 +848,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textX = {
-                        name = "X Offset",
+                        name = L["X Offset"],
                         type = "range",
                         min = -200,
                         max = 200,
@@ -860,7 +861,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textY = {
-                        name = "Y Offset",
+                        name = L["Y Offset"],
                         type = "range",
                         min = -200,
                         max = 200,
@@ -873,7 +874,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textWidth = {
-                        name = "Text Area Width",
+                        name = L["Text Area Width"],
                         type = "range",
                         min = 50,
                         max = 500,
@@ -886,7 +887,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textBackdropEnabled = {
-                        name = "Enable Backdrop",
+                        name = L["Enable Backdrop"],
                         type = "toggle",
                         order = 35,
                         get = function(info) return self.db.profile.textBackdropEnabled end,
@@ -895,7 +896,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textBackdropColor = {
-                        name = "Backdrop Color",
+                        name = L["Backdrop Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 36,
@@ -908,7 +909,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     textBackdropColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 36.1,
@@ -925,13 +926,13 @@ function AscensionCastBar:SetupOptions()
             -- TAB 4: MECHANICS (Latency, Empower, Channels)
             -- -------------------------------------------------------------------------------
             mechanics = {
-                name = "Mechanics",
+                name = L["Mechanics"],
                 type = "group",
                 order = 4,
                 args = {
-                    headerLatency = { name = "Latency", type = "header", order = 1 },
+                    headerLatency = { name = L["Latency"], type = "header", order = 1 },
                     showLatency = {
-                        name = "Show Latency",
+                        name = L["Show Latency"],
                         type = "toggle",
                         order = 2,
                         get = function(info) return self.db.profile.showLatency end,
@@ -941,7 +942,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     latencyColor = {
-                        name = "Latency Color",
+                        name = L["Latency Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 34.6,
@@ -951,15 +952,15 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.latencyColor = { r, g, b, a } end,
                     },
                     latencyColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 34.7,
                         func = function() self.db.profile.latencyColor = { unpack(defaults.latencyColor) } end,
                     },
                     latencyMaxPercent = {
-                        name = "Max Width %",
-                        desc = "Sets the maximum width percentage of the cast bar that the latency indicator can occupy.",
+                        name = L["Max Width %"],
+                        desc = L["Sets the maximum width percentage of the cast bar that the latency indicator can occupy."],
                         type = "range",
                         min = 0.1,
                         max = 1.0,
@@ -972,10 +973,10 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    headerChannel = { name = "Channeled Spells", type = "header", order = 10 },
+                    headerChannel = { name = L["Channeled Spells"], type = "header", order = 10 },
                     reverseChanneling = {
-                        name = "Reverse Channel",
-                        desc = "Fill bar instead of empty.",
+                        name = L["Reverse Channel"],
+                        desc = L["Fill bar instead of empty."],
                         type = "toggle",
                         order = 11,
                         get = function(info) return self.db.profile.reverseChanneling end,
@@ -987,7 +988,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     showChannelTicks = {
-                        name = "Show Ticks",
+                        name = L["Show Ticks"],
                         type = "toggle",
                         order = 12,
                         get = function(info) return self.db.profile.showChannelTicks end,
@@ -999,7 +1000,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     channelTicksThickness = {
-                        name = "Tick Thickness",
+                        name = L["Tick Thickness"],
                         type = "range",
                         min = 1,
                         max = 10,
@@ -1015,7 +1016,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     channelTicksColor = {
-                        name = "Tick Color",
+                        name = L["Tick Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 12.2,
@@ -1031,7 +1032,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     channelTicksColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 12.3,
@@ -1044,9 +1045,9 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
 
-                    headerChannelStyle = { name = "Channel Styling", type = "header", order = 13 },
+                    headerChannelStyle = { name = L["Channel Styling"], type = "header", order = 13 },
                     useChannelColor = {
-                        name = "Custom Channel Color",
+                        name = L["Custom Channel Color"],
                         type = "toggle",
                         order = 13.1,
                         get = function(info) return self.db.profile.useChannelColor end,
@@ -1055,7 +1056,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     channelColor = {
-                        name = "Channel Color",
+                        name = L["Channel Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 13.2,
@@ -1068,7 +1069,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     channelColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 13.25,
@@ -1077,10 +1078,11 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.channelColor = { unpack(defaults.channelColor) }; self:UpdateBarColor()
                         end,
                     },
-                    headerEmpower = { name = "Empowered Spells (Evoker)", type = "header", order = 20 },
+                    -- Empowered spells are not exclusive to Evokers..
+                    headerEmpower = { name = L["Empowered Spells"], type = "header", order = 20 },
                     empowerWidthScale = {
-                        name = "Scale Bar Width",
-                        desc = "Increases the horizontal length of the bar during empowered stages.",
+                        name = L["Scale Bar Width"],
+                        desc = L["Increases the horizontal length of the bar during empowered stages."],
                         type = "toggle",
                         width = "full",
                         order = 20.1,
@@ -1090,7 +1092,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     empowerStage1Color = {
-                        name = "Stage 1",
+                        name = L["Stage 1"],
                         type = "color",
                         hasAlpha = true,
                         order = 21,
@@ -1100,7 +1102,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage1Color = { r, g, b, a } end,
                     },
                     empowerStage1ColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 21.1,
@@ -1110,7 +1112,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     empowerStage2Color = {
-                        name = "Stage 2",
+                        name = L["Stage 2"],
                         type = "color",
                         hasAlpha = true,
                         order = 22,
@@ -1120,7 +1122,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage2Color = { r, g, b, a } end,
                     },
                     empowerStage2ColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 22.1,
@@ -1130,7 +1132,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     empowerStage3Color = {
-                        name = "Stage 3",
+                        name = L["Stage 3"],
                         type = "color",
                         hasAlpha = true,
                         order = 23,
@@ -1140,7 +1142,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage3Color = { r, g, b, a } end,
                     },
                     empowerStage3ColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 23.1,
@@ -1150,7 +1152,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     empowerStage4Color = {
-                        name = "Stage 4",
+                        name = L["Stage 4"],
                         type = "color",
                         hasAlpha = true,
                         order = 24,
@@ -1160,7 +1162,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage4Color = { r, g, b, a } end,
                     },
                     empowerStage4ColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 24.1,
@@ -1170,7 +1172,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     empowerStage5Color = {
-                        name = "Stage 5",
+                        name = L["Stage 5"],
                         type = "color",
                         hasAlpha = true,
                         order = 25,
@@ -1180,7 +1182,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a) self.db.profile.empowerStage5Color = { r, g, b, a } end,
                     },
                     empowerStage5ColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 25.1,
@@ -1196,24 +1198,24 @@ function AscensionCastBar:SetupOptions()
             -- TAB 5: ANIMATION (Visual FX)
             -- -------------------------------------------------------------------------------
             animation = {
-                name = "Visual FX",
+                name = L["Visual FX"],
                 type = "group",
                 order = 5,
                 args = {
                     animStyle = {
-                        name = "Main Style",
+                        name = L["Main Style"],
                         type = "select",
                         order = 1,
                         values = {
-                            ["Comet"] = "Comet",
-                            ["Orb"] = "Orb",
-                            ["Flux"] = "Flux",
-                            ["Helix"] = "Helix",
-                            ["Pulse"] = "Pulse",
-                            ["Starfall"] = "Starfall",
-                            ["Wave"] = "Wave",
-                            ["Glitch"] = "Glitch",
-                            ["Lightning"] = "Lightning",
+                            ["Comet"] = L["Comet"],
+                            ["Orb"] = L["Orb"],
+                            ["Flux"] = L["Flux"],
+                            ["Helix"] = L["Helix"],
+                            ["Pulse"] = L["Pulse"],
+                            ["Starfall"] = L["Starfall"],
+                            ["Wave"] = L["Wave"],
+                            ["Glitch"] = L["Glitch"],
+                            ["Lightning"] = L["Lightning"],
                         },
                         get = function(info) return self.db.profile.animStyle end,
                         set = function(info, val)
@@ -1224,7 +1226,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     enableSpark = {
-                        name = "Enable Spark",
+                        name = L["Enable Spark"],
                         type = "toggle",
                         order = 2,
                         get = function(info) return self.db.profile.enableSpark end,
@@ -1232,9 +1234,9 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     -- GLOBAL FX SETTINGS
-                    headerGlobalFX = { name = "Global Glow & Offsets", type = "header", order = 5 },
+                    headerGlobalFX = { name = L["Global Glow & Offsets"], type = "header", order = 5 },
                     glowColor = {
-                        name = "Global Glow Color",
+                        name = L["Global Glow Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 6,
@@ -1246,7 +1248,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     glowColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 6.1,
@@ -1255,7 +1257,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     glowIntensity = {
-                        name = "Glow Intensity",
+                        name = L["Glow Intensity"],
                         type = "range",
                         min = 0,
                         max = 5,
@@ -1265,7 +1267,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.glowIntensity = val end,
                     },
                     headLengthOffset = {
-                        name = "Head Offset (Global)",
+                        name = L["Head Offset (Global)"],
                         type = "range",
                         min = -100,
                         max = 100,
@@ -1275,7 +1277,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.headLengthOffset = val end,
                     },
                     tailOffset = {
-                        name = "Tail Offset (Global)",
+                        name = L["Tail Offset (Global)"],
                         type = "range",
                         min = -100,
                         max = 100,
@@ -1285,7 +1287,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.tailOffset = val end,
                     },
                     tailLength = {
-                        name = "Tail Length (Global)",
+                        name = L["Tail Length (Global)"],
                         type = "range",
                         min = 10,
                         max = 500,
@@ -1303,9 +1305,9 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     -- TAIL CONFIGURATION
-                    headerTails = { name = "Spark & Tail Colors", type = "header", order = 10 },
+                    headerTails = { name = L["Spark & Tail Colors"], type = "header", order = 10 },
                     sparkColor = {
-                        name = "Spark Head Color",
+                        name = L["Spark Head Color"],
                         type = "color",
                         hasAlpha = true,
                         order = 11,
@@ -1317,7 +1319,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     sparkColorReset = {
-                        name = "Reset",
+                        name = L["Reset"],
                         type = "execute",
                         width = "half",
                         order = 11.05,
@@ -1326,7 +1328,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     sparkIntensity = {
-                        name = "Spark Intensity",
+                        name = L["Spark Intensity"],
                         type = "range",
                         min = 0,
                         max = 5,
@@ -1336,7 +1338,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val) self.db.profile.sparkIntensity = val end,
                     },
                     sparkScale = {
-                        name = "Spark Scale",
+                        name = L["Spark Scale"],
                         type = "range",
                         min = 0.5,
                         max = 3,
@@ -1348,7 +1350,7 @@ function AscensionCastBar:SetupOptions()
                         end,
                     },
                     sparkOffset = {
-                        name = "Spark X Offset",
+                        name = L["Spark X Offset"],
                         type = "range",
                         min = -100,
                         max = 100,
@@ -1359,7 +1361,7 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     enableTails = {
-                        name = "Enable Tails",
+                        name = L["Enable Tails"],
                         type = "toggle",
                         order = 12,
                         get = function(info) return self.db.profile.enableTails end,
@@ -1368,13 +1370,13 @@ function AscensionCastBar:SetupOptions()
 
                     -- Tails (Inline groups)
                     tail1Group = {
-                        name = "Tail 1 (Primary)",
+                        name = L["Tail 1 (Primary)"],
                         type = "group",
                         inline = true,
                         order = 13,
                         args = {
                             color = {
-                                name = "Color",
+                                name = L["Color"],
                                 type = "color",
                                 hasAlpha = true,
                                 order = 1,
@@ -1386,7 +1388,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             colorReset = {
-                                name = "Reset",
+                                name = L["Reset"],
                                 type = "execute",
                                 width = "half",
                                 order = 1.1,
@@ -1395,7 +1397,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             intensity = {
-                                name = "Intensity",
+                                name = L["Intensity"],
                                 type = "range",
                                 min = 0,
                                 max = 5,
@@ -1405,7 +1407,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.tail1Intensity = val end,
                             },
                             length = {
-                                name = "Length",
+                                name = L["Length"],
                                 type = "range",
                                 min = 10,
                                 max = 400,
@@ -1419,13 +1421,13 @@ function AscensionCastBar:SetupOptions()
                         }
                     },
                     tail2Group = {
-                        name = "Tail 2",
+                        name = L["Tail 2"],
                         type = "group",
                         inline = true,
                         order = 14,
                         args = {
                             color = {
-                                name = "Color",
+                                name = L["Color"],
                                 type = "color",
                                 hasAlpha = true,
                                 order = 1,
@@ -1437,7 +1439,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             colorReset = {
-                                name = "Reset",
+                                name = L["Reset"],
                                 type = "execute",
                                 width = "half",
                                 order = 1.1,
@@ -1446,7 +1448,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             intensity = {
-                                name = "Intensity",
+                                name = L["Intensity"],
                                 type = "range",
                                 min = 0,
                                 max = 5,
@@ -1456,7 +1458,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.tail2Intensity = val end,
                             },
                             length = {
-                                name = "Length",
+                                name = L["Length"],
                                 type = "range",
                                 min = 10,
                                 max = 400,
@@ -1470,13 +1472,13 @@ function AscensionCastBar:SetupOptions()
                         }
                     },
                     tail3Group = {
-                        name = "Tail 3",
+                        name = L["Tail 3"],
                         type = "group",
                         inline = true,
                         order = 15,
                         args = {
                             color = {
-                                name = "Color",
+                                name = L["Color"],
                                 type = "color",
                                 hasAlpha = true,
                                 order = 1,
@@ -1488,7 +1490,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             colorReset = {
-                                name = "Reset",
+                                name = L["Reset"],
                                 type = "execute",
                                 width = "half",
                                 order = 1.1,
@@ -1497,7 +1499,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             intensity = {
-                                name = "Intensity",
+                                name = L["Intensity"],
                                 type = "range",
                                 min = 0,
                                 max = 5,
@@ -1507,7 +1509,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.tail3Intensity = val end,
                             },
                             length = {
-                                name = "Length",
+                                name = L["Length"],
                                 type = "range",
                                 min = 10,
                                 max = 400,
@@ -1521,13 +1523,13 @@ function AscensionCastBar:SetupOptions()
                         }
                     },
                     tail4Group = {
-                        name = "Tail 4",
+                        name = L["Tail 4"],
                         type = "group",
                         inline = true,
                         order = 16,
                         args = {
                             color = {
-                                name = "Color",
+                                name = L["Color"],
                                 type = "color",
                                 hasAlpha = true,
                                 order = 1,
@@ -1539,7 +1541,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             colorReset = {
-                                name = "Reset",
+                                name = L["Reset"],
                                 type = "execute",
                                 width = "half",
                                 order = 1.1,
@@ -1548,7 +1550,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             intensity = {
-                                name = "Intensity",
+                                name = L["Intensity"],
                                 type = "range",
                                 min = 0,
                                 max = 5,
@@ -1558,7 +1560,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.tail4Intensity = val end,
                             },
                             length = {
-                                name = "Length",
+                                name = L["Length"],
                                 type = "range",
                                 min = 10,
                                 max = 400,
@@ -1573,9 +1575,9 @@ function AscensionCastBar:SetupOptions()
                     },
 
                     -- ADVANCED STYLE PARAMETERS
-                    headerAdvanced = { name = "Advanced Style Settings", type = "header", order = 20 },
+                    headerAdvanced = { name = L["Advanced Style Settings"], type = "header", order = 20 },
                     styleSpecificGroup = {
-                        name = "Fine Tune Animation",
+                        name = L["Fine Tune Animation"],
                         type = "group",
                         inline = true,
                         order = 21,
@@ -1586,7 +1588,7 @@ function AscensionCastBar:SetupOptions()
                         args = {
                             -- Orb Settings
                             orbRotationSpeed = {
-                                name = "Rotation Speed",
+                                name = L["Rotation Speed"],
                                 type = "range",
                                 min = 1,
                                 max = 20,
@@ -1597,7 +1599,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Orb"].rotationSpeed = val end,
                             },
                             orbRadius = {
-                                name = "Orb Radius",
+                                name = L["Orb Radius"],
                                 type = "range",
                                 min = 0.1,
                                 max = 1.0,
@@ -1608,7 +1610,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Orb"].radiusMultiplier = val end,
                             },
                             orbGlowPulse = {
-                                name = "Glow Pulse",
+                                name = L["Glow Pulse"],
                                 type = "range",
                                 min = 0.1,
                                 max = 2.0,
@@ -1620,7 +1622,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Pulse Settings
                             pulseMaxScale = {
-                                name = "Max Scale",
+                                name = L["Max Scale"],
                                 type = "range",
                                 min = 1.0,
                                 max = 5.0,
@@ -1631,7 +1633,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Pulse"].maxScale = val end,
                             },
                             pulseRippleCycle = {
-                                name = "Ripple Cycle",
+                                name = L["Ripple Cycle"],
                                 type = "range",
                                 min = 0.5,
                                 max = 3.0,
@@ -1642,7 +1644,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Pulse"].rippleCycle = val end,
                             },
                             pulseFadeSpeed = { -- RESTORED: Was missing
-                                name = "Fade Speed",
+                                name = L["Fade Speed"],
                                 type = "range",
                                 min = 0.1,
                                 max = 3.0,
@@ -1654,7 +1656,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Starfall Settings
                             starfallFallSpeed = {
-                                name = "Fall Speed",
+                                name = L["Fall Speed"],
                                 type = "range",
                                 min = 1.0,
                                 max = 10.0,
@@ -1665,7 +1667,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Starfall"].fallSpeed = val end,
                             },
                             starfallSwayAmount = {
-                                name = "Sway Amount",
+                                name = L["Sway Amount"],
                                 type = "range",
                                 min = 0,
                                 max = 20,
@@ -1676,7 +1678,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Starfall"].swayAmount = val end,
                             },
                             starfallParticleSpeed = { -- RESTORED: Was missing
-                                name = "Particle Speed",
+                                name = L["Particle Speed"],
                                 type = "range",
                                 min = 0.1,
                                 max = 10.0,
@@ -1688,7 +1690,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Flux Settings
                             fluxJitterY = {
-                                name = "Vertical Jitter",
+                                name = L["Vertical Jitter"],
                                 type = "range",
                                 min = 1.0,
                                 max = 10.0,
@@ -1699,7 +1701,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Flux"].jitterY = val end,
                             },
                             fluxJitterX = {
-                                name = "Horizontal Jitter",
+                                name = L["Horizontal Jitter"],
                                 type = "range",
                                 min = 1.0,
                                 max = 10.0,
@@ -1710,7 +1712,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Flux"].jitterX = val end,
                             },
                             fluxDrift = { -- RESTORED: Was missing
-                                name = "Drift Speed",
+                                name = L["Drift Speed"],
                                 type = "range",
                                 min = 0,
                                 max = 1,
@@ -1722,7 +1724,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Helix Settings
                             helixDriftMultiplier = {
-                                name = "Drift Multiplier",
+                                name = L["Drift Multiplier"],
                                 type = "range",
                                 min = 0.01,
                                 max = 0.3,
@@ -1733,7 +1735,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Helix"].driftMultiplier = val end,
                             },
                             helixAmplitude = {
-                                name = "Wave Amplitude",
+                                name = L["Wave Amplitude"],
                                 type = "range",
                                 min = 0.1,
                                 max = 1.0,
@@ -1744,7 +1746,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Helix"].amplitude = val end,
                             },
                             helixWaveSpeed = {
-                                name = "Wave Speed",
+                                name = L["Wave Speed"],
                                 type = "range",
                                 min = 1,
                                 max = 20,
@@ -1756,7 +1758,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Wave Settings
                             waveCount = {
-                                name = "Wave Count",
+                                name = L["Wave Count"],
                                 type = "range",
                                 min = 1,
                                 max = 10,
@@ -1767,7 +1769,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Wave"].waveCount = val end,
                             },
                             waveSpeed = {
-                                name = "Wave Speed",
+                                name = L["Wave Speed"],
                                 type = "range",
                                 min = 0.1,
                                 max = 2.0,
@@ -1778,7 +1780,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Wave"].waveSpeed = val end,
                             },
                             waveAmplitude = {
-                                name = "Amplitude",
+                                name = L["Amplitude"],
                                 type = "range",
                                 min = 0.01,
                                 max = 0.2,
@@ -1789,7 +1791,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Wave"].amplitude = val end,
                             },
                             waveWidth = {
-                                name = "Width",
+                                name = L["Width"],
                                 type = "range",
                                 min = 0.1,
                                 max = 0.5,
@@ -1801,7 +1803,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Glitch Settings
                             glitchChance = {
-                                name = "Glitch Intensity",
+                                name = L["Glitch Intensity"],
                                 type = "range",
                                 min = 0.01,
                                 max = 0.5,
@@ -1812,7 +1814,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Glitch"].glitchChance = val end,
                             },
                             glitchMaxOffset = {
-                                name = "Max Glitch Offset",
+                                name = L["Max Glitch Offset"],
                                 type = "range",
                                 min = 1,
                                 max = 20,
@@ -1823,7 +1825,7 @@ function AscensionCastBar:SetupOptions()
                                 set = function(info, val) self.db.profile.animationParams["Glitch"].maxOffset = val end,
                             },
                             glitchColorIntensity = {
-                                name = "Color Intensity",
+                                name = L["Color Intensity"],
                                 type = "range",
                                 min = 0,
                                 max = 1,
@@ -1835,7 +1837,7 @@ function AscensionCastBar:SetupOptions()
                             },
                             -- Lightning Settings
                             lightningChance = {
-                                name = "Frequency",
+                                name = L["Frequency"],
                                 type = "range",
                                 min = 0.1,
                                 max = 1.0,
@@ -1849,7 +1851,7 @@ function AscensionCastBar:SetupOptions()
                                 end,
                             },
                             lightningSegmentCount = {
-                                name = "Segment Count",
+                                name = L["Segment Count"],
                                 type = "range",
                                 min = 1,
                                 max = 10,
@@ -1862,7 +1864,7 @@ function AscensionCastBar:SetupOptions()
                         }
                     },
                     resetStyleSettings = {
-                        name = "Reset Animation Defaults",
+                        name = L["Reset Animation Defaults"],
                         type = "execute",
                         width = "full",
                         order = 100,

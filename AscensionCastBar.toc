@@ -13,6 +13,7 @@
 # Addon files
 AscensionCastBar.lua
 Constants.lua
+Locales/Locales.xml
 Config.lua
 Animations.lua
 UI.lua
