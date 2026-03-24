@@ -12,8 +12,17 @@
 
 # Addon files
 AscensionCastBar.lua
-Constants.lua
-Config.lua
+# Config System
+Config/Defaults.lua
+Styles.lua
+Config/UIFactory.lua
+Config/Config.lua
+Config/General.lua
+Config/Appearance.lua
+Config/Text.lua
+Config/Mechanics.lua
+Config/VisualFX.lua
+Config/Profiles.lua
 Animations.lua
 UI.lua
 Cast.lua

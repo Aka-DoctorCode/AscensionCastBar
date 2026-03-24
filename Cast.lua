@@ -10,6 +10,7 @@
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
 -------------------------------------------------------------------------------
+
 local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)

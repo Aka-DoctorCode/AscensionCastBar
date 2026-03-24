@@ -10,6 +10,7 @@
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
 -------------------------------------------------------------------------------
+
 ---@class AceAddon
 ---@field OnInitialize function
 ---@field OnEnable function
@@ -43,6 +44,11 @@
 ---@field editModeEventsRegistered boolean
 ---@field lastHookedFrame any
 ---@field cdmFinderTimer any
+---@field registeredElements table|nil
+---@field activeTab number|nil
+---@field colors table|nil
+---@field files table|nil
+---@field menuStyle table|nil
 ---@field OnInitialize function
 ---@field OnEnable function
 ---@field OnDisable function
@@ -90,15 +96,22 @@
 ---@field OpenConfig function
 ---@field ResetAnimationParams function
 ---@field ValidateAnimationParams function
+---@field ToggleConfigMenu function
 
+local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
 ---@type AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
+addonTable.main = AscensionCastBar -- Set this immediately!
 local LSM = LibStub("LibSharedMedia-3.0")
 
 -- -------------------------------------------------------------------------------
 -- INITIALIZATION
 -- -------------------------------------------------------------------------------
+
+function AscensionCastBar:SetupOptions()
+    -- New system uses ToggleConfigMenu, this is left for compatibility
+end
 
 function AscensionCastBar:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AscensionCastBarDB", self.defaults, "Default")
@@ -210,13 +223,7 @@ function AscensionCastBar:NAME_PLATE_UNIT_REMOVED(event, unit)
 end
 
 function AscensionCastBar:OpenConfig()
-    LibStub("AceConfigDialog-3.0"):Open(ADDON_NAME)
-    local widget = LibStub("AceConfigDialog-3.0").OpenFrames[ADDON_NAME]
-    if widget and widget.frame then
-        widget.frame:SetWidth(440)
-        widget.frame:SetHeight(500)
-        widget.frame:SetBackdropColor(0, 0, 0, 1)
-    end
+    self:ToggleConfigMenu()
 end
 
 -- -------------------------------------------------------------------------------

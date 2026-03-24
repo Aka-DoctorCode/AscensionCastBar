@@ -10,6 +10,7 @@
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
 -------------------------------------------------------------------------------
+
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
 local LSM              = LibStub("LibSharedMedia-3.0")
@@ -441,7 +442,7 @@ function AscensionCastBar:UpdateSparkSize()
     if not cb then return end
 
     local db = self.db.profile
-    local sc, h = db.sparkScale, db.height
+    local sc, h = db.sparkScale or 1, db.height or 24
 
     if cb.sparkHead then
         cb.sparkHead:SetSize(32 * sc, h * 2 * sc)

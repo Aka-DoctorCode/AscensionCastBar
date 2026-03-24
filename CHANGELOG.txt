@@ -1,7 +1,9 @@
-<h1>V47</h1>
-<p>Hey guys, I'm alive</p>
-<p>Sorry I have not updated this addon in a while, I have been working on other projects, but soon I'll focus only on this project</p>
-<p>I'm back and I'm here to stay</p>
+<h1>V48</h1>
 <ul>
-    <li></li>
+    <li>New Menu is been build using the new system, you already access it using `/ascension` command.
+    <br>
+    It is still a bit buggy and clunky, but it's a start.
+    <br>
+    The normal old command is not been removed, you can still access it using `/acb` command.
+    </li>
 </ul>
