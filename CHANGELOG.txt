@@ -1,9 +1,7 @@
-<h1>V48</h1>
+<h1>V49</h1>
 <ul>
-    <li>New Menu is been build using the new system, you already access it using `/ascension` command.
-    <br>
-    It is still a bit buggy and clunky, but it's a start.
-    <br>
-    The normal old command is not been removed, you can still access it using `/acb` command.
-    </li>
+    <li>I don't know what I had, but the menu were not working as expected, so I had to rewrite it.</li>
+    <li>The `/acb` command access the new menu</li>
+    <li>To access the old menu go into WOW's add-ons menu and select Ascension Cast Bar.</li>
 </ul>
+<h2> There are several issues with the new menu, I'll fix them as soon as possible. I do not recommend using the new menu for now.</h2>
