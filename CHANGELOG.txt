@@ -1,7 +1,9 @@
-<h1>V49</h1>
+<h1>@project-version@</h1>
 <ul>
-    <li>I don't know what I had, but the menu were not working as expected, so I had to rewrite it.</li>
-    <li>The `/acb` command access the new menu</li>
-    <li>To access the old menu go into WOW's add-ons menu and select Ascension Cast Bar.</li>
+    <li>The only menu avaible in the one inthe add on menu</li>
+    <li>Fix: The Ticks have been fixed, they were not showing any. Any issue you found with an ability that's missing it ticks please let know.</li>
+    <li>Fix: The backdrop in the last stage of empowere abilities was been divied in two.</li>
+    <li>Remove: Spark head.</li>
 </ul>
-<h2> There are several issues with the new menu, I'll fix them as soon as possible. I do not recommend using the new menu for now.</h2>
+<br>
+<h3>Positive feedback is always appreciated, it helps me to continue working on this project</h3>

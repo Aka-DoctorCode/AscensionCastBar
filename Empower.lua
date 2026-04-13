@@ -71,6 +71,7 @@ function AscensionCastBar:EmpowerStart(info)
     self:UpdateBarColor(info.notInterruptible)
 
     self:AddEmpowerStages(numStages)
+    self:UpdateTicks(info.spellID, numStages, cb.duration)
     
     if self.UpdateEmpowerStageHighlight then
         self:UpdateEmpowerStageHighlight(1)

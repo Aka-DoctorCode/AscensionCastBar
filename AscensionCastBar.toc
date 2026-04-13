@@ -12,6 +12,7 @@
 
 # Addon files
 AscensionCastBar.lua
+Constants.lua
 Config.lua
 # Config System
 Config/Defaults.lua

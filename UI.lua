@@ -92,8 +92,9 @@ function AscensionCastBar:CreateBar()
     castBar.tailMask:SetClipsChildren(true)
 
     castBar.sparkHead = castBar:CreateTexture(nil, "OVERLAY", nil, 7)
-    castBar.sparkHead:SetAtlas("pvpscoreboard-header-glow", true)
-    castBar.sparkHead:SetBlendMode("ADD")
+    -- Hidden by user request: ONLY the spark is hidden, tails remain
+    -- castBar.sparkHead:SetAtlas("pvpscoreboard-header-glow", true)
+    -- castBar.sparkHead:SetBlendMode("ADD")
     if castBar.sparkHead.SetRotation then castBar.sparkHead:SetRotation(math.rad(90)) end
 
     -- Tails
@@ -107,8 +108,9 @@ function AscensionCastBar:CreateBar()
         "AftLevelup-SoftCloud", true); castBar.sparkTail4:SetTexCoord(0, 1, 1, 0); castBar.sparkTail4:SetBlendMode("ADD")
 
     castBar.sparkGlow = castBar:CreateTexture(nil, "OVERLAY", nil, 6)
-    castBar.sparkGlow:SetTexture("Interface\\CastingBar\\UI-CastingBar-Pushback")
-    castBar.sparkGlow:SetBlendMode("ADD")
+    -- Hidden by user request
+    -- castBar.sparkGlow:SetTexture("Interface\\CastingBar\\UI-CastingBar-Pushback")
+    -- castBar.sparkGlow:SetBlendMode("ADD")
 
     -- Text Context
     castBar.textCtx = CreateFrame("Frame", "AscensionCastBarTextFrame", UIParent)
@@ -150,35 +152,6 @@ function AscensionCastBar:CreateBar()
 
     -- Initialize text layout
     self:UpdateTextLayout()
-
-    -- Hook UpdateSpark to force the Spark's exact position on the texture's edge
-    hooksecurefunc(self, "UpdateSpark", function(addon, prog, sparkProg)
-        local cb = addon.castBar
-        if not cb then return end
-        
-        local tex = cb:GetStatusBarTexture()
-        if not tex then return end
-
-        local reverse = cb.channeling and addon.db.profile.reverseChanneling
-
-        if cb.sparkHead then
-            cb.sparkHead:ClearAllPoints()
-            if reverse then
-                cb.sparkHead:SetPoint("CENTER", tex, "LEFT", 0, 0)
-            else
-                cb.sparkHead:SetPoint("CENTER", tex, "RIGHT", 0, 0)
-            end
-        end
-
-        if cb.sparkGlow then
-            cb.sparkGlow:ClearAllPoints()
-            if reverse then
-                cb.sparkGlow:SetPoint("CENTER", tex, "LEFT", 0, 0)
-            else
-                cb.sparkGlow:SetPoint("CENTER", tex, "RIGHT", 0, 0)
-            end
-        end
-    end)
 end
 
 -- -------------------------------------------------------------------------------
@@ -376,6 +349,53 @@ function AscensionCastBar:UpdateBorder()
     self.castBar.border.left:SetWidth(t); self.castBar.border.right:SetWidth(t)
 end
 
+function AscensionCastBar:UpdateEmpowerGeometry()
+    local cb = self.castBar
+    if not cb or not cb.stageTiers then return end
+
+    local db = self.db.profile
+    local border = (db.borderEnabled and db.borderThickness) or 0
+    local width = cb:GetWidth() or 270
+    local usableW = math.max(1, width - (border * 2))
+
+    local stageMaxMS = 0
+    if cb.stagePoints and #cb.stagePoints > 0 and cb.duration then
+        stageMaxMS = cb.duration * 1000
+    else
+        return
+    end
+
+    for i = 1, cb.numStages do
+        local leftPortion = (i == 1) and 0 or (cb.stagePoints[i - 1] / stageMaxMS)
+        local rightPortion = (i == cb.numStages) and 1 or (cb.stagePoints[i] / stageMaxMS)
+
+        local left = border + (usableW * leftPortion)
+        local right = border + (usableW * rightPortion)
+
+        if cb.stageTiers[i] and cb.stageTiers[i].tint then
+            cb.stageTiers[i].tint:SetPoint("TOPLEFT", cb, "TOPLEFT", left, -border)
+            cb.stageTiers[i].tint:SetPoint("BOTTOMRIGHT", cb, "BOTTOMLEFT", right, border)
+        end
+        if i < cb.numStages and cb.stagePips and cb.stagePips[i] then
+            cb.stagePips[i]:SetPoint("TOP", cb, "TOPLEFT", right, -border)
+            cb.stagePips[i]:SetPoint("BOTTOM", cb, "BOTTOMLEFT", right, border)
+        end
+    end
+
+    if cb.ticks then
+        local numPips = cb.numStages - 1
+        for i = 1, numPips do
+            local cumulative = 0
+            if cb.stagePoints and cb.stagePoints[i] then
+                cumulative = cb.stagePoints[i] / stageMaxMS
+            end
+            if cb.ticks[i] then
+                cb.ticks[i]:SetPoint("CENTER", cb, "LEFT", width * cumulative, 0)
+            end
+        end
+    end
+end
+
 function AscensionCastBar:UpdateBarColor()
     local db = self.db.profile
     local cb = self.castBar
@@ -394,7 +414,9 @@ function AscensionCastBar:UpdateBarColor()
 
         local baseWidth = cb.baseWidth or db.manualWidth or 270
         local widthMultiplier = db.empowerWidthScale and (1 + ((s - 1) * 0.05)) or 1
-        cb:SetWidth(baseWidth * widthMultiplier)
+        local newWidth = baseWidth * widthMultiplier
+        cb:SetWidth(newWidth)
+        self:UpdateEmpowerGeometry()
 
         if s >= 5 then
             c = db.empowerStage5Color or { 0.8, 0.3, 1, 1 }
@@ -567,7 +589,10 @@ function AscensionCastBar:UpdateTextVisibility()
 end
 
 function AscensionCastBar:HideTicks()
-    for _, tick in ipairs(self.castBar.ticks) do tick:Hide() end
+    if not self.castBar or not self.castBar.ticks then return end
+    for _, tick in pairs(self.castBar.ticks) do
+        if tick then tick:Hide() end
+    end
 end
 
 function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
@@ -584,14 +609,20 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
 
     if isEmpowered then
         count = numStages
-    elseif spellID then
+    elseif spellID and spellID > 0 then
         if spellID == 234153 then
             count = 5
-        elseif self.CHANNEL_TICKS then
+        elseif self.CHANNEL_TICKS and self.CHANNEL_TICKS[spellID] then
             count = self.CHANNEL_TICKS[spellID]
         end
+        
         if type(count) == "function" then
             count = count(duration)
+        end
+        
+        -- Fallback: If duration is valid but no count found, assume 1 tick per second
+        if (not count or count < 1) and duration and duration > 0 then
+            count = math.floor(duration + 0.5)
         end
     end
 
@@ -605,13 +636,15 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
     if width <= 10 then width = db.manualWidth or 270 end
 
     if isEmpowered then
-        local weights = self:GetEmpoweredStageWeights(count)
-        local totalWeight = 0
-        for _, w in ipairs(weights) do totalWeight = totalWeight + w end
-
-        local cumulative = 0
-        for i = 1, count - 1 do
-            cumulative = cumulative + (weights[i] / totalWeight)
+        local numPips = (self.castBar.numStages and self.castBar.numStages - 1) or (count - 1)
+        local maxMS = (self.castBar.duration and self.castBar.duration * 1000) or 1
+        for i = 1, numPips do
+            local cumulative = 0
+            if self.castBar.stagePoints and self.castBar.stagePoints[i] then
+                cumulative = self.castBar.stagePoints[i] / maxMS
+            else
+                cumulative = i / (numPips + 1)
+            end
             local tick = self.castBar.ticks[i]
             if not tick then
                 tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
