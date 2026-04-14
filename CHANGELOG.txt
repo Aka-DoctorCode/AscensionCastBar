@@ -1,9 +1,6 @@
 <h1>@project-version@</h1>
 <ul>
-    <li>The only menu avaible in the one inthe add on menu</li>
-    <li>Fix: The Ticks have been fixed, they were not showing any. Any issue you found with an ability that's missing it ticks please let know.</li>
-    <li>Fix: The backdrop in the last stage of empowere abilities was been divied in two.</li>
-    <li>Remove: Spark head.</li>
+    <li>Fix: All habilities had a tick in its cast bar, after last update.</li>
 </ul>
 <br>
 <h3>Positive feedback is always appreciated, it helps me to continue working on this project</h3>

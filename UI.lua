@@ -619,11 +619,6 @@ function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
         if type(count) == "function" then
             count = count(duration)
         end
-        
-        -- Fallback: If duration is valid but no count found, assume 1 tick per second
-        if (not count or count < 1) and duration and duration > 0 then
-            count = math.floor(duration + 0.5)
-        end
     end
 
     if not count or type(count) ~= "number" or count < 1 then return end
