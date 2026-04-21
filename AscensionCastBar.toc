@@ -8,7 +8,7 @@
 ## RequiredDeps: AscensionSuit
 ## IconTexture: Interface\AddOns\AscensionCastBar\Media\AkaDoctorCode.png
 ## X-Curse-Project-ID: 1405023
-# X-Wago-ID:
+## X-Wago-ID: ZKxZBvNk
 
 # Addon files
 AscensionCastBar.lua
