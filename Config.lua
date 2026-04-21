@@ -36,6 +36,7 @@ end
 AscensionCastBar.defaults = {
     profile = {
         height = 24,
+        frameStrata = "MEDIUM",
         testAttached = false,
 
         -- Manual
@@ -345,6 +346,27 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.previewEnabled = true -- Auto-enable preview
                             self:ToggleTestMode(true)
                             self:UpdateAnchor()
+                        end,
+                    },
+                    frameStrata = {
+                        name = "Frame Strata",
+                        desc = "The layer on which the cast bar is drawn.",
+                        type = "select",
+                        order = 22.5,
+                        values = {
+                            ["BACKGROUND"] = "Background",
+                            ["LOW"] = "Low",
+                            ["MEDIUM"] = "Medium",
+                            ["HIGH"] = "High",
+                            ["DIALOG"] = "Dialog",
+                            ["FULLSCREEN"] = "Fullscreen",
+                            ["FULLSCREEN_DIALOG"] = "Fullscreen Dialog",
+                            ["TOOLTIP"] = "Tooltip",
+                        },
+                        get = function(info) return self.db.profile.frameStrata or "MEDIUM" end,
+                        set = function(info, val)
+                            self.db.profile.frameStrata = val
+                            self:UpdateStrata()
                         end,
                     },
                     -- Coordinates Group

@@ -13,6 +13,7 @@
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
+---@type AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
@@ -20,6 +21,7 @@ local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf
 AscensionCastBar.defaults = {
     profile = {
         height = 24,
+        frameStrata = "MEDIUM",
         testAttached = false,
 
         -- Manual
@@ -125,6 +127,12 @@ AscensionCastBar.defaults = {
         showLatency = true,
         latencyColor = { 1, 0, 0, 0.5 },
         latencyMaxPercent = 0.5,
+
+        -- Feedback Colors
+        flashInterrupted = true,
+        interruptedColor = { 0.937, 0.266, 0.266, 1.0 },
+        failedColor = { 0.5, 0.5, 0.5, 1.0 },
+        successColor = { 0.062, 0.725, 0.505, 1.0 },
 
         -- CDM
         attachToCDM = false,

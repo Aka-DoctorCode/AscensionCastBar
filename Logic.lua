@@ -247,6 +247,10 @@ function AscensionCastBar:ToggleTestMode(val)
             numStages = state == "Empowered" and (IsPlayerSpell(408083) and 5 or 4) or 0
         }
 
+        cb.lastSpellID = info.spellID
+        cb.numStages = info.numStages or 0
+        cb.duration = info.duration or 10
+
         if state == "Empowered" then
             self:EmpowerStart(info)
         elseif state == "Channel" then

@@ -73,12 +73,45 @@ function AscensionCastBar:CreateMainFrame()
     title:SetText("Ascension Cast Bar")
     title:SetTextColor(unpack(colors.gold or {1,1,0,1}))
 
-    -- Close Button
+    -- Close Button (Premium Aesthetic)
     local close = CreateFrame("Button", nil, frame)
-    close:SetSize(24, 24)
+    close:SetSize(20, 20)
     close:SetPoint("TOPRIGHT", -12, -12)
-    close:SetNormalTexture(files.close or [[Interface\Buttons\UI-Panel-MinimizeButton-Up]])
+    
+    local closeTex = close:CreateTexture(nil, "OVERLAY")
+    closeTex:SetAllPoints()
+    closeTex:SetTexture(files.close or [[Interface\Buttons\UI-Panel-MinimizeButton-Up]])
+    
+    close:SetScript("OnEnter", function() 
+        closeTex:SetVertexColor(unpack(colors.primary or {1,1,1,1})) 
+    end)
+    close:SetScript("OnLeave", function() 
+        closeTex:SetVertexColor(1, 1, 1, 1) 
+    end)
     close:SetScript("OnClick", function() frame:Hide() end)
+
+    -- Resize Handle (Premium Aesthetic)
+    frame:SetResizable(true)
+    frame:SetResizeBounds(600, 400, 1200, 900)
+
+    local resize = CreateFrame("Button", nil, frame)
+    resize:SetSize(20, 20)
+    resize:SetPoint("BOTTOMRIGHT", -4, 4)
+    
+    local resizeTex = resize:CreateTexture(nil, "OVERLAY")
+    resizeTex:SetSize(16, 16)
+    resizeTex:SetPoint("CENTER")
+    resizeTex:SetTexture([[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]])
+    resizeTex:SetVertexColor(unpack(colors.gold or {1,1,1,1}))
+
+    resize:SetScript("OnEnter", function() 
+        resizeTex:SetVertexColor(unpack(colors.primary or {1,1,1,1})) 
+    end)
+    resize:SetScript("OnLeave", function() 
+        resizeTex:SetVertexColor(unpack(colors.gold or {1,1,1,1})) 
+    end)
+    resize:SetScript("OnMouseDown", function() frame:StartSizing("BOTTOMRIGHT") end)
+    resize:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
 
     -- Tab Configuration for the library
     local tabData = {
@@ -94,11 +127,17 @@ function AscensionCastBar:CreateMainFrame()
     local tabBuildFuncs = {}
 
     for _, item in ipairs(tabData) do
+        local tabID = item.id -- Fix closure capturing
         table.insert(tabNames, item.label)
         table.insert(tabBuildFuncs, function(contentFrame)
-            local layout = UIContext:newLayout(contentFrame)
-            if addonTable.tabs[item.id] then
-                addonTable.tabs[item.id]:Render(layout, self.db.profile)
+            -- Ensure we use the scroll content frame if available from the factory
+            local targetFrame = contentFrame.content or contentFrame
+            local layout = UIContext:newLayout(targetFrame)
+            
+            if addonTable.tabs[tabID] then
+                addonTable.tabs[tabID]:Render(layout, self.db.profile)
+                -- Auto-resize the content frame to fit the last Y position
+                targetFrame:SetHeight(math.abs(layout.y) + 50)
             end
         end)
     end

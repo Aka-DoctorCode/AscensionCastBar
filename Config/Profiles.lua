@@ -12,6 +12,7 @@
 -------------------------------------------------------------------------------
 
 local addonName, addonTable = ...
+---@type AscensionCastBar
 local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
 
 -- Registry for the Profiles tab
@@ -31,10 +32,8 @@ function ProfilesTab:Render(layout, profile)
     -- SECCIÓN: ACTIVE PROFILE
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Profile Management")
+    layout:header(nil, "Current Profile: |cff00ff00" .. db:GetCurrentProfile() .. "|r")
     layout:beginSection()
-        
-        -- Mostrar el perfil actual (Informativo)
-        layout:header(nil, "Current Profile: |cff00ff00" .. db:GetCurrentProfile() .. "|r")
 
         -- Selector de Perfil existente
         local profiles = db:GetProfiles()
@@ -43,7 +42,7 @@ function ProfilesTab:Render(layout, profile)
             profileList[name] = name
         end
 
-        layout:dropdown(nil, "Switch to Profile", profileList,
+        layout:dropdown(nil, "Switch to Profile", nil, profileList,
             function() return db:GetCurrentProfile() end,
             function(val)
                 db:SetProfile(val)
@@ -74,14 +73,19 @@ function ProfilesTab:Render(layout, profile)
     -- SECCIÓN: INFORMATION
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Addon Info")
+    layout:header(nil, "Author: Aka-DoctorCode")
+    layout:header(nil, "Version: " .. (C_AddOns.GetAddOnMetadata(addonName, "Version") or "4.7"))
     layout:beginSection()
-        layout:header(nil, "Author: Aka-DoctorCode")
-        layout:header(nil, "Version: " .. (C_AddOns.GetAddOnMetadata(addonName, "Version") or "4.7"))
         
         layout:button(nil, "Open Advanced Ace3 Profiles", 220, nil, nil, function()
             -- Abre el menú estándar de Ace3 por si necesitan borrar o copiar perfiles específicos
-            InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
-            InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
+            if AscensionCastBar and AscensionCastBar.optionsFrame then
+                if Settings and Settings.OpenToCategory then
+                    Settings.OpenToCategory(AscensionCastBar.optionsFrame.name)
+                elseif _G["InterfaceOptionsFrame_OpenToCategory"] then
+                    _G["InterfaceOptionsFrame_OpenToCategory"](AscensionCastBar.optionsFrame)
+                end
+            end
         end)
     layout:endSection()
 end

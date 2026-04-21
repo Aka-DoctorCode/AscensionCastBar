@@ -93,10 +93,13 @@
 ---@field GetBlizzardCastBars function
 ---@field NAME_PLATE_UNIT_ADDED function
 ---@field NAME_PLATE_UNIT_REMOVED function
----@field OpenConfig function
 ---@field ResetAnimationParams function
 ---@field ValidateAnimationParams function
 ---@field ToggleConfigMenu function
+---@field openConfig function
+---@field OpenConfig function
+---@field UpdateStrata function
+---@field UpdateLatency function
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
@@ -133,6 +136,7 @@ function AscensionCastBar:OnInitialize()
             files = self.files,
             menuStyle = self.menuStyle
         })
+        if addonTable.configUtils then addonTable.configUtils:init() end
     end
 
     self:CreateBar()
@@ -147,6 +151,7 @@ function AscensionCastBar:openConfig()
                 files = self.files,
                 menuStyle = self.menuStyle
             })
+            if addonTable.configUtils then addonTable.configUtils:init() end
         end
     end
     
@@ -197,6 +202,9 @@ function AscensionCastBar:RefreshConfig()
     self:UpdateTextLayout()
     self:UpdateTextVisibility()
     self:UpdateSparkColors()
+    self:UpdateTicks()
+    self:UpdateLatency()
+    self:UpdateStrata()
     self:UpdateDefaultCastBarVisibility()
 end
 

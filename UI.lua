@@ -30,6 +30,12 @@ local BAR_BUTTON_CONFIG = {
     ["BT4Class4"]  = { btStart = 109, btEnd = 120 },
 }
 
+function AscensionCastBar:UpdateStrata()
+    if not self.castBar then return end
+    local strata = self.db.profile.frameStrata or "MEDIUM"
+    self.castBar:SetFrameStrata(strata)
+end
+
 -- -------------------------------------------------------------------------------
 -- FRAME CREATION
 -- -------------------------------------------------------------------------------
@@ -51,7 +57,8 @@ function AscensionCastBar:CreateBar()
     castBar:ClearAllPoints()
     castBar:SetPoint("CENTER", self.anchorFrame, "CENTER", 0, 0)
 
-    castBar:SetFrameStrata("MEDIUM"); castBar:SetFrameLevel(10); castBar:Hide()
+    local strata = self.db.profile.frameStrata or "MEDIUM"
+    castBar:SetFrameStrata(strata); castBar:SetFrameLevel(10); castBar:Hide()
     self.castBar = castBar
 
     -- Bar Texture
@@ -596,8 +603,15 @@ function AscensionCastBar:HideTicks()
 end
 
 function AscensionCastBar:UpdateTicks(spellID, numStages, duration)
+    if not self.castBar then return end
     self:HideTicks()
-    if not self.db.profile.showChannelTicks then return end
+
+    spellID = spellID or self.castBar.lastSpellID
+    numStages = numStages or self.castBar.numStages
+    duration = duration or self.castBar.duration
+
+    local db = self.db.profile
+    if not db.showChannelTicks and not db.showEmpowerStages then return end
 
     if self.castBar.ticksFrame then
         self.castBar.ticksFrame:SetFrameLevel(self.castBar:GetFrameLevel() + 10)
@@ -685,6 +699,12 @@ function AscensionCastBar:GetEmpoweredStageWeights(numStages)
         for i = 1, numStages do w[i] = 1 end
     end
     return w
+end
+
+function AscensionCastBar:UpdateLatency()
+    if self.castBar then
+        self:UpdateLatencyBar(self.castBar)
+    end
 end
 
 function AscensionCastBar:UpdateLatencyBar(castBar)
@@ -909,7 +929,7 @@ function AscensionCastBar:AddEmpowerStages(numStages)
             pip:ClearAllPoints()
             pip:SetPoint("TOP", cb, "TOPLEFT", right, -border)
             pip:SetPoint("BOTTOM", cb, "BOTTOMLEFT", right, border)
-            pip:Show()
+            pip:SetShown(db.showEmpowerStages)
         end
     end
 end
