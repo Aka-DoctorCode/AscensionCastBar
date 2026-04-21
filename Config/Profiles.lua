@@ -22,7 +22,7 @@ local ProfilesTab = {}
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
 function ProfilesTab:Render(layout, profile)
-    local db = AscensionCastBar.db -- Referencia al objeto AceDB
+    local db = AscensionCastBar.db
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: ACTIVE PROFILE
