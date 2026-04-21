@@ -29,228 +29,193 @@ function TextTab:Render(layout, profile)
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: GLOBAL FONT SETTINGS
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Global Font Settings" })
+    -- -------------------------------------------------------------------------------
+    -- SECCIÓN: GLOBAL FONT SETTINGS
+    -- -------------------------------------------------------------------------------
+    layout:header(nil, "Global Font Settings")
     layout:beginSection()
         
         -- Selector de Fuente (LSM)
-        layout:createDropdown({
-            text = "Font Face",
-            values = LSM:List("font"),
-            get = function() return profile.spellNameFontLSM end,
-            set = function(val)
+        layout:dropdown(nil, "Font Face", LSM:List("font"),
+            function() return profile.spellNameFontLSM end,
+            function(val)
                 profile.spellNameFontLSM = val
                 profile.timerFontLSM = val
                 AscensionCastBar:ApplyFont()
             end
-        })
+        )
 
         -- Outline (Borde de fuente)
-        layout:createDropdown({
-            text = "Font Outline",
-            values = { 
+        layout:dropdown(nil, "Font Outline",
+            { 
                 ["NONE"] = "None", 
                 ["OUTLINE"] = "Outline", 
                 ["THICKOUTLINE"] = "Thick Outline", 
                 ["MONOCHROME"] = "Monochrome" 
             },
-            get = function() return profile.outline end,
-            set = function(val)
+            function() return profile.outline end,
+            function(val)
                 profile.outline = val
                 AscensionCastBar:ApplyFont()
             end
-        })
+        )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: SPELL NAME (Configuración del nombre del hechizo)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Spell Name" })
+    layout:header(nil, "Spell Name")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Name",
-            get = function() return profile.showSpellText end,
-            set = function(val)
+        layout:checkbox(nil, "Show Name", nil,
+            function() return profile.showSpellText end,
+            function(val)
                 profile.showSpellText = val
                 AscensionCastBar:UpdateTextVisibility()
             end
-        })
+        )
 
-        layout:createToggle({
-            text = "Truncate Name",
-            get = function() return profile.truncateSpellName end,
-            set = function(val) 
+        layout:checkbox(nil, "Truncate Name", nil,
+            function() return profile.truncateSpellName end,
+            function(val) 
                 profile.truncateSpellName = val 
-                AscensionCastBar:SelectTab("text") -- Refrescar para mostrar slider de longitud
+                AscensionCastBar:SelectTab("text")
             end
-        })
+        )
 
         if profile.truncateSpellName then
-            layout:createSlider({
-                text = "Max Characters",
-                min = 5, max = 100, step = 1,
-                get = function() return profile.truncateLength end,
-                set = function(val) profile.truncateLength = val end
-            })
+            layout:slider(nil, "Max Characters", 5, 100, 1,
+                function() return profile.truncateLength end,
+                function(val) profile.truncateLength = val end
+            )
         end
 
-        layout:createSlider({
-            text = "Size",
-            min = 8, max = 32, step = 1,
-            get = function() return profile.spellNameFontSize end,
-            set = function(val)
+        layout:slider(nil, "Size", 8, 32, 1,
+            function() return profile.spellNameFontSize end,
+            function(val)
                 profile.spellNameFontSize = val
                 AscensionCastBar:ApplyFont()
             end
-        })
+        )
 
-        layout:createColorPicker({
-            text = "Color",
-            get = function() return unpack(profile.fontColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Color",
+            function() return unpack(profile.fontColor) end,
+            function(r, g, b, a)
                 profile.fontColor = { r, g, b, a }
                 AscensionCastBar:ApplyFont()
-            end,
-            onReset = function()
-                profile.fontColor = { unpack(defaults.fontColor) }
-                AscensionCastBar:ApplyFont()
-            end
-        })
+            end, nil, true
+        )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: TIMER (Configuración del tiempo)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Timer" })
+    layout:header(nil, "Timer")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Timer",
-            get = function() return profile.showTimerText end,
-            set = function(val) profile.showTimerText = val end
-        })
+        layout:checkbox(nil, "Show Timer", nil,
+            function() return profile.showTimerText end,
+            function(val) profile.showTimerText = val end
+        )
 
-        layout:createToggle({
-            text = "Hide on Channel",
-            get = function() return profile.hideTimerOnChannel end,
-            set = function(val) profile.hideTimerOnChannel = val end
-        })
+        layout:checkbox(nil, "Hide on Channel", nil,
+            function() return profile.hideTimerOnChannel end,
+            function(val) profile.hideTimerOnChannel = val end
+        )
 
-        layout:createDropdown({
-            text = "Format",
-            values = { ["Remaining"] = "Remaining", ["Duration"] = "Duration", ["Total"] = "Total" },
-            get = function() return profile.timerFormat end,
-            set = function(val) profile.timerFormat = val end
-        })
+        layout:dropdown(nil, "Format", { ["Remaining"] = "Remaining", ["Duration"] = "Duration", ["Total"] = "Total" },
+            function() return profile.timerFormat end,
+            function(val) profile.timerFormat = val end
+        )
 
-        layout:createSlider({
-            text = "Size",
-            min = 8, max = 32, step = 1,
-            get = function() return profile.timerFontSize end,
-            set = function(val)
+        layout:slider(nil, "Size", 8, 32, 1,
+            function() return profile.timerFontSize end,
+            function(val)
                 profile.timerFontSize = val
                 AscensionCastBar:ApplyFont()
             end
-        })
+        )
 
-        layout:createToggle({
-            text = "Use Shared Color",
-            get = function() return profile.useSharedColor end,
-            set = function(val)
+        layout:checkbox(nil, "Use Shared Color", nil,
+            function() return profile.useSharedColor end,
+            function(val)
                 profile.useSharedColor = val
                 AscensionCastBar:ApplyFont()
-                AscensionCastBar:SelectTab("text") -- Ocultar/Mostrar el picker de abajo
+                AscensionCastBar:SelectTab("text")
             end
-        })
+        )
 
         if not profile.useSharedColor then
-            layout:createColorPicker({
-                text = "Timer Color",
-                get = function() return unpack(profile.timerColor) end,
-                set = function(r, g, b, a)
+            layout:colorPicker(nil, "Timer Color",
+                function() return unpack(profile.timerColor) end,
+                function(r, g, b, a)
                     profile.timerColor = { r, g, b, a }
                     AscensionCastBar:ApplyFont()
-                end,
-                onReset = function()
-                    profile.timerColor = { unpack(defaults.timerColor) }
-                    AscensionCastBar:ApplyFont()
-                end
-            })
+                end, nil, true
+            )
         end
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: POSITIONING & BACKDROP
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Positioning & Backdrop" })
+    layout:header(nil, "Positioning & Backdrop")
     layout:beginSection()
 
-        layout:createToggle({
-            text = "Detach Text",
-            get = function() return profile.detachText end,
-            set = function(val)
+        layout:checkbox(nil, "Detach Text", nil,
+            function() return profile.detachText end,
+            function(val)
                 profile.detachText = val
                 AscensionCastBar:UpdateTextLayout()
                 AscensionCastBar:SelectTab("text")
             end
-        })
+        )
 
         if profile.detachText then
-            layout:createSlider({
-                text = "X Offset",
-                min = -200, max = 200, step = 1,
-                get = function() return profile.textX end,
-                set = function(val)
+            layout:slider(nil, "X Offset", -200, 200, 1,
+                function() return profile.textX end,
+                function(val)
                     profile.textX = val
                     AscensionCastBar:UpdateTextLayout()
                 end
-            })
+            )
 
-            layout:createSlider({
-                text = "Y Offset",
-                min = -200, max = 200, step = 1,
-                get = function() return profile.textY end,
-                set = function(val)
+            layout:slider(nil, "Y Offset", -200, 200, 1,
+                function() return profile.textY end,
+                function(val)
                     profile.textY = val
                     AscensionCastBar:UpdateTextLayout()
                 end
-            })
+            )
 
-            layout:createSlider({
-                text = "Text Area Width",
-                min = 50, max = 500, step = 1,
-                get = function() return profile.textWidth end,
-                set = function(val)
+            layout:slider(nil, "Text Area Width", 50, 500, 1,
+                function() return profile.textWidth end,
+                function(val)
                     profile.textWidth = val
                     AscensionCastBar:UpdateTextLayout()
                 end
-            })
+            )
         end
 
-        layout:createToggle({
-            text = "Enable Backdrop",
-            get = function() return profile.textBackdropEnabled end,
-            set = function(val)
+        layout:checkbox(nil, "Enable Backdrop", nil,
+            function() return profile.textBackdropEnabled end,
+            function(val)
                 profile.textBackdropEnabled = val
                 AscensionCastBar:UpdateTextLayout()
                 AscensionCastBar:SelectTab("text")
             end
-        })
+        )
 
         if profile.textBackdropEnabled then
-            layout:createColorPicker({
-                text = "Backdrop Color",
-                get = function() return unpack(profile.textBackdropColor) end,
-                set = function(r, g, b, a)
+            layout:colorPicker(nil, "Backdrop Color",
+                function() return unpack(profile.textBackdropColor) end,
+                function(r, g, b, a)
                     profile.textBackdropColor = { r, g, b, a }
                     AscensionCastBar:UpdateTextLayout()
-                end,
-                onReset = function()
-                    profile.textBackdropColor = { unpack(defaults.textBackdropColor) }
-                    AscensionCastBar:UpdateTextLayout()
-                end
-            })
+                end, nil, true
+            )
         end
+    layout:endSection()
     layout:endSection()
 end
 

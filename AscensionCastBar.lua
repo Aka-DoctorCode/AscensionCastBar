@@ -109,9 +109,7 @@ local LSM = LibStub("LibSharedMedia-3.0")
 -- INITIALIZATION
 -- -------------------------------------------------------------------------------
 
-function AscensionCastBar:SetupOptions()
-    -- New system uses ToggleConfigMenu, this is left for compatibility
-end
+
 
 function AscensionCastBar:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("AscensionCastBarDB", self.defaults, "Default")
@@ -126,7 +124,37 @@ function AscensionCastBar:OnInitialize()
     self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
     self:SetupOptions()
+    
+    -- Initialize the Centralized UI Library context
+    local UIFactory = LibStub("AscensionSuit-UI", true)
+    if UIFactory then
+        addonTable.UIContext = UIFactory:CreateContext({
+            colors = self.colors,
+            files = self.files,
+            menuStyle = self.menuStyle
+        })
+    end
+
     self:CreateBar()
+end
+
+function AscensionCastBar:openConfig()
+    if not addonTable.UIContext then
+        local UIFactory = LibStub("AscensionSuit-UI", true)
+        if UIFactory then
+            addonTable.UIContext = UIFactory:CreateContext({
+                colors = self.colors,
+                files = self.files,
+                menuStyle = self.menuStyle
+            })
+        end
+    end
+    
+    if self.toggleConfigMenu then
+        self:toggleConfigMenu()
+    else
+        print("|cff7F13ECAscension Cast Bar:|r Configuration system not loaded correctly.")
+    end
 end
 
 function AscensionCastBar:OnEnable()
@@ -148,8 +176,8 @@ function AscensionCastBar:OnEnable()
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "HandleCastStop")
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "HandleCastStart")
     end)
-    -- self:RegisterChatCommand("acb", "OpenConfig")
-    -- self:RegisterChatCommand("ascensioncastbar", "OpenConfig")
+    self:RegisterChatCommand("acb", "openConfig")
+    self:RegisterChatCommand("ascensioncastbar", "openConfig")
     self:RefreshConfig()
     if self.castBar then
         self.castBar:Hide()

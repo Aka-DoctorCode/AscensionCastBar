@@ -28,146 +28,120 @@ function MechanicsTab:Render(layout, profile)
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: LATENCY (Lag Bar)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Latency & Lag" })
+    -- -------------------------------------------------------------------------------
+    -- SECCIÓN: LATENCY (Lag Bar)
+    -- -------------------------------------------------------------------------------
+    layout:header(nil, "Latency & Lag")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Latency (Lag)",
-            get = function() return profile.showLatency end,
-            set = function(val)
+        layout:checkbox(nil, "Show Latency (Lag)", nil,
+            function() return profile.showLatency end,
+            function(val)
                 profile.showLatency = val
                 AscensionCastBar:UpdateLatency()
+                AscensionCastBar:SelectTab("mechanics")
             end
-        })
+        )
 
-        layout:createColorPicker({
-            text = "Latency Color",
-            disabled = function() return not profile.showLatency end,
-            get = function() return unpack(profile.latencyColor) end,
-            set = function(r, g, b, a)
-                profile.latencyColor = { r, g, b, a }
-                AscensionCastBar:UpdateLatency()
-            end,
-            onReset = function()
-                profile.latencyColor = { unpack(defaults.latencyColor) }
-                AscensionCastBar:UpdateLatency()
-            end
-        })
+        if profile.showLatency then
+            layout:colorPicker(nil, "Latency Color",
+                function() return unpack(profile.latencyColor) end,
+                function(r, g, b, a)
+                    profile.latencyColor = { r, g, b, a }
+                    AscensionCastBar:UpdateLatency()
+                end, nil, true
+            )
+        end
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: CHANNELING TICKS (Ticks de hechizos canalizados)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Channeling Ticks" })
+    layout:header(nil, "Channeling Ticks")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Ticks",
-            get = function() return profile.showChannelTicks end,
-            set = function(val)
+        layout:checkbox(nil, "Show Ticks", nil,
+            function() return profile.showChannelTicks end,
+            function(val)
                 profile.showChannelTicks = val
                 AscensionCastBar:UpdateTicks()
+                AscensionCastBar:SelectTab("mechanics")
             end
-        })
+        )
 
-        layout:createSlider({
-            text = "Tick Width",
-            min = 1, max = 5, step = 1,
-            disabled = function() return not profile.showChannelTicks end,
-            get = function() return profile.channelTicksThickness end,
-            set = function(val)
-                profile.channelTicksThickness = val
-                AscensionCastBar:UpdateTicks()
-            end
-        })
+        if profile.showChannelTicks then
+            layout:slider(nil, "Tick Width", 1, 5, 1,
+                function() return profile.channelTicksThickness end,
+                function(val)
+                    profile.channelTicksThickness = val
+                    AscensionCastBar:UpdateTicks()
+                end
+            )
 
-        layout:createColorPicker({
-            text = "Tick Color",
-            disabled = function() return not profile.showChannelTicks end,
-            get = function() return unpack(profile.channelTicksColor or {1,1,1,1}) end,
-            set = function(r, g, b, a)
-                profile.channelTicksColor = { r, g, b, a }
-                AscensionCastBar:UpdateTicks()
-            end,
-            onReset = function()
-                profile.channelTicksColor = { unpack(defaults.channelTicksColor) }
-                AscensionCastBar:UpdateTicks()
-            end
-        })
+            layout:colorPicker(nil, "Tick Color",
+                function() return unpack(profile.channelTicksColor or {1,1,1,1}) end,
+                function(r, g, b, a)
+                    profile.channelTicksColor = { r, g, b, a }
+                    AscensionCastBar:UpdateTicks()
+                end, nil, true
+            )
+        end
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: EMPOWERED SPELLS (Niveles de carga)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Empowered Casts" })
+    layout:header(nil, "Empowered Casts")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Stage Dividers",
-            get = function() return profile.showEmpowerStages end,
-            set = function(val)
+        layout:checkbox(nil, "Show Stage Dividers", nil,
+            function() return profile.showEmpowerStages end,
+            function(val)
                 profile.showEmpowerStages = val
                 AscensionCastBar:UpdateEmpoweredStages()
             end
-        })
+        )
 
         -- Color para el nivel actual alcanzado
-        layout:createColorPicker({
-            text = "Reached Stage Color",
-            get = function() return unpack(profile.empoweredReachedColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Reached Stage Color",
+            function() return unpack(profile.empoweredReachedColor) end,
+            function(r, g, b, a)
                 profile.empoweredReachedColor = { r, g, b, a }
-            end,
-            onReset = function()
-                profile.empoweredReachedColor = { unpack(defaults.empoweredReachedColor) }
-            end
-        })
+            end, nil, true
+        )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: STATUS COLORS (Interrupciones y Fallos)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Feedback Colors" })
+    layout:header(nil, "Feedback Colors")
     layout:beginSection()
 
-        layout:createToggle({
-            text = "Flash on Interrupted",
-            get = function() return profile.flashInterrupted end,
-            set = function(val) profile.flashInterrupted = val end
-        })
+        layout:checkbox(nil, "Flash on Interrupted", nil,
+            function() return profile.flashInterrupted end,
+            function(val) profile.flashInterrupted = val end
+        )
 
-        layout:createColorPicker({
-            text = "Interrupted Color",
-            get = function() return unpack(profile.interruptedColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Interrupted Color",
+            function() return unpack(profile.interruptedColor) end,
+            function(r, g, b, a)
                 profile.interruptedColor = { r, g, b, a }
-            end,
-            onReset = function()
-                profile.interruptedColor = { unpack(defaults.interruptedColor) }
-            end
-        })
+            end, nil, true
+        )
 
-        layout:createColorPicker({
-            text = "Failed/Cancelled Color",
-            get = function() return unpack(profile.failedColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Failed/Cancelled Color",
+            function() return unpack(profile.failedColor) end,
+            function(r, g, b, a)
                 profile.failedColor = { r, g, b, a }
-            end,
-            onReset = function()
-                profile.failedColor = { unpack(defaults.failedColor) }
-            end
-        })
+            end, nil, true
+        )
 
-        layout:createColorPicker({
-            text = "Finished Success Color",
-            get = function() return unpack(profile.successColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Finished Success Color",
+            function() return unpack(profile.successColor) end,
+            function(r, g, b, a)
                 profile.successColor = { r, g, b, a }
-            end,
-            onReset = function()
-                profile.successColor = { unpack(defaults.successColor) }
-            end
-        })
+            end, nil, true
+        )
     layout:endSection()
 end
 

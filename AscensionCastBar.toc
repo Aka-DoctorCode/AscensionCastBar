@@ -1,4 +1,4 @@
-## Interface: 120001
+## Interface: 120005
 ## Title: Ascension Cast Bar
 ## Notes: A highly customisable casting bar with integration for Cooldown Manager.
 ## Author: AkaDoctorCode
@@ -13,12 +13,12 @@
 # Addon files
 AscensionCastBar.lua
 Constants.lua
-Config.lua
 # Config System
+Config.lua
 Config/Defaults.lua
 Styles.lua
-Config/UIFactory.lua
 Config/Config.lua
+Config/ConfigUtils.lua
 Config/General.lua
 Config/Appearance.lua
 Config/Text.lua

@@ -29,167 +29,138 @@ function AppearanceTab:Render(layout, profile)
     -- -------------------------------------------------------------------------------
     -- SECTION: BAR STYLE (Main Textures and Colors)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Bar Style" })
+    layout:header(nil, "Bar Style")
     layout:beginSection()
         
         -- Texture Selector (LSM)
-        layout:createDropdown({
-            text = "Texture",
-            values = LSM:List("statusbar"),
-            get = function() return profile.barLSMName end,
-            set = function(val)
+        layout:dropdown(nil, "Texture", LSM:List("statusbar"),
+            function() return profile.barLSMName end,
+            function(val)
                 profile.barLSMName = val
                 AscensionCastBar:UpdateBarTexture()
             end
-        })
+        )
 
         -- Bar Color
-        layout:createToggle({
-            text = "Use Class Color",
-            get = function() return profile.useClassColor end,
-            set = function(val)
+        layout:checkbox(nil, "Use Class Color", nil,
+            function() return profile.useClassColor end,
+            function(val)
                 profile.useClassColor = val
                 AscensionCastBar:UpdateBarColor()
+                AscensionCastBar:SelectTab("castbar")
             end
-        })
+        )
 
-        layout:createColorPicker({
-            text = "Bar Color",
-            disabled = function() return profile.useClassColor end,
-            get = function() return unpack(profile.barColor) end,
-            set = function(r, g, b, a)
-                profile.barColor = { r, g, b, a }
-                AscensionCastBar:UpdateBarColor()
-            end,
-            onReset = function()
-                profile.barColor = { unpack(defaults.barColor) }
-                AscensionCastBar:UpdateBarColor()
-            end
-        })
+        if not profile.useClassColor then
+            layout:colorPicker(nil, "Bar Color",
+                function() return unpack(profile.barColor) end,
+                function(r, g, b, a)
+                    profile.barColor = { r, g, b, a }
+                    AscensionCastBar:UpdateBarColor()
+                end, nil, true
+            )
+        end
 
         -- Background Color (BG)
-        layout:createColorPicker({
-            text = "Background Color",
-            get = function() return unpack(profile.bgColor) end,
-            set = function(r, g, b, a)
+        layout:colorPicker(nil, "Background Color",
+            function() return unpack(profile.bgColor) end,
+            function(r, g, b, a)
                 profile.bgColor = { r, g, b, a }
                 AscensionCastBar:UpdateBackground()
-            end,
-            onReset = function()
-                profile.bgColor = { unpack(defaults.bgColor) }
-                AscensionCastBar:UpdateBackground()
-            end
-        })
+            end, nil, true
+        )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECTION: BORDER (Bar Borders)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Border" })
+    layout:header(nil, "Border")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Enable Border",
-            get = function() return profile.borderEnabled end,
-            set = function(val)
+        layout:checkbox(nil, "Enable Border", nil,
+            function() return profile.borderEnabled end,
+            function(val)
                 profile.borderEnabled = val
                 AscensionCastBar:UpdateBorder()
+                AscensionCastBar:SelectTab("castbar")
             end
-        })
+        )
 
-        layout:createColorPicker({
-            text = "Border Color",
-            disabled = function() return not profile.borderEnabled end,
-            get = function() return unpack(profile.borderColor) end,
-            set = function(r, g, b, a)
-                profile.borderColor = { r, g, b, a }
-                AscensionCastBar:UpdateBorder()
-            end,
-            onReset = function()
-                profile.borderColor = { unpack(defaults.borderColor) }
-                AscensionCastBar:UpdateBorder()
-            end
-        })
+        if profile.borderEnabled then
+            layout:colorPicker(nil, "Border Color",
+                function() return unpack(profile.borderColor) end,
+                function(r, g, b, a)
+                    profile.borderColor = { r, g, b, a }
+                    AscensionCastBar:UpdateBorder()
+                end, nil, true
+            )
 
-        layout:createSlider({
-            text = "Thickness",
-            min = 1, max = 10, step = 1,
-            disabled = function() return not profile.borderEnabled end,
-            get = function() return profile.borderThickness end,
-            set = function(val)
-                profile.borderThickness = val
-                AscensionCastBar:UpdateBorder()
-            end
-        })
+            layout:slider(nil, "Thickness", 1, 10, 1,
+                function() return profile.borderThickness end,
+                function(val)
+                    profile.borderThickness = val
+                    AscensionCastBar:UpdateBorder()
+                end
+            )
+        end
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECTION: SPELL ICON
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Spell Icon" })
+    layout:header(nil, "Spell Icon")
     layout:beginSection()
         
-        layout:createToggle({
-            text = "Show Icon",
-            get = function() return profile.showIcon end,
-            set = function(val)
+        layout:checkbox(nil, "Show Icon", nil,
+            function() return profile.showIcon end,
+            function(val)
                 profile.showIcon = val
                 AscensionCastBar:UpdateIcon()
-                -- Refresh to show/hide icon options
                 AscensionCastBar:SelectTab("castbar")
             end
-        })
+        )
 
         if profile.showIcon then
-            layout:createToggle({
-                text = "Detach Icon",
-                get = function() return profile.detachIcon end,
-                set = function(val)
+            layout:checkbox(nil, "Detach Icon", nil,
+                function() return profile.detachIcon end,
+                function(val)
                     profile.detachIcon = val
                     AscensionCastBar:UpdateIcon()
                 end
-            })
+            )
 
-            layout:createDropdown({
-                text = "Position",
-                values = { ["Left"] = "Left", ["Right"] = "Right" },
-                get = function() return profile.iconAnchor end,
-                set = function(val)
+            layout:dropdown(nil, "Position", { ["Left"] = "Left", ["Right"] = "Right" },
+                function() return profile.iconAnchor end,
+                function(val)
                     profile.iconAnchor = val
                     AscensionCastBar:UpdateIcon()
                 end
-            })
+            )
 
-            layout:createSlider({
-                text = "Size",
-                min = 10, max = 128, step = 1,
-                get = function() return profile.iconSize end,
-                set = function(val)
+            layout:slider(nil, "Size", 10, 128, 1,
+                function() return profile.iconSize end,
+                function(val)
                     profile.iconSize = val
                     AscensionCastBar:UpdateIcon()
                 end
-            })
+            )
 
             -- Position Sliders (X/Y)
-            layout:createSlider({
-                text = "Icon X Offset",
-                min = -200, max = 200, step = 1,
-                get = function() return profile.iconX end,
-                set = function(val)
+            layout:slider(nil, "Icon X Offset", -200, 200, 1,
+                function() return profile.iconX end,
+                function(val)
                     profile.iconX = val
                     AscensionCastBar:UpdateIcon()
                 end
-            })
+            )
 
-            layout:createSlider({
-                text = "Icon Y Offset",
-                min = -200, max = 200, step = 1,
-                get = function() return profile.iconY end,
-                set = function(val)
+            layout:slider(nil, "Icon Y Offset", -200, 200, 1,
+                function() return profile.iconY end,
+                function(val)
                     profile.iconY = val
                     AscensionCastBar:UpdateIcon()
                 end
-            })
+            )
         end
     layout:endSection()
 end

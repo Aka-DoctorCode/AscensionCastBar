@@ -27,14 +27,14 @@ function ProfilesTab:Render(layout, profile)
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: ACTIVE PROFILE
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Profile Management" })
+    -- -------------------------------------------------------------------------------
+    -- SECCIÓN: ACTIVE PROFILE
+    -- -------------------------------------------------------------------------------
+    layout:header(nil, "Profile Management")
     layout:beginSection()
         
         -- Mostrar el perfil actual (Informativo)
-        layout:createHeader({ 
-            text = "Current Profile: |cff00ff00" .. db:GetCurrentProfile() .. "|r",
-            isSubHeader = true 
-        })
+        layout:header(nil, "Current Profile: |cff00ff00" .. db:GetCurrentProfile() .. "|r")
 
         -- Selector de Perfil existente
         local profiles = db:GetProfiles()
@@ -43,58 +43,46 @@ function ProfilesTab:Render(layout, profile)
             profileList[name] = name
         end
 
-        layout:createDropdown({
-            text = "Switch to Profile",
-            values = profileList,
-            get = function() return db:GetCurrentProfile() end,
-            set = function(val)
+        layout:dropdown(nil, "Switch to Profile", profileList,
+            function() return db:GetCurrentProfile() end,
+            function(val)
                 db:SetProfile(val)
                 -- Refrescar toda la UI tras el cambio de perfil
                 AscensionCastBar:RefreshConfig() 
             end
-        })
+        )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: MAINTENANCE (Reset & Copy)
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Maintenance" })
+    layout:header(nil, "Maintenance")
     layout:beginSection()
 
         -- Botón: Resetear Perfil actual
-        layout:createButton({
-            text = "Reset Current Profile",
-            color = { 0.8, 0.2, 0.2 }, -- Rojo para advertir peligro
-            onClick = function()
-                StaticPopup_Show("ASCENSION_CASTBAR_RESET_CONFIRM")
-            end
-        })
+        layout:button(nil, "Reset Current Profile", nil, nil, nil, function()
+            StaticPopup_Show("ASCENSION_CASTBAR_RESET_CONFIRM")
+        end)
 
         -- Botón: Crear Nuevo Perfil (Usando el prompt de Blizzard)
-        layout:createButton({
-            text = "Create New Profile",
-            onClick = function()
-                StaticPopup_Show("ASCENSION_CASTBAR_NEW_PROFILE")
-            end
-        })
+        layout:button(nil, "Create New Profile", nil, nil, nil, function()
+            StaticPopup_Show("ASCENSION_CASTBAR_NEW_PROFILE")
+        end)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: INFORMATION
     -- -------------------------------------------------------------------------------
-    layout:createHeader({ text = "Addon Info" })
+    layout:header(nil, "Addon Info")
     layout:beginSection()
-        layout:createHeader({ text = "Author: Aka-DoctorCode", isSubHeader = true })
-        layout:createHeader({ text = "Version: " .. (C_AddOns.GetAddOnMetadata(addonName, "Version") or "4.7"), isSubHeader = true })
+        layout:header(nil, "Author: Aka-DoctorCode")
+        layout:header(nil, "Version: " .. (C_AddOns.GetAddOnMetadata(addonName, "Version") or "4.7"))
         
-        layout:createButton({
-            text = "Open Advanced Ace3 Profiles",
-            onClick = function()
-                -- Abre el menú estándar de Ace3 por si necesitan borrar o copiar perfiles específicos
-                InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
-                InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
-            end
-        })
+        layout:button(nil, "Open Advanced Ace3 Profiles", 220, nil, nil, function()
+            -- Abre el menú estándar de Ace3 por si necesitan borrar o copiar perfiles específicos
+            InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
+            InterfaceOptionsFrame_OpenToCategory(AscensionCastBar.optionsFrame)
+        end)
     layout:endSection()
 end
 
