@@ -2,6 +2,7 @@ name: Package and Release
 
 permissions:
   contents: write
+  administration: 
 
 on:
   push:
@@ -19,9 +20,8 @@ jobs:
 
       - name: syncMetadataFromToc
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          # Extrae la nota y limpia espacios/retornos de carro
           TOC_NOTE=$(grep "^## Notes:" AscensionCastBar.toc | sed 's/^## Notes: //' | tr -d '\r')
           echo "Syncing GitHub description with TOC Note: $TOC_NOTE"
           gh repo edit ${{ github.repository }} --description "$TOC_NOTE"
