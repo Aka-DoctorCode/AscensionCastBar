@@ -1,13 +1,24 @@
+# Project Metadata
 package-as: AscensionCastBar
 license-output: LICENSE
 enable-nolib-creation: no
+
+# CurseForge / Wago Dependencies
 required-dependencies:
     - AscensionSuit
+
+# Packager Ignore List
 ignore:
-    - __MACOSX
+    - .git/
+    - .github/
+    - .vscode/
+    - .gitignore
+    - .gitattributes
     - pkgmeta.yaml
     - config.md
-    
+    - __MACOSX
+
+# Changelog Settings
 manual-changelog: 
     filename: CHANGELOG.txt
     markup-type: html

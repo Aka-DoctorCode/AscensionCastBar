@@ -1,7 +1,7 @@
-## Interface: 120005
+## Interface: 120000
 ## Title: Ascension Cast Bar
-## Notes: A highly customisable casting bar with integration for Cooldown Manager.
-## Author: AkaDoctorCode
+## Notes: Enhanced and customizable cast bar that integrates with cooldown manager integration for retail wow
+## Author: Aka-DoctorCode
 ## Category: Interface Enhancements
 ## Version: @project-version@
 ## SavedVariables: AscensionCastBarDB
@@ -10,24 +10,29 @@
 ## X-Curse-Project-ID: 1405023
 ## X-Wago-ID: ZKxZBvNk
 
-# Addon files
-AscensionCastBar.lua
+#Core and Constants 
 Constants.lua
-# Config System
-Config.lua
 Config/Defaults.lua
+
+#Configuration System 
 Styles.lua
-Config/Config.lua
 Config/ConfigUtils.lua
+Config.lua
+Config/Config.lua
 Config/General.lua
 Config/Appearance.lua
 Config/Text.lua
 Config/Mechanics.lua
 Config/VisualFX.lua
 Config/Profiles.lua
+
+#Logic and Systems 
 Animations.lua
-UI.lua
+Logic.lua
 Cast.lua
 Channel.lua
 Empower.lua
-Logic.lua
+
+#Interface and Initialization 
+UI.lua
+AscensionCastBar.lua

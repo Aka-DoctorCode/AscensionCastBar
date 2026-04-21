@@ -12,19 +12,30 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: checkoutCode
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Package and Deploy
+      - name: syncMetadataFromToc
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extrae la nota y limpia espacios/retornos de carro
+          TOC_NOTE=$(grep "^## Notes:" AscensionCastBar.toc | sed 's/^## Notes: //' | tr -d '\r')
+          echo "Syncing GitHub description with TOC Note: $TOC_NOTE"
+          gh repo edit ${{ github.repository }} --description "$TOC_NOTE"
+
+      - name: packageAndDeploy
         uses: BigWigsMods/packager@v2
+        with:
+          args: "-r README.md"
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger AscensionSuit Update
+      - name: triggerAscensionSuitUpdate
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.PAT_TOKEN }}
