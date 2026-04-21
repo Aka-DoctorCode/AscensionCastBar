@@ -6,6 +6,7 @@ required-dependencies:
 ignore:
     - __MACOSX
     - pkgmeta.yaml
+    - config.md
     
 manual-changelog: 
     filename: CHANGELOG.txt
