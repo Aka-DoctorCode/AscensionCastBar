@@ -27,8 +27,6 @@ jobs:
 
       - name: packageAndDeploy
         uses: BigWigsMods/packager@v2
-        with:
-          args: "-r README.md"
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
