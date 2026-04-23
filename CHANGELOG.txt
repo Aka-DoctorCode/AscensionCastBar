@@ -3,6 +3,7 @@
     <li>Major code cleanup and refactoring for better structure and maintainability.</li>
     <li>Improved modularity, reduced duplication, and standardized naming conventions.</li>
     <li>Fixed initialization issues and removed obsolete files.</li>
+    <li>Fix: there was a bug with the frame strata, it has been fixed. Also the order of options for strata has been corrected.</li>
 </ul>
 <br>
 <h3>Positive feedback is always appreciated, it helps me to continue working on this project</h3>
