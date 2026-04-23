@@ -34,6 +34,7 @@ function AscensionCastBar:UpdateStrata()
     if not self.castBar then return end
     local strata = self.db.profile.frameStrata or "MEDIUM"
     self.castBar:SetFrameStrata(strata)
+    self.castBar.textCtx:SetFrameStrata(strata)
 end
 
 -- -------------------------------------------------------------------------------
