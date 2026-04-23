@@ -103,15 +103,15 @@ function GeneralTab:render(layout, profile)
     layout:beginSection()
 
         local stratas = {
-            { label = "Background", value = "BACKGROUND" },
-            { label = "Low",        value = "LOW" },
-            { label = "Medium",     value = "MEDIUM" },
-            { label = "High",       value = "HIGH" },
-            { label = "Dialog",     value = "DIALOG" },
-            { label = "Fullscreen", value = "FULLSCREEN" },
-            { label = "Fullscreen Dialog", value = "FULLSCREEN_DIALOG" },
-            { label = "Tooltip",    value = "TOOLTIP" },
-        }
+    { label = "Tooltip",        value = "TOOLTIP" },
+    { label = "Fullscreen Dialog", value = "FULLSCREEN_DIALOG" },
+    { label = "Fullscreen",     value = "FULLSCREEN" },
+    { label = "Dialog",         value = "DIALOG" },
+    { label = "High",           value = "HIGH" },
+    { label = "Medium",         value = "MEDIUM" },
+    { label = "Low",            value = "LOW" },
+    { label = "Background",     value = "BACKGROUND" },
+}
 
         layout:dropdown(nil, "Frame Strata", nil, stratas,
             function() return profile.frameStrata or "MEDIUM" end,
