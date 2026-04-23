@@ -121,7 +121,7 @@ function AscensionCastBar:CreateBar()
 
     -- Text Context
     castBar.textCtx = CreateFrame("Frame", "AscensionCastBarTextFrame", UIParent)
-    castBar.textCtx:SetFrameStrata("MEDIUM")
+    castBar.textCtx:SetFrameStrata(strata)
     castBar.textCtx:SetFrameLevel(25)
     castBar.textCtx.bg = castBar.textCtx:CreateTexture(nil, "BACKGROUND")
     castBar.textCtx.bg:SetAllPoints()
