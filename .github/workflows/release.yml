@@ -8,22 +8,17 @@ on:
     tags:
       - '*'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: checkoutCode
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: syncMetadataFromToc
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          TOC_NOTE=$(grep "^## Notes:" AscensionCastBar.toc | sed 's/^## Notes: //' | tr -d '\r')
-          echo "Syncing GitHub description with TOC Note: $TOC_NOTE"
-          gh repo edit ${{ github.repository }} --description "$TOC_NOTE"
 
       - name: packageAndDeploy
         uses: BigWigsMods/packager@v2

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/General.lua
+-- File: General.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -13,8 +13,10 @@
 
 
 local addonName, addonTable = ...
+local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
 
 -- Registry for the General tab in the modular system
 addonTable.tabs = addonTable.tabs or {}
@@ -23,7 +25,7 @@ local GeneralTab = {}
 ---Main rendering function for the General tab
 ---@param layout table The layoutModel instance defined in Config.lua
 ---@param profile table Reference to self.db.profile
-function GeneralTab:Render(layout, profile)
+function GeneralTab:render(layout, profile)
     
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: SETUP & TESTING
@@ -40,8 +42,8 @@ function GeneralTab:Render(layout, profile)
             function(val)
                 profile.previewEnabled = val
                 if not val then profile.testAttached = false end
-                AscensionCastBar:ToggleTestMode(val)
-                AscensionCastBar:SelectTab("general")
+                AscensionCastBar:toggleTestMode(val)
+                AscensionCastBar:selectTab("general")
             end
         )
 
@@ -55,7 +57,7 @@ function GeneralTab:Render(layout, profile)
             function() return profile.testModeState end,
             function(val)
                 profile.testModeState = val
-                if profile.previewEnabled then AscensionCastBar:ToggleTestMode(true) end
+                if profile.previewEnabled then AscensionCastBar:toggleTestMode(true) end
             end
         )
 
@@ -64,7 +66,7 @@ function GeneralTab:Render(layout, profile)
             function() return profile.hideDefaultCastbar end,
             function(val)
                 profile.hideDefaultCastbar = val
-                AscensionCastBar:UpdateDefaultCastBarVisibility()
+                AscensionCastBar:updateDefaultCastBarVisibility()
             end
         )
     layout:endSection()
@@ -78,7 +80,7 @@ function GeneralTab:Render(layout, profile)
             function() return profile.manualWidth end,
             function(val)
                 profile.manualWidth = val
-                AscensionCastBar:UpdateAnchor()
+                AscensionCastBar:updateAnchor()
             end
         )
 
@@ -88,8 +90,8 @@ function GeneralTab:Render(layout, profile)
                 profile.manualHeight = val
                 profile.height = val
                 if AscensionCastBar.castBar then AscensionCastBar.castBar:SetHeight(val) end
-                AscensionCastBar:UpdateSparkSize()
-                AscensionCastBar:UpdateIcon()
+                AscensionCastBar:updateSparkSize()
+                AscensionCastBar:updateIcon()
             end
         )
     layout:endSection()
@@ -115,7 +117,7 @@ function GeneralTab:Render(layout, profile)
             function() return profile.frameStrata or "MEDIUM" end,
             function(val)
                 profile.frameStrata = val
-                AscensionCastBar:UpdateStrata()
+                AscensionCastBar:updateStrata()
             end
         )
 
@@ -123,9 +125,9 @@ function GeneralTab:Render(layout, profile)
             function() return profile.attachToCDM end,
             function(val)
                 profile.attachToCDM = val
-                AscensionCastBar:InitCDMHooks()
-                AscensionCastBar:UpdateAnchor()
-                AscensionCastBar:SelectTab("general")
+                AscensionCastBar:initCDMHooks()
+                AscensionCastBar:updateAnchor()
+                AscensionCastBar:selectTab("general")
             end
         )
 
@@ -135,8 +137,8 @@ function GeneralTab:Render(layout, profile)
                 function(val)
                     profile.testAttached = val
                     profile.previewEnabled = true
-                    AscensionCastBar:ToggleTestMode(true)
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:toggleTestMode(true)
+                    AscensionCastBar:updateAnchor()
                 end
             )
             -- Configuración de Anclaje Automático
@@ -172,8 +174,8 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.cdmTarget end,
                 function(val)
                     profile.cdmTarget = val
-                    AscensionCastBar:InitCDMHooks()
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:initCDMHooks()
+                    AscensionCastBar:updateAnchor()
                 end
             )
 
@@ -181,7 +183,7 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.cdmYOffset end,
                 function(val)
                     profile.cdmYOffset = val
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:updateAnchor()
                 end
             )
         else
@@ -198,7 +200,7 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.point end,
                 function(val)
                     profile.point = val
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:updateAnchor()
                 end
             )
 
@@ -206,7 +208,7 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.relativePoint end,
                 function(val)
                     profile.relativePoint = val
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:updateAnchor()
                 end
             )
 
@@ -214,7 +216,7 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.manualX end,
                 function(val)
                     profile.manualX = val
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:updateAnchor()
                 end
             )
 
@@ -222,7 +224,7 @@ function GeneralTab:Render(layout, profile)
                 function() return profile.manualY end,
                 function(val)
                     profile.manualY = val
-                    AscensionCastBar:UpdateAnchor()
+                    AscensionCastBar:updateAnchor()
                 end
             )
         end

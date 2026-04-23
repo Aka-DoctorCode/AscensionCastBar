@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/VisualFX.lua
+-- File: VisualFX.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -13,16 +13,21 @@
 
 
 local addonName, addonTable = ...
----@type AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local ADDON_NAME = "Ascension Cast Bar"
+---@class AscensionCastBar
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
+
 
 addonTable.tabs = addonTable.tabs or {}
 local VisualFXTab = {}
 
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
-function VisualFXTab:Render(layout, profile)
+function VisualFXTab:render(layout, profile)
+    if not AscensionCastBar or not AscensionCastBar.defaults then return end
     local defaults = AscensionCastBar.defaults.profile
+    if not defaults then return end
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: MAIN STYLE
@@ -47,9 +52,9 @@ function VisualFXTab:Render(layout, profile)
             function(val)
                 profile.animStyle = val
                 if not profile.animationParams[val] then
-                    profile.animationParams[val] = CopyTable(AscensionCastBar.ANIMATION_STYLE_PARAMS[val])
+                    profile.animationParams[val] = CopyTable(AscensionCastBar.animationStyleParams[val])
                 end
-                AscensionCastBar:SelectTab("visualfx")
+                AscensionCastBar:selectTab("visualfx")
             end
         )
     layout:endSection()
@@ -64,12 +69,12 @@ function VisualFXTab:Render(layout, profile)
             function() return unpack(profile.glowColor or defaults.glowColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.glowColor = { r, g, b, a }
-                AscensionCastBar:UpdateSparkColors()
+                AscensionCastBar:updateSparkColors()
             end, nil, true
         )
         layout:button(nil, "Reset Glow Color", 150, 20, nil, function()
-            profile.glowColor = { unpack(defaults.glowColor) }
-            AscensionCastBar:UpdateSparkColors()
+            profile.glowColor = { unpack(defaults.glowColor or {1,1,1,1}) }
+            AscensionCastBar:updateSparkColors()
             AscensionCastBar:SelectTab("visualfx")
         end)
 
@@ -96,7 +101,7 @@ function VisualFXTab:Render(layout, profile)
                 profile.tail2Length = val
                 profile.tail3Length = val
                 profile.tail4Length = val
-                AscensionCastBar:UpdateSparkSize()
+                AscensionCastBar:updateSparkSize()
             end
         )
     layout:endSection()
@@ -111,7 +116,7 @@ function VisualFXTab:Render(layout, profile)
             function() return profile.enableSpark end,
             function(val)
                 profile.enableSpark = val
-                AscensionCastBar:UpdateSparkSize()
+                AscensionCastBar:updateSparkSize()
                 AscensionCastBar:SelectTab("visualfx")
             end
         )
@@ -121,12 +126,12 @@ function VisualFXTab:Render(layout, profile)
                 function() return unpack(profile.sparkColor or defaults.sparkColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.sparkColor = { r, g, b, a }
-                    AscensionCastBar:UpdateSparkColors()
+                    AscensionCastBar:updateSparkColors()
                 end, nil, true
             )
             layout:button(nil, "Reset Spark Color", 150, 20, nil, function()
-                profile.sparkColor = { unpack(defaults.sparkColor) }
-                AscensionCastBar:UpdateSparkColors()
+                profile.sparkColor = { unpack(defaults.sparkColor or {1,1,1,1}) }
+                AscensionCastBar:updateSparkColors()
                 AscensionCastBar:SelectTab("visualfx")
             end)
 
@@ -139,7 +144,7 @@ function VisualFXTab:Render(layout, profile)
                 function() return profile.sparkScale end,
                 function(val)
                     profile.sparkScale = val
-                    AscensionCastBar:UpdateSparkSize()
+                    AscensionCastBar:updateSparkSize()
                 end
             )
 
@@ -279,7 +284,7 @@ function VisualFXTab:Render(layout, profile)
             function() return profile.enableTails end,
             function(val)
                 profile.enableTails = val
-                AscensionCastBar:UpdateSparkColors()
+                AscensionCastBar:updateSparkColors()
                 AscensionCastBar:SelectTab("visualfx")
             end
         )
@@ -298,12 +303,12 @@ function VisualFXTab:Render(layout, profile)
                     function() return unpack(profile["tail" .. i .. "Color"] or defaults["tail" .. i .. "Color"] or {1,1,1,1}) end,
                     function(r, g, b, a)
                         profile["tail" .. i .. "Color"] = { r, g, b, a }
-                        AscensionCastBar:UpdateSparkColors()
+                        AscensionCastBar:updateSparkColors()
                     end, nil, true
                 )
                 layout:button(nil, "Reset Tail " .. i .. " Color", 150, 20, nil, function()
-                    profile["tail" .. i .. "Color"] = { unpack(defaults["tail" .. i .. "Color"]) }
-                    AscensionCastBar:UpdateSparkColors()
+                    profile["tail" .. i .. "Color"] = { unpack(defaults["tail" .. i .. "Color"] or {1,1,1,1}) }
+                    AscensionCastBar:updateSparkColors()
                     AscensionCastBar:SelectTab("visualfx")
                 end)
 
@@ -312,7 +317,7 @@ function VisualFXTab:Render(layout, profile)
                     function() return profile["tail" .. i .. "Length"] end,
                     function(val)
                         profile["tail" .. i .. "Length"] = val
-                        AscensionCastBar:UpdateSparkSize()
+                        AscensionCastBar:updateSparkSize()
                     end
                 )
 
@@ -321,7 +326,7 @@ function VisualFXTab:Render(layout, profile)
                     function() return profile["tail" .. i .. "Intensity"] end,
                     function(val)
                         profile["tail" .. i .. "Intensity"] = val
-                        AscensionCastBar:UpdateSparkColors()
+                        AscensionCastBar:updateSparkColors()
                     end
                 )
 
@@ -336,7 +341,7 @@ function VisualFXTab:Render(layout, profile)
         layout:button(nil, "Reset Animation Defaults", 250, nil, nil, function()
             local currentStyle = profile.animStyle
             if currentStyle and defaults.animationParams[currentStyle] then
-                profile.animationParams[currentStyle] = CopyTable(AscensionCastBar.ANIMATION_STYLE_PARAMS[currentStyle])
+                profile.animationParams[currentStyle] = CopyTable(AscensionCastBar.animationStyleParams[currentStyle])
             end
 
             -- Reset Global Anim Settings
@@ -354,8 +359,8 @@ function VisualFXTab:Render(layout, profile)
                 profile[key] = defaults[key]
             end
 
-            AscensionCastBar:UpdateSparkColors()
-            AscensionCastBar:UpdateSparkSize()
+            AscensionCastBar:updateSparkColors()
+            AscensionCastBar:updateSparkSize()
             AscensionCastBar:SelectTab("visualfx")
         end)
     layout:endSection()

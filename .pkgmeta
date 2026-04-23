@@ -17,6 +17,8 @@ ignore:
     - pkgmeta.yaml
     - config.md
     - __MACOSX
+    - README.md
+    - License.md
 
 # Changelog Settings
 manual-changelog: 

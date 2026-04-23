@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config.lua
+-- File: oldConfig.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -19,19 +19,8 @@ local LSM = LibStub("LibSharedMedia-3.0")
 -- DEFAULTS
 -- -------------------------------------------------------------------------------
 
-local BAR_DEFAULT_FONT_PATH = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
+local barDefaultFontPath = "Interface\\AddOns\\AscensionCastBar\\COLLEGIA.ttf"
 
-local function CopyTable(orig)
-    local copy = {}
-    for key, value in pairs(orig) do
-        if type(value) == "table" then
-            copy[key] = CopyTable(value)
-        else
-            copy[key] = value
-        end
-    end
-    return copy
-end
 
 AscensionCastBar.defaults = {
     profile = {
@@ -67,7 +56,7 @@ AscensionCastBar.defaults = {
         -- Fonts/Text
         spellNameFontSize = 14,
         timerFontSize = 14,
-        fontPath = BAR_DEFAULT_FONT_PATH,
+        fontPath = barDefaultFontPath,
         fontColor = { 0.8, 1, 0.95, 1 },
         outlineColor = { 0, 0, 0, 1 },
         outlineThickness = 1,
@@ -204,7 +193,7 @@ AscensionCastBar.defaults = {
 -- -------------------------------------------------------------------------------
 -- ACE CONFIG (OPTIONS)
 -- -------------------------------------------------------------------------------
-function AscensionCastBar:SetupOptions()
+function AscensionCastBar:setupOptions()
     local defaults = self.defaults.profile
     local function GetFontList()
         local fonts = {}
@@ -262,7 +251,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.previewEnabled = val
                             if not val then self.db.profile.testAttached = false end
-                            self:ToggleTestMode(val)
+                            self:toggleTestMode(val)
                         end,
                     },
                     testModeState = {
@@ -275,7 +264,7 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.testModeState end,
                         set = function(info, val)
                             self.db.profile.testModeState = val
-                            if self.db.profile.previewEnabled then self:ToggleTestMode(true) end
+                            if self.db.profile.previewEnabled then self:toggleTestMode(true) end
                         end,
                     },
                     hideDefaultCastbar = {
@@ -285,7 +274,7 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.hideDefaultCastbar end,
                         set = function(info, val)
                             self.db.profile.hideDefaultCastbar = val
-                            self:UpdateDefaultCastBarVisibility()
+                            self:updateDefaultCastBarVisibility()
                         end,
                     },
 
@@ -300,7 +289,7 @@ function AscensionCastBar:SetupOptions()
                         order = 11,
                         get = function(info) return self.db.profile.manualWidth end,
                         set = function(info, val)
-                            self.db.profile.manualWidth = val; self:UpdateAnchor()
+                            self.db.profile.manualWidth = val; self:updateAnchor()
                         end,
                     },
                     height = {
@@ -315,8 +304,8 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.manualHeight = val
                             self.db.profile.height = val
                             self.castBar:SetHeight(val)
-                            self:UpdateSparkSize()
-                            self:UpdateIcon()
+                            self:updateSparkSize()
+                            self:updateIcon()
                         end,
                     },
 
@@ -330,7 +319,7 @@ function AscensionCastBar:SetupOptions()
                         order = 21,
                         get = function(info) return self.db.profile.attachToCDM end,
                         set = function(info, val)
-                            self.db.profile.attachToCDM = val; self:InitCDMHooks(); self:UpdateAnchor()
+                            self.db.profile.attachToCDM = val; self:initCDMHooks(); self:updateAnchor()
                         end,
                     },
                     testAttached = {
@@ -344,8 +333,8 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.testAttached = val
                             self.db.profile.previewEnabled = true -- Auto-enable preview
-                            self:ToggleTestMode(true)
-                            self:UpdateAnchor()
+                            self:toggleTestMode(true)
+                            self:updateAnchor()
                         end,
                     },
                     frameStrata = {
@@ -366,7 +355,7 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.frameStrata or "MEDIUM" end,
                         set = function(info, val)
                             self.db.profile.frameStrata = val
-                            self:UpdateStrata()
+                            self:updateStrata()
                         end,
                     },
                     -- Coordinates Group
@@ -385,7 +374,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.point end,
                                 set = function(info, val)
-                                    self.db.profile.point = val; self:UpdateAnchor()
+                                    self.db.profile.point = val; self:updateAnchor()
                                 end,
                             },
                             relativePoint = {
@@ -397,7 +386,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.relativePoint end,
                                 set = function(info, val)
-                                    self.db.profile.relativePoint = val; self:UpdateAnchor()
+                                    self.db.profile.relativePoint = val; self:updateAnchor()
                                 end,
                             },
                             manualX = {
@@ -410,7 +399,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.manualX end,
                                 set = function(info, val)
-                                    self.db.profile.manualX = val; self:UpdateAnchor()
+                                    self.db.profile.manualX = val; self:updateAnchor()
                                 end,
                             },
                             manualY = {
@@ -423,7 +412,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.manualY end,
                                 set = function(info, val)
-                                    self.db.profile.manualY = val; self:UpdateAnchor()
+                                    self.db.profile.manualY = val; self:updateAnchor()
                                 end,
                             },
                             -- Attached
@@ -436,7 +425,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return not self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.cdmTarget end,
                                 set = function(info, val)
-                                    self.db.profile.cdmTarget = val; self:InitCDMHooks(); self:UpdateAnchor()
+                                    self.db.profile.cdmTarget = val; self:initCDMHooks(); self:updateAnchor()
                                 end,
 
                                 -- 1. THE DISPLAY NAMES (The text the user sees)
@@ -493,7 +482,7 @@ function AscensionCastBar:SetupOptions()
                                 hidden = function() return not self.db.profile.attachToCDM end,
                                 get = function(info) return self.db.profile.cdmYOffset end,
                                 set = function(info, val)
-                                    self.db.profile.cdmYOffset = val; self:UpdateAnchor()
+                                    self.db.profile.cdmYOffset = val; self:updateAnchor()
                                 end,
                             },
                         }
@@ -527,7 +516,7 @@ function AscensionCastBar:SetupOptions()
                         order = 2.1,
                         get = function(info) return self.db.profile.useClassColor end,
                         set = function(info, val)
-                            self.db.profile.useClassColor = val; self:UpdateBarColor()
+                            self.db.profile.useClassColor = val; self:updateBarColor()
                         end,
                     },
                     barColor = {
@@ -540,7 +529,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.barColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.barColor = { r, g, b, a }; self:UpdateBarColor()
+                            self.db.profile.barColor = { r, g, b, a }; self:updateBarColor()
                         end,
                     },
                     barColorReset = {
@@ -549,7 +538,7 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 3.1,
                         func = function()
-                            self.db.profile.barColor = { unpack(defaults.barColor) }; self:UpdateBarColor()
+                            self.db.profile.barColor = { unpack(defaults.barColor or {1,1,1,1}) }; self:updateBarColor()
                         end,
                     },
                     bgColor = {
@@ -561,7 +550,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.bgColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.bgColor = { r, g, b, a }; self:UpdateBackground()
+                            self.db.profile.bgColor = { r, g, b, a }; self:updateBackground()
                         end,
                     },
                     bgColorReset = {
@@ -570,7 +559,7 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 4.1,
                         func = function()
-                            self.db.profile.bgColor = { unpack(defaults.bgColor) }; self:UpdateBackground()
+                            self.db.profile.bgColor = { unpack(defaults.bgColor or {0,0,0,0.5}) }; self:updateBackground()
                         end,
                     },
 
@@ -581,7 +570,7 @@ function AscensionCastBar:SetupOptions()
                         order = 11,
                         get = function(info) return self.db.profile.borderEnabled end,
                         set = function(info, val)
-                            self.db.profile.borderEnabled = val; self:UpdateBorder()
+                            self.db.profile.borderEnabled = val; self:updateBorder()
                         end,
                     },
                     borderColor = {
@@ -594,7 +583,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.borderColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.borderColor = { r, g, b, a }; self:UpdateBorder()
+                            self.db.profile.borderColor = { r, g, b, a }; self:updateBorder()
                         end,
                     },
                     borderColorReset = {
@@ -604,7 +593,7 @@ function AscensionCastBar:SetupOptions()
                         order = 12.1,
                         disabled = function() return not self.db.profile.borderEnabled end,
                         func = function()
-                            self.db.profile.borderColor = { unpack(defaults.borderColor) }; self:UpdateBorder()
+                            self.db.profile.borderColor = { unpack(defaults.borderColor or {0,0,0,1}) }; self:updateBorder()
                         end,
                     },
                     borderThickness = {
@@ -617,7 +606,7 @@ function AscensionCastBar:SetupOptions()
                         disabled = function() return not self.db.profile.borderEnabled end,
                         get = function(info) return self.db.profile.borderThickness end,
                         set = function(info, val)
-                            self.db.profile.borderThickness = val; self:UpdateBorder()
+                            self.db.profile.borderThickness = val; self:updateBorder()
                         end,
                     },
 
@@ -628,7 +617,7 @@ function AscensionCastBar:SetupOptions()
                         order = 21,
                         get = function(info) return self.db.profile.showIcon end,
                         set = function(info, val)
-                            self.db.profile.showIcon = val; self:UpdateIcon()
+                            self.db.profile.showIcon = val; self:updateIcon()
                         end,
                     },
                     iconGroup = {
@@ -644,7 +633,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 1,
                                 get = function(info) return self.db.profile.detachIcon end,
                                 set = function(info, val)
-                                    self.db.profile.detachIcon = val; self:UpdateIcon()
+                                    self.db.profile.detachIcon = val; self:updateIcon()
                                 end,
                             },
                             iconAnchor = {
@@ -654,7 +643,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 2,
                                 get = function(info) return self.db.profile.iconAnchor end,
                                 set = function(info, val)
-                                    self.db.profile.iconAnchor = val; self:UpdateIcon()
+                                    self.db.profile.iconAnchor = val; self:updateIcon()
                                 end,
                             },
                             iconSize = {
@@ -666,7 +655,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 3,
                                 get = function(info) return self.db.profile.iconSize end,
                                 set = function(info, val)
-                                    self.db.profile.iconSize = val; self:UpdateIcon()
+                                    self.db.profile.iconSize = val; self:updateIcon()
                                 end,
                             },
                             iconX = {
@@ -678,7 +667,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 4,
                                 get = function(info) return self.db.profile.iconX end,
                                 set = function(info, val)
-                                    self.db.profile.iconX = val; self:UpdateIcon()
+                                    self.db.profile.iconX = val; self:updateIcon()
                                 end,
                             },
                             iconY = {
@@ -690,7 +679,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 5,
                                 get = function(info) return self.db.profile.iconY end,
                                 set = function(info, val)
-                                    self.db.profile.iconY = val; self:UpdateIcon()
+                                    self.db.profile.iconY = val; self:updateIcon()
                                 end,
                             },
                         }
@@ -715,7 +704,7 @@ function AscensionCastBar:SetupOptions()
                         order = 2,
                         get = function(info) return self.db.profile.spellNameFontLSM end,
                         set = function(info, val)
-                            self.db.profile.spellNameFontLSM = val; self.db.profile.timerFontLSM = val; self:ApplyFont()
+                            self.db.profile.spellNameFontLSM = val; self.db.profile.timerFontLSM = val; self:applyFont()
                         end,
                     },
                     outline = {
@@ -725,7 +714,7 @@ function AscensionCastBar:SetupOptions()
                         order = 3,
                         get = function(info) return self.db.profile.outline end,
                         set = function(info, val)
-                            self.db.profile.outline = val; self:ApplyFont()
+                            self.db.profile.outline = val; self:applyFont()
                         end,
                     },
                     headerName = { name = "Spell Name", type = "header", order = 10 },
@@ -735,7 +724,7 @@ function AscensionCastBar:SetupOptions()
                         order = 11,
                         get = function(info) return self.db.profile.showSpellText end,
                         set = function(info, val)
-                            self.db.profile.showSpellText = val; self:UpdateTextVisibility()
+                            self.db.profile.showSpellText = val; self:updateTextVisibility()
                         end,
                     },
                     truncateSpellName = {
@@ -765,7 +754,7 @@ function AscensionCastBar:SetupOptions()
                         order = 12,
                         get = function(info) return self.db.profile.spellNameFontSize end,
                         set = function(info, val)
-                            self.db.profile.spellNameFontSize = val; self:ApplyFont()
+                            self.db.profile.spellNameFontSize = val; self:applyFont()
                         end,
                     },
                     fontColor = {
@@ -777,7 +766,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.fontColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.fontColor = { r, g, b, a }; self:ApplyFont()
+                            self.db.profile.fontColor = { r, g, b, a }; self:applyFont()
                         end,
                     },
                     fontColorReset = {
@@ -786,7 +775,7 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 13.1,
                         func = function()
-                            self.db.profile.fontColor = { unpack(defaults.fontColor) }; self:ApplyFont()
+                            self.db.profile.fontColor = { unpack(defaults.fontColor or {1,1,1,1}) }; self:applyFont()
                         end,
                     },
                     headerTimer = { name = "Timer", type = "header", order = 20 },
@@ -821,7 +810,7 @@ function AscensionCastBar:SetupOptions()
                         order = 23,
                         get = function(info) return self.db.profile.timerFontSize end,
                         set = function(info, val)
-                            self.db.profile.timerFontSize = val; self:ApplyFont()
+                            self.db.profile.timerFontSize = val; self:applyFont()
                         end,
                     },
                     useSharedColor = {
@@ -831,7 +820,7 @@ function AscensionCastBar:SetupOptions()
                         order = 24,
                         get = function(info) return self.db.profile.useSharedColor end,
                         set = function(info, val)
-                            self.db.profile.useSharedColor = val; self:ApplyFont()
+                            self.db.profile.useSharedColor = val; self:applyFont()
                         end,
                     },
                     timerColor = {
@@ -844,7 +833,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.timerColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.timerColor = { r, g, b, a }; self:ApplyFont()
+                            self.db.profile.timerColor = { r, g, b, a }; self:applyFont()
                         end,
                     },
                     timerColorReset = {
@@ -854,7 +843,7 @@ function AscensionCastBar:SetupOptions()
                         order = 25.1,
                         disabled = function() return self.db.profile.useSharedColor end,
                         func = function()
-                            self.db.profile.timerColor = { unpack(defaults.timerColor) }; self:ApplyFont()
+                            self.db.profile.timerColor = { unpack(defaults.timerColor or {1,1,1,1}) }; self:applyFont()
                         end,
                     },
                     -- TEXT POSITIONING & BACKDROP
@@ -865,7 +854,7 @@ function AscensionCastBar:SetupOptions()
                         order = 31,
                         get = function(info) return self.db.profile.detachText end,
                         set = function(info, val)
-                            self.db.profile.detachText = val; self:UpdateTextLayout()
+                            self.db.profile.detachText = val; self:updateTextLayout()
                         end,
                     },
                     textX = {
@@ -878,7 +867,7 @@ function AscensionCastBar:SetupOptions()
                         hidden = function() return not self.db.profile.detachText end,
                         get = function(info) return self.db.profile.textX end,
                         set = function(info, val)
-                            self.db.profile.textX = val; self:UpdateTextLayout()
+                            self.db.profile.textX = val; self:updateTextLayout()
                         end,
                     },
                     textY = {
@@ -891,7 +880,7 @@ function AscensionCastBar:SetupOptions()
                         hidden = function() return not self.db.profile.detachText end,
                         get = function(info) return self.db.profile.textY end,
                         set = function(info, val)
-                            self.db.profile.textY = val; self:UpdateTextLayout()
+                            self.db.profile.textY = val; self:updateTextLayout()
                         end,
                     },
                     textWidth = {
@@ -904,7 +893,7 @@ function AscensionCastBar:SetupOptions()
                         hidden = function() return not self.db.profile.detachText end,
                         get = function(info) return self.db.profile.textWidth end,
                         set = function(info, val)
-                            self.db.profile.textWidth = val; self:UpdateTextLayout()
+                            self.db.profile.textWidth = val; self:updateTextLayout()
                         end,
                     },
                     textBackdropEnabled = {
@@ -913,7 +902,7 @@ function AscensionCastBar:SetupOptions()
                         order = 35,
                         get = function(info) return self.db.profile.textBackdropEnabled end,
                         set = function(info, val)
-                            self.db.profile.textBackdropEnabled = val; self:UpdateTextLayout()
+                            self.db.profile.textBackdropEnabled = val; self:updateTextLayout()
                         end,
                     },
                     textBackdropColor = {
@@ -926,7 +915,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.textBackdropColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.textBackdropColor = { r, g, b, a }; self:UpdateTextLayout()
+                            self.db.profile.textBackdropColor = { r, g, b, a }; self:updateTextLayout()
                         end,
                     },
                     textBackdropColorReset = {
@@ -936,8 +925,8 @@ function AscensionCastBar:SetupOptions()
                         order = 36.1,
                         hidden = function() return not self.db.profile.textBackdropEnabled end,
                         func = function()
-                            self.db.profile.textBackdropColor = { unpack(defaults.textBackdropColor) }; self
-                                :UpdateTextLayout()
+                            self.db.profile.textBackdropColor = { unpack(defaults.textBackdropColor or {0,0,0,0.5}) }; self
+                                :updateTextLayout()
                         end,
                     },
                 }
@@ -959,7 +948,7 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.showLatency end,
                         set = function(info, val)
                             self.db.profile.showLatency = val
-                            if self.db.profile.previewEnabled then self:UpdateLatencyBar(self.castBar) end
+                            if self.db.profile.previewEnabled then self:updateLatencyBar(self.castBar) end
                         end,
                     },
                     latencyColor = {
@@ -977,7 +966,7 @@ function AscensionCastBar:SetupOptions()
                         type = "execute",
                         width = "half",
                         order = 34.7,
-                        func = function() self.db.profile.latencyColor = { unpack(defaults.latencyColor) } end,
+                        func = function() self.db.profile.latencyColor = { unpack(defaults.latencyColor or {1,0,0,0.5}) } end,
                     },
                     latencyMaxPercent = {
                         name = "Max Width %",
@@ -990,7 +979,7 @@ function AscensionCastBar:SetupOptions()
                         get = function(info) return self.db.profile.latencyMaxPercent end,
                         set = function(info, val)
                             self.db.profile.latencyMaxPercent = val
-                            if self.db.profile.previewEnabled then self:UpdateLatencyBar(self.castBar) end
+                            if self.db.profile.previewEnabled then self:updateLatencyBar(self.castBar) end
                         end,
                     },
 
@@ -1004,7 +993,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.reverseChanneling = val; if self.db.profile.previewEnabled then
                                 self
-                                    :ToggleTestMode(true)
+                                    :toggleTestMode(true)
                             end
                         end,
                     },
@@ -1016,7 +1005,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.showChannelTicks = val
                             if self.db.profile.previewEnabled and self.db.profile.testModeState == "Channel" then
-                                self:UpdateTicks(234153, 0, 10)
+                                self:updateTicks(234153, 0, 10)
                             end
                         end,
                     },
@@ -1032,7 +1021,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.channelTicksThickness = val
                             if self.db.profile.previewEnabled and self.db.profile.testModeState == "Channel" then
-                                self:UpdateTicks(234153, 0, 10)
+                                self:updateTicks(234153, 0, 10)
                             end
                         end,
                     },
@@ -1048,7 +1037,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, r, g, b, a)
                             self.db.profile.channelTicksColor = { r, g, b, a }
                             if self.db.profile.previewEnabled and self.db.profile.testModeState == "Channel" then
-                                self:UpdateTicks(234153, 0, 10)
+                                self:updateTicks(234153, 0, 10)
                             end
                         end,
                     },
@@ -1059,9 +1048,9 @@ function AscensionCastBar:SetupOptions()
                         order = 12.3,
                         disabled = function() return not self.db.profile.showChannelTicks end,
                         func = function()
-                            self.db.profile.channelTicksColor = { unpack(defaults.channelTicksColor) }
+                            self.db.profile.channelTicksColor = { unpack(defaults.channelTicksColor or {1,1,1,1}) }
                             if self.db.profile.previewEnabled and self.db.profile.testModeState == "Channel" then
-                                self:UpdateTicks(234153, 0, 10)
+                                self:updateTicks(234153, 0, 10)
                             end
                         end,
                     },
@@ -1073,7 +1062,7 @@ function AscensionCastBar:SetupOptions()
                         order = 13.1,
                         get = function(info) return self.db.profile.useChannelColor end,
                         set = function(info, val)
-                            self.db.profile.useChannelColor = val; self:UpdateBarColor()
+                            self.db.profile.useChannelColor = val; self:updateBarColor()
                         end,
                     },
                     channelColor = {
@@ -1086,7 +1075,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.channelColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.channelColor = { r, g, b, a }; self:UpdateBarColor()
+                            self.db.profile.channelColor = { r, g, b, a }; self:updateBarColor()
                         end,
                     },
                     channelColorReset = {
@@ -1096,7 +1085,7 @@ function AscensionCastBar:SetupOptions()
                         order = 13.25,
                         disabled = function() return not self.db.profile.useChannelColor end,
                         func = function()
-                            self.db.profile.channelColor = { unpack(defaults.channelColor) }; self:UpdateBarColor()
+                            self.db.profile.channelColor = { unpack(defaults.channelColor or {1,1,1,1}) }; self:updateBarColor()
                         end,
                     },
                     headerEmpower = { name = "Empowered Spells (Evoker)", type = "header", order = 20 },
@@ -1108,7 +1097,7 @@ function AscensionCastBar:SetupOptions()
                         order = 20.1,
                         get = function(info) return self.db.profile.empowerWidthScale end,
                         set = function(info, val)
-                            self.db.profile.empowerWidthScale = val; self:UpdateBarColor()
+                            self.db.profile.empowerWidthScale = val; self:updateBarColor()
                         end,
                     },
                     empowerStage1Color = {
@@ -1127,8 +1116,8 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 21.1,
                         func = function()
-                            self.db.profile.empowerStage1Color = { unpack(defaults.empowerStage1Color) }; self
-                                :UpdateBarColor()
+                            self.db.profile.empowerStage1Color = { unpack(defaults.empowerStage1Color or {0,1,0,1}) }; self
+                                :updateBarColor()
                         end,
                     },
                     empowerStage2Color = {
@@ -1147,8 +1136,8 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 22.1,
                         func = function()
-                            self.db.profile.empowerStage2Color = { unpack(defaults.empowerStage2Color) }; self
-                                :UpdateBarColor()
+                            self.db.profile.empowerStage2Color = { unpack(defaults.empowerStage2Color or {1,1,0,1}) }; self
+                                :updateBarColor()
                         end,
                     },
                     empowerStage3Color = {
@@ -1167,8 +1156,8 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 23.1,
                         func = function()
-                            self.db.profile.empowerStage3Color = { unpack(defaults.empowerStage3Color) }; self
-                                :UpdateBarColor()
+                            self.db.profile.empowerStage3Color = { unpack(defaults.empowerStage3Color or {1,0.5,0,1}) }; self
+                                :updateBarColor()
                         end,
                     },
                     empowerStage4Color = {
@@ -1187,8 +1176,8 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 24.1,
                         func = function()
-                            self.db.profile.empowerStage4Color = { unpack(defaults.empowerStage4Color) }; self
-                                :UpdateBarColor()
+                            self.db.profile.empowerStage4Color = { unpack(defaults.empowerStage4Color or {1,0,0,1}) }; self
+                                :updateBarColor()
                         end,
                     },
                     empowerStage5Color = {
@@ -1207,8 +1196,8 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 25.1,
                         func = function()
-                            self.db.profile.empowerStage5Color = { unpack(defaults.empowerStage5Color) }; self
-                                :UpdateBarColor()
+                            self.db.profile.empowerStage5Color = { unpack(defaults.empowerStage5Color or {0.8,0.3,1,1}) }; self
+                                :updateBarColor()
                         end,
                     },
                 }
@@ -1241,7 +1230,7 @@ function AscensionCastBar:SetupOptions()
                         set = function(info, val)
                             self.db.profile.animStyle = val
                             if not self.db.profile.animationParams[val] then
-                                self.db.profile.animationParams[val] = CopyTable(self.ANIMATION_STYLE_PARAMS[val])
+                                self.db.profile.animationParams[val] = CopyTable(self.animationStyleParams[val])
                             end
                         end,
                     },
@@ -1264,7 +1253,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.glowColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.glowColor = { r, g, b, a }; self:UpdateSparkColors()
+                            self.db.profile.glowColor = { r, g, b, a }; self:updateSparkColors()
                         end,
                     },
                     glowColorReset = {
@@ -1273,7 +1262,7 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 6.1,
                         func = function()
-                            self.db.profile.glowColor = { unpack(defaults.glowColor) }; self:UpdateSparkColors()
+                            self.db.profile.glowColor = { unpack(defaults.glowColor or {1,1,1,1}) }; self:updateSparkColors()
                         end,
                     },
                     glowIntensity = {
@@ -1320,7 +1309,7 @@ function AscensionCastBar:SetupOptions()
                             self.db.profile.tail2Length = val
                             self.db.profile.tail3Length = val
                             self.db.profile.tail4Length = val
-                            self:UpdateSparkSize()
+                            self:updateSparkSize()
                         end,
                     },
 
@@ -1335,7 +1324,7 @@ function AscensionCastBar:SetupOptions()
                             local c = self.db.profile.sparkColor; return c[1], c[2], c[3], c[4]
                         end,
                         set = function(info, r, g, b, a)
-                            self.db.profile.sparkColor = { r, g, b, a }; self:UpdateSparkColors()
+                            self.db.profile.sparkColor = { r, g, b, a }; self:updateSparkColors()
                         end,
                     },
                     sparkColorReset = {
@@ -1344,7 +1333,7 @@ function AscensionCastBar:SetupOptions()
                         width = "half",
                         order = 11.05,
                         func = function()
-                            self.db.profile.sparkColor = { unpack(defaults.sparkColor) }; self:UpdateSparkColors()
+                            self.db.profile.sparkColor = { unpack(defaults.sparkColor or {1,1,1,1}) }; self:updateSparkColors()
                         end,
                     },
                     sparkIntensity = {
@@ -1366,7 +1355,7 @@ function AscensionCastBar:SetupOptions()
                         order = 11.2,
                         get = function(info) return self.db.profile.sparkScale end,
                         set = function(info, val)
-                            self.db.profile.sparkScale = val; self:UpdateSparkSize()
+                            self.db.profile.sparkScale = val; self:updateSparkSize()
                         end,
                     },
                     sparkOffset = {
@@ -1404,7 +1393,7 @@ function AscensionCastBar:SetupOptions()
                                     local c = self.db.profile.tail1Color; return c[1], c[2], c[3], c[4]
                                 end,
                                 set = function(info, r, g, b, a)
-                                    self.db.profile.tail1Color = { r, g, b, a }; self:UpdateSparkColors()
+                                    self.db.profile.tail1Color = { r, g, b, a }; self:updateSparkColors()
                                 end,
                             },
                             colorReset = {
@@ -1413,7 +1402,7 @@ function AscensionCastBar:SetupOptions()
                                 width = "half",
                                 order = 1.1,
                                 func = function()
-                                    self.db.profile.tail1Color = { unpack(defaults.tail1Color) }; self:UpdateSparkColors()
+                                    self.db.profile.tail1Color = { unpack(defaults.tail1Color or {1,1,1,1}) }; self:updateSparkColors()
                                 end,
                             },
                             intensity = {
@@ -1435,7 +1424,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 3,
                                 get = function(info) return self.db.profile.tail1Length end,
                                 set = function(info, val)
-                                    self.db.profile.tail1Length = val; self:UpdateSparkSize()
+                                    self.db.profile.tail1Length = val; self:updateSparkSize()
                                 end,
                             },
                         }
@@ -1455,7 +1444,7 @@ function AscensionCastBar:SetupOptions()
                                     local c = self.db.profile.tail2Color; return c[1], c[2], c[3], c[4]
                                 end,
                                 set = function(info, r, g, b, a)
-                                    self.db.profile.tail2Color = { r, g, b, a }; self:UpdateSparkColors()
+                                    self.db.profile.tail2Color = { r, g, b, a }; self:updateSparkColors()
                                 end,
                             },
                             colorReset = {
@@ -1464,7 +1453,7 @@ function AscensionCastBar:SetupOptions()
                                 width = "half",
                                 order = 1.1,
                                 func = function()
-                                    self.db.profile.tail2Color = { unpack(defaults.tail2Color) }; self:UpdateSparkColors()
+                                    self.db.profile.tail2Color = { unpack(defaults.tail2Color or {1,1,1,1}) }; self:updateSparkColors()
                                 end,
                             },
                             intensity = {
@@ -1486,7 +1475,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 3,
                                 get = function(info) return self.db.profile.tail2Length end,
                                 set = function(info, val)
-                                    self.db.profile.tail2Length = val; self:UpdateSparkSize()
+                                    self.db.profile.tail2Length = val; self:updateSparkSize()
                                 end,
                             },
                         }
@@ -1506,7 +1495,7 @@ function AscensionCastBar:SetupOptions()
                                     local c = self.db.profile.tail3Color; return c[1], c[2], c[3], c[4]
                                 end,
                                 set = function(info, r, g, b, a)
-                                    self.db.profile.tail3Color = { r, g, b, a }; self:UpdateSparkColors()
+                                    self.db.profile.tail3Color = { r, g, b, a }; self:updateSparkColors()
                                 end,
                             },
                             colorReset = {
@@ -1515,7 +1504,7 @@ function AscensionCastBar:SetupOptions()
                                 width = "half",
                                 order = 1.1,
                                 func = function()
-                                    self.db.profile.tail3Color = { unpack(defaults.tail3Color) }; self:UpdateSparkColors()
+                                    self.db.profile.tail3Color = { unpack(defaults.tail3Color or {1,1,1,1}) }; self:updateSparkColors()
                                 end,
                             },
                             intensity = {
@@ -1537,7 +1526,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 3,
                                 get = function(info) return self.db.profile.tail3Length end,
                                 set = function(info, val)
-                                    self.db.profile.tail3Length = val; self:UpdateSparkSize()
+                                    self.db.profile.tail3Length = val; self:updateSparkSize()
                                 end,
                             },
                         }
@@ -1557,7 +1546,7 @@ function AscensionCastBar:SetupOptions()
                                     local c = self.db.profile.tail4Color; return c[1], c[2], c[3], c[4]
                                 end,
                                 set = function(info, r, g, b, a)
-                                    self.db.profile.tail4Color = { r, g, b, a }; self:UpdateSparkColors()
+                                    self.db.profile.tail4Color = { r, g, b, a }; self:updateSparkColors()
                                 end,
                             },
                             colorReset = {
@@ -1566,7 +1555,7 @@ function AscensionCastBar:SetupOptions()
                                 width = "half",
                                 order = 1.1,
                                 func = function()
-                                    self.db.profile.tail4Color = { unpack(defaults.tail4Color) }; self:UpdateSparkColors()
+                                    self.db.profile.tail4Color = { unpack(defaults.tail4Color or {1,1,1,1}) }; self:updateSparkColors()
                                 end,
                             },
                             intensity = {
@@ -1588,7 +1577,7 @@ function AscensionCastBar:SetupOptions()
                                 order = 3,
                                 get = function(info) return self.db.profile.tail4Length end,
                                 set = function(info, val)
-                                    self.db.profile.tail4Length = val; self:UpdateSparkSize()
+                                    self.db.profile.tail4Length = val; self:updateSparkSize()
                                 end,
                             },
                         }
@@ -1914,8 +1903,8 @@ function AscensionCastBar:SetupOptions()
                                 end
                             end
 
-                            self:UpdateSparkColors()
-                            self:UpdateSparkSize()
+                            self:updateSparkColors()
+                            self:updateSparkSize()
                             LibStub("AceConfigRegistry-3.0"):NotifyChange(ADDON_NAME)
                         end,
                     },

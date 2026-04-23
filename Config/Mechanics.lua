@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/Mechanics.lua
+-- File: Mechanics.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -13,8 +13,9 @@
 
 
 local addonName, addonTable = ...
----@type AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local ADDON_NAME = "Ascension Cast Bar"
+---@class AscensionCastBar
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 
 -- Registry for the Mechanics tab
 addonTable.tabs = addonTable.tabs or {}
@@ -23,12 +24,11 @@ local MechanicsTab = {}
 ---Rendering function for the Mechanics tab
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
-function MechanicsTab:Render(layout, profile)
+function MechanicsTab:render(layout, profile)
+    if not AscensionCastBar or not AscensionCastBar.defaults then return end
     local defaults = AscensionCastBar.defaults.profile
+    if not defaults then return end
 
-    -- -------------------------------------------------------------------------------
-    -- SECCIÓN: LATENCY (Lag Bar)
-    -- -------------------------------------------------------------------------------
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: LATENCY (Lag Bar)
     -- -------------------------------------------------------------------------------
@@ -39,8 +39,8 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.showLatency end,
             function(val)
                 profile.showLatency = val
-                AscensionCastBar:UpdateLatency()
-                AscensionCastBar:SelectTab("mechanics")
+                AscensionCastBar:updateLatency()
+                AscensionCastBar:selectTab("mechanics")
             end
         )
 
@@ -49,7 +49,7 @@ function MechanicsTab:Render(layout, profile)
                 function() return unpack(profile.latencyColor or defaults.latencyColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.latencyColor = { r, g, b, a }
-                    AscensionCastBar:UpdateLatency()
+                    AscensionCastBar:updateLatency()
                 end, nil, true
             )
 
@@ -58,9 +58,9 @@ function MechanicsTab:Render(layout, profile)
                 function(val) profile.latencyMaxPercent = val end
             )
             layout:button(nil, "Reset Latency Color", 150, 20, nil, function()
-                profile.latencyColor = { unpack(defaults.latencyColor) }
-                AscensionCastBar:UpdateLatency()
-                AscensionCastBar:SelectTab("mechanics")
+                profile.latencyColor = { unpack(defaults.latencyColor or {1,1,1,1}) }
+                AscensionCastBar:updateLatency()
+                AscensionCastBar:selectTab("mechanics")
             end)
         end
     layout:endSection()
@@ -75,7 +75,7 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.reverseChanneling end,
             function(val)
                 profile.reverseChanneling = val
-                if profile.previewEnabled then AscensionCastBar:ToggleTestMode(true) end
+                if profile.previewEnabled then AscensionCastBar:toggleTestMode(true) end
             end
         )
         
@@ -83,8 +83,8 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.showChannelTicks end,
             function(val)
                 profile.showChannelTicks = val
-                AscensionCastBar:UpdateTicks()
-                AscensionCastBar:SelectTab("mechanics")
+                AscensionCastBar:updateTicks()
+                AscensionCastBar:selectTab("mechanics")
             end
         )
 
@@ -93,7 +93,7 @@ function MechanicsTab:Render(layout, profile)
                 function() return profile.channelTicksThickness end,
                 function(val)
                     profile.channelTicksThickness = val
-                    AscensionCastBar:UpdateTicks()
+                    AscensionCastBar:updateTicks()
                 end
             )
 
@@ -101,13 +101,13 @@ function MechanicsTab:Render(layout, profile)
                 function() return unpack(profile.channelTicksColor or defaults.channelTicksColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.channelTicksColor = { r, g, b, a }
-                    AscensionCastBar:UpdateTicks()
+                    AscensionCastBar:updateTicks()
                 end, nil, true
             )
             layout:button(nil, "Reset Tick Color", 150, 20, nil, function()
-                profile.channelTicksColor = { unpack(defaults.channelTicksColor) }
-                AscensionCastBar:UpdateTicks()
-                AscensionCastBar:SelectTab("mechanics")
+                profile.channelTicksColor = { unpack(defaults.channelTicksColor or {1,1,1,1}) }
+                AscensionCastBar:updateTicks()
+                AscensionCastBar:selectTab("mechanics")
             end)
         end
 
@@ -115,8 +115,8 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.useChannelColor end,
             function(val)
                 profile.useChannelColor = val
-                AscensionCastBar:UpdateBarColor()
-                AscensionCastBar:SelectTab("mechanics")
+                AscensionCastBar:updateBarColor()
+                AscensionCastBar:selectTab("mechanics")
             end
         )
 
@@ -125,13 +125,13 @@ function MechanicsTab:Render(layout, profile)
                 function() return unpack(profile.channelColor or defaults.channelColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.channelColor = { r, g, b, a }
-                    AscensionCastBar:UpdateBarColor()
+                    AscensionCastBar:updateBarColor()
                 end, nil, true
             )
             layout:button(nil, "Reset Channel Color", 150, 20, nil, function()
-                profile.channelColor = { unpack(defaults.channelColor) }
-                AscensionCastBar:UpdateBarColor()
-                AscensionCastBar:SelectTab("mechanics")
+                profile.channelColor = { unpack(defaults.channelColor or {1,1,1,1}) }
+                AscensionCastBar:updateBarColor()
+                AscensionCastBar:selectTab("mechanics")
             end)
         end
     layout:endSection()
@@ -146,7 +146,7 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.empowerWidthScale end,
             function(val)
                 profile.empowerWidthScale = val
-                AscensionCastBar:UpdateBarColor()
+                AscensionCastBar:updateBarColor()
             end
         )
 
@@ -156,13 +156,13 @@ function MechanicsTab:Render(layout, profile)
                 function() return unpack(profile["empowerStage" .. i .. "Color"] or defaults["empowerStage" .. i .. "Color"] or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile["empowerStage" .. i .. "Color"] = { r, g, b, a }
-                    AscensionCastBar:UpdateBarColor()
+                    AscensionCastBar:updateBarColor()
                 end, nil, true
             )
             layout:button(nil, "Reset Stage " .. i, 120, 20, nil, function()
-                profile["empowerStage" .. i .. "Color"] = { unpack(defaults["empowerStage" .. i .. "Color"]) }
-                AscensionCastBar:UpdateBarColor()
-                AscensionCastBar:SelectTab("mechanics")
+                profile["empowerStage" .. i .. "Color"] = { unpack(defaults["empowerStage" .. i .. "Color"] or {1,1,1,1}) }
+                AscensionCastBar:updateBarColor()
+                AscensionCastBar:selectTab("mechanics")
             end)
         end
 
@@ -170,7 +170,7 @@ function MechanicsTab:Render(layout, profile)
             function() return profile.showEmpowerStages end,
             function(val)
                 profile.showEmpowerStages = val
-                AscensionCastBar:UpdateTicks()
+                AscensionCastBar:updateTicks()
             end
         )
     layout:endSection()
@@ -193,8 +193,8 @@ function MechanicsTab:Render(layout, profile)
             end, nil, true
         )
         layout:button(nil, "Reset Interrupted", 150, 20, nil, function()
-            profile.interruptedColor = { unpack(defaults.interruptedColor) }
-            AscensionCastBar:SelectTab("mechanics")
+            profile.interruptedColor = { unpack(defaults.interruptedColor or {1,1,1,1}) }
+            AscensionCastBar:selectTab("mechanics")
         end)
 
         layout:colorPicker(nil, "Failed/Cancelled Color",
@@ -204,8 +204,8 @@ function MechanicsTab:Render(layout, profile)
             end, nil, true
         )
         layout:button(nil, "Reset Failed", 150, 20, nil, function()
-            profile.failedColor = { unpack(defaults.failedColor) }
-            AscensionCastBar:SelectTab("mechanics")
+            profile.failedColor = { unpack(defaults.failedColor or {1,1,1,1}) }
+            AscensionCastBar:selectTab("mechanics")
         end)
 
         layout:colorPicker(nil, "Finished Success Color",
@@ -215,8 +215,8 @@ function MechanicsTab:Render(layout, profile)
             end, nil, true
         )
         layout:button(nil, "Reset Success", 150, 20, nil, function()
-            profile.successColor = { unpack(defaults.successColor) }
-            AscensionCastBar:SelectTab("mechanics")
+            profile.successColor = { unpack(defaults.successColor or {1,1,1,1}) }
+            AscensionCastBar:selectTab("mechanics")
         end)
     layout:endSection()
 end

@@ -1,23 +1,27 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Logic.lua
+-- File: CastEventManager.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
----@diagnostic disable: deprecated
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --
--- This software and its source code is the exclusive property of the author.
+-- This software and its source code are the exclusive property of the author.
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
 -------------------------------------------------------------------------------
 
+local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
 
 local reusableCastInfo = {}
 
+---@param unit string
+---@param channel boolean
+---@return table|nil
 local function GetSafeCastInfo(unit, channel)
     if not unit then return nil end
 
@@ -63,56 +67,10 @@ local function GetSafeCastInfo(unit, channel)
 end
 
 -------------------------------------------------------------------------------
--- LOGIC HELPERS
+-- CAST START LOGIC
 -------------------------------------------------------------------------------
-function AscensionCastBar:GetFormattedTimer(rem, dur)
-    local db = self.db.profile
-    if not db.showTimerText then return "" end
-    local f = db.timerFormat
-    if f == "Duration" then
-        return string.format("%.1f / %.1f", math.max(0, math.floor(rem * 10) / 10), math.floor(dur * 10) / 10)
-    elseif f == "Total" then
-        return string.format("%.1f", math.floor(dur * 10) / 10)
-    else
-        return string.format("%.1f", math.max(0, math.floor(rem * 10) / 10))
-    end
-end
 
-function AscensionCastBar:SetupCastBarShared(info)
-    local cb = self.castBar
-    local db = self.db.profile
-
-    if cb.textCtx then cb.textCtx:Show() end
-
-    cb.currentStage = 1
-    cb:SetScale(1.0)
-    cb:SetAlpha(1.0)
-
-    local name = info.name
-    local texture = info.texture
-
-    local displayName = name
-    if db.truncateSpellName and string.len(displayName) > (db.truncateLength or 20) then
-        displayName = string.sub(displayName, 1, db.truncateLength or 20) .. "..."
-    end
-    cb.spellName:SetText(db.showSpellText and displayName or "")
-
-    if db.showIcon and texture then
-        cb.icon:SetTexture(texture); cb.icon:Show()
-    else
-        cb.icon:Hide()
-    end
-
-    cb.shield:Hide()
-
-    self:ApplyFont()
-    self:UpdateBorder()
-    self:UpdateBackground()
-    self:UpdateIcon()
-    self:UpdateSparkColors()
-end
-
-function AscensionCastBar:HandleCastStart(event, unit, ...)
+function AscensionCastBar:handleCastStart(event, unit, ...)
     local channel = (event == "UNIT_SPELLCAST_CHANNEL_START")
     local empowered = (event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
 
@@ -136,21 +94,22 @@ function AscensionCastBar:HandleCastStart(event, unit, ...)
         return
     end
 
-    self:UpdateAnchor()
+    self:updateAnchor()
 
     if empowered then
-        self:EmpowerStart(info)
+        self:empowerStart(info)
     elseif channel then
-        self:ChannelStart(info)
+        self:channelStart(info)
     else
-        self:CastStart(info)
+        self:castStart(info)
     end
 end
 
 -------------------------------------------------------------------------------
 -- STOP LOGIC
 -------------------------------------------------------------------------------
-function AscensionCastBar:HandleCastStop(event, unit)
+
+function AscensionCastBar:handleCastStop(event, unit)
     if unit and unit ~= "player" then return end
 
     local castData = GetSafeCastInfo("player", false)
@@ -170,9 +129,9 @@ function AscensionCastBar:HandleCastStop(event, unit)
             end
         else
             if chName then
-                self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
+                self:handleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
             else
-                self:HandleCastStart("UNIT_SPELLCAST_START", "player")
+                self:handleCastStart("UNIT_SPELLCAST_START", "player")
             end
             return
         end
@@ -191,26 +150,26 @@ function AscensionCastBar:HandleCastStop(event, unit)
         self.castBar.timer:SetText("")
         self.castBar.icon:Hide()
         self.castBar.shield:Hide()
-        self:HideTicks()
-        self:ClearEmpowerStages()
+        self:hideTicks()
+        self:clearEmpowerStages()
 
-        self:UpdateSpark(0, 0)
+        self:updateSpark(0, 0)
     end
 end
 
-function AscensionCastBar:StopCast()
+function AscensionCastBar:stopCast()
     local cb = self.castBar
     if not cb then return end
 
     local channelInfo = GetSafeCastInfo("player", true)
     if channelInfo and channelInfo.name then
-        self:HandleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
+        self:handleCastStart("UNIT_SPELLCAST_CHANNEL_START", "player")
         return
     end
 
     local castInfo = GetSafeCastInfo("player", false)
     if castInfo and castInfo.name then
-        self:HandleCastStart("UNIT_SPELLCAST_START", "player")
+        self:handleCastStart("UNIT_SPELLCAST_START", "player")
         return
     end
 
@@ -221,16 +180,16 @@ function AscensionCastBar:StopCast()
     cb.timer:SetText("")
     cb.icon:Hide()
     cb.shield:Hide()
-    self:HideTicks()
-    self:ClearEmpowerStages()
-    self:UpdateSpark(0, 0)
+    self:hideTicks()
+    self:clearEmpowerStages()
+    self:updateSpark(0, 0)
 
     if not self.db.profile.previewEnabled then
         cb:Hide()
     end
 end
 
-function AscensionCastBar:ToggleTestMode(val)
+function AscensionCastBar:toggleTestMode(val)
     local cb = self.castBar
     if not cb then return end
 
@@ -252,20 +211,20 @@ function AscensionCastBar:ToggleTestMode(val)
         cb.duration = info.duration or 10
 
         if state == "Empowered" then
-            self:EmpowerStart(info)
+            self:empowerStart(info)
         elseif state == "Channel" then
-            self:ChannelStart(info)
-            self:UpdateTicks(234153, 0, 10)
+            self:channelStart(info)
+            self:updateTicks(234153, 0, 10)
         else
-            self:CastStart(info)
-            self:HideTicks()
+            self:castStart(info)
+            self:hideTicks()
         end
 
         cb.lastSpellName = "Test Spell"
 
-        self:UpdateAnchor()
-        self:UpdateTextLayout()
-        self:UpdateIcon()
+        self:updateAnchor()
+        self:updateTextLayout()
+        self:updateIcon()
     else
         cb.casting = false
         cb.channeling = false
@@ -283,12 +242,11 @@ function AscensionCastBar:ToggleTestMode(val)
     end
 end
 
--- -------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- ON UPDATE (ANIMATION LOOP)
--- -------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-
-function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
+function AscensionCastBar:onFrameUpdate(selfFrame, elapsed)
     local now = GetTime()
     local db = self.db.profile
 
@@ -298,7 +256,7 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         local endTime = selfFrame.endTime or (start + duration)
 
         if now > (endTime + 0.5) and selfFrame.lastSpellName ~= "Test Spell" then
-            self:HandleCastStop(nil, "player")
+            self:handleCastStop(nil, "player")
             return
         end
 
@@ -310,11 +268,11 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         end
 
         if selfFrame.casting then
-            self:CastUpdate(now, db)
+            self:castUpdate(now, db)
         elseif selfFrame.isEmpowered then
-            self:EmpowerUpdate(now, db)
+            self:empowerUpdate(now, db)
         else
-            self:ChannelUpdate(now, db)
+            self:channelUpdate(now, db)
         end
         return
     end
@@ -326,9 +284,9 @@ function AscensionCastBar:OnFrameUpdate(selfFrame, elapsed)
         selfFrame.icon:Hide()
         selfFrame.shield:Hide()
         if selfFrame.textCtx then selfFrame.textCtx:Hide() end
-        self:HideTicks()
-        self:ClearEmpowerStages()
-        self:UpdateSpark(0, 0)
+        self:hideTicks()
+        self:clearEmpowerStages()
+        self:updateSpark(0, 0)
         selfFrame:Hide()
     end
 end

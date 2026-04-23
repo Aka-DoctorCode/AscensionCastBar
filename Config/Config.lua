@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/Config.lua
+-- File: Config.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -12,11 +12,54 @@
 -------------------------------------------------------------------------------
 
 local addonName, addonTable = ...
+local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar: AceAddon
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
+
 local colors = AscensionCastBar.colors or {}
 local files = AscensionCastBar.files or {}
 local menuStyle = AscensionCastBar.menuStyle or {}
+
+-- Cleans up a panel by hiding all children and regions
+local function cleanupContent(contentPanel)
+    if not contentPanel then return end
+    for _, child in ipairs({ contentPanel:GetChildren() }) do
+        child:Hide()
+        child:ClearAllPoints()
+    end
+    for _, region in ipairs({ contentPanel:GetRegions() }) do
+        if region.Hide then region:Hide() end
+    end
+end
+
+-- Sets a standard GameTooltip for a given UI frame
+local function setTooltip(frame, text)
+    if not frame or not text then return end
+    frame:SetScript("OnEnter", function(self)
+        if _G.GameTooltip then
+            _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            _G.GameTooltip:SetText(text, 1, 1, 1)
+            _G.GameTooltip:Show()
+        end
+    end)
+    frame:SetScript("OnLeave", function()
+        if _G.GameTooltip then _G.GameTooltip:Hide() end
+    end)
+end
+
+-- Integrates the custom layout management into the centralized UI Context
+local function initUIContext()
+    local UIContext = addonTable.UIContext
+    if not UIContext then return end
+    UIContext.newLayout = function(context, contentFrame)
+        cleanupContent(contentFrame)
+        if context.layoutModel and context.layoutModel.reset then
+            return context.layoutModel:reset(contentFrame)
+        end
+        return context.layoutModel
+    end
+end
 
 -- Initialize tab registry in the shared namespace
 addonTable.tabs = addonTable.tabs or {}
@@ -42,6 +85,7 @@ end
 function AscensionCastBar:CreateMainFrame()
     local UIContext = addonTable.UIContext
     if not UIContext then return end
+    initUIContext()
 
     local frame = CreateFrame("Frame", "AscensionCastBarConfigFrame", UIParent, "BackdropTemplate")
     local frameWidth = 800
@@ -135,7 +179,7 @@ function AscensionCastBar:CreateMainFrame()
             local layout = UIContext:newLayout(targetFrame)
             
             if addonTable.tabs[tabID] then
-                addonTable.tabs[tabID]:Render(layout, self.db.profile)
+                addonTable.tabs[tabID]:render(layout, self.db.profile)
                 -- Auto-resize the content frame to fit the last Y position
                 targetFrame:SetHeight(math.abs(layout.y) + 50)
             end
@@ -145,8 +189,8 @@ function AscensionCastBar:CreateMainFrame()
     -- Create and initialize the tabbed interface via UIContext
     local menu = UIContext:createTabbedInterface(frame, tabNames, tabBuildFuncs, 1)
     
-    -- Expose SelectTab for external use
-    self.SelectTab = function(_, tabID)
+    -- Expose selectTab for external use
+    self.selectTab = function(_, tabID)
         for i, item in ipairs(tabData) do
             if item.id == tabID then
                 menu.selectTab(i)

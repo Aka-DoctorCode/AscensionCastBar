@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/Profiles.lua
+-- File: Profiles.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -12,8 +12,10 @@
 -------------------------------------------------------------------------------
 
 local addonName, addonTable = ...
----@type AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local ADDON_NAME = "Ascension Cast Bar"
+---@class AscensionCastBar
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
 
 -- Registry for the Profiles tab
 addonTable.tabs = addonTable.tabs or {}
@@ -22,7 +24,7 @@ local ProfilesTab = {}
 ---Rendering function for the Profiles tab
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
-function ProfilesTab:Render(layout, profile)
+function ProfilesTab:render(layout, profile)
     local db = AscensionCastBar.db
 
     -- -------------------------------------------------------------------------------
@@ -47,7 +49,7 @@ function ProfilesTab:Render(layout, profile)
             function(val)
                 db:SetProfile(val)
                 -- Refrescar toda la UI tras el cambio de perfil
-                AscensionCastBar:RefreshConfig() 
+                AscensionCastBar:refreshConfig() 
             end
         )
     layout:endSection()
@@ -99,7 +101,7 @@ StaticPopupDialogs["ASCENSION_CASTBAR_RESET_CONFIRM"] = {
     button2 = "Cancel",
     OnAccept = function()
         AscensionCastBar.db:ResetProfile()
-        AscensionCastBar:RefreshConfig()
+        AscensionCastBar:refreshConfig()
     end,
     timeout = 0,
     whileDead = true,
@@ -115,7 +117,7 @@ StaticPopupDialogs["ASCENSION_CASTBAR_NEW_PROFILE"] = {
         local name = self.editBox:GetText()
         if name and name ~= "" then
             AscensionCastBar.db:SetProfile(name)
-            AscensionCastBar:RefreshConfig()
+            AscensionCastBar:refreshConfig()
         end
     end,
     timeout = 0,

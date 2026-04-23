@@ -35,9 +35,9 @@
 ---@field optionsFrame table
 ---@field castBar any
 ---@field anchorFrame any
----@field BAR_DEFAULT_FONT_PATH string
----@field CHANNEL_TICKS table
----@field ANIMATION_STYLE_PARAMS table
+---@field barDefaultFontPath string
+---@field channelTicks table
+---@field animationStyleParams table
 ---@field AnimationStyles table
 ---@field testAttachedFrame any
 ---@field actionBarProxy any
@@ -52,54 +52,54 @@
 ---@field OnInitialize function
 ---@field OnEnable function
 ---@field OnDisable function
----@field SetupOptions function
----@field ToggleTestMode function
----@field UpdateDefaultCastBarVisibility function
----@field UpdateAnchor function
----@field UpdateSparkSize function
----@field UpdateIcon function
----@field InitCDMHooks function
+---@field setupOptions function
+---@field toggleTestMode function
+---@field updateDefaultCastBarVisibility function
+---@field updateAnchor function
+---@field updateSparkSize function
+---@field updateIcon function
+---@field initCDMHooks function
 ---@field UpdateBarTexture function
----@field UpdateBarColor function
----@field UpdateBackground function
----@field UpdateBorder function
----@field ApplyFont function
----@field UpdateTextVisibility function
----@field UpdateTextLayout function
----@field UpdateLatencyBar function
----@field UpdateTicks function
----@field UpdateSparkColors function
----@field CreateBar function
----@field AddEmpowerStages function
----@field UpdateEmpowerStageHighlight function
----@field ClearEmpowerStages function
----@field HandleCastStart function
----@field HandleCastStop function
----@field StopCast function
----@field OnFrameUpdate function
----@field GetFormattedTimer function
----@field SetupCastBarShared function
----@field EmpowerStart function
----@field EmpowerUpdate function
----@field ChannelStart function
----@field ChannelUpdate function
----@field CastStart function
----@field CastUpdate function
----@field HideTicks function
----@field UpdateSpark function
----@field ResetParticles function
----@field HideAllSparkElements function
----@field RefreshConfig function
----@field GetBlizzardCastBars function
+---@field updateBarColor function
+---@field updateBackground function
+---@field updateBorder function
+---@field applyFont function
+---@field updateTextVisibility function
+---@field updateTextLayout function
+---@field updateLatencyBar function
+---@field updateTicks function
+---@field updateSparkColors function
+---@field createBar function
+---@field addEmpowerStages function
+---@field updateEmpowerStageHighlight function
+---@field clearEmpowerStages function
+---@field handleCastStart function
+---@field handleCastStop function
+---@field stopCast function
+---@field onFrameUpdate function
+---@field getFormattedTimer function
+---@field setupCastBarShared function
+---@field empowerStart function
+---@field empowerUpdate function
+---@field channelStart function
+---@field channelUpdate function
+---@field castStart function
+---@field castUpdate function
+---@field hideTicks function
+---@field updateSpark function
+---@field resetParticles function
+---@field hideAllSparkElements function
+---@field refreshConfig function
+---@field getBlizzardCastBars function
 ---@field NAME_PLATE_UNIT_ADDED function
 ---@field NAME_PLATE_UNIT_REMOVED function
----@field ResetAnimationParams function
----@field ValidateAnimationParams function
----@field ToggleConfigMenu function
+---@field resetAnimationParams function
+---@field validateAnimationParams function
+---@field toggleConfigMenu function
 ---@field openConfig function
 ---@field OpenConfig function
----@field UpdateStrata function
----@field UpdateLatency function
+---@field updateStrata function
+---@field updateLatency function
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
@@ -107,6 +107,11 @@ local ADDON_NAME = "Ascension Cast Bar"
 local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0", "AceHook-3.0")
 addonTable.main = AscensionCastBar -- Set this immediately!
 local LSM = LibStub("LibSharedMedia-3.0")
+
+-- Inicialización explícita del namespace compartido
+addonTable.tabs = addonTable.tabs or {}
+addonTable.configUtils = nil
+addonTable.UIContext = nil
 
 -- -------------------------------------------------------------------------------
 -- INITIALIZATION
@@ -122,11 +127,20 @@ function AscensionCastBar:OnInitialize()
         LibDualSpec:EnhanceDatabase(self.db, "Ascension Cast Bar")
     end
 
-    self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
-    self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
-    self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
+    self.db.RegisterCallback(self, "OnProfileChanged", "refreshConfig")
+    self.db.RegisterCallback(self, "OnProfileCopied", "refreshConfig")
+    self.db.RegisterCallback(self, "OnProfileReset", "refreshConfig")
 
-    self:SetupOptions()
+    self:setupOptions()
+
+    if not self.db.profile.animationParams then
+        self.db.profile.animationParams = {}
+    end
+    for style, params in pairs(self.animationStyleParams) do
+        if not self.db.profile.animationParams[style] then
+            self.db.profile.animationParams[style] = CopyTable(params)
+        end
+    end
     
     -- Initialize the Centralized UI Library context
     local UIFactory = LibStub("AscensionSuit-UI", true)
@@ -136,10 +150,9 @@ function AscensionCastBar:OnInitialize()
             files = self.files,
             menuStyle = self.menuStyle
         })
-        if addonTable.configUtils then addonTable.configUtils:init() end
     end
 
-    self:CreateBar()
+    self:createBar()
 end
 
 function AscensionCastBar:openConfig()
@@ -151,7 +164,6 @@ function AscensionCastBar:openConfig()
                 files = self.files,
                 menuStyle = self.menuStyle
             })
-            if addonTable.configUtils then addonTable.configUtils:init() end
         end
     end
     
@@ -163,73 +175,66 @@ function AscensionCastBar:openConfig()
 end
 
 function AscensionCastBar:OnEnable()
-    self:ValidateAnimationParams()
-    self:UpdateDefaultCastBarVisibility()
-    self:InitCDMHooks()
-    self:RegisterEvent("ADDON_LOADED", "InitCDMHooks")
-    self:RegisterEvent("UNIT_SPELLCAST_START", "HandleCastStart")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", "HandleCastStart")
-    self:RegisterEvent("UNIT_SPELLCAST_STOP", "HandleCastStop")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP", "HandleCastStop")
-    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "HandleCastStop")
-    self:RegisterEvent("UNIT_SPELLCAST_FAILED", "HandleCastStop")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateDefaultCastBarVisibility")
+    self:validateAnimationParams()
+    self:updateDefaultCastBarVisibility()
+    self:initCDMHooks()
+    self:RegisterEvent("ADDON_LOADED", "initCDMHooks")
+    self:RegisterEvent("UNIT_SPELLCAST_START", "handleCastStart")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", "handleCastStart")
+    self:RegisterEvent("UNIT_SPELLCAST_STOP", "handleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP", "handleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "handleCastStop")
+    self:RegisterEvent("UNIT_SPELLCAST_FAILED", "handleCastStop")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "updateDefaultCastBarVisibility")
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     pcall(function()
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START", "HandleCastStart")
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "HandleCastStop")
-        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "HandleCastStart")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START", "handleCastStart")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "handleCastStop")
+        self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "handleCastStart")
     end)
     self:RegisterChatCommand("acb", "openConfig")
     self:RegisterChatCommand("ascensioncastbar", "openConfig")
-    self:RefreshConfig()
+    self:refreshConfig()
     if self.castBar then
         self.castBar:Hide()
-        self:UpdateAnchor()
+        self:updateAnchor()
     end
 end
 
-function AscensionCastBar:RefreshConfig()
-    self:ValidateAnimationParams()
-    self:UpdateAnchor()
-    self:UpdateSparkSize()
-    self:UpdateIcon()
-    self:ApplyFont()
-    self:UpdateBarColor()
-    self:UpdateBackground()
-    self:UpdateBorder()
-    self:UpdateTextLayout()
-    self:UpdateTextVisibility()
-    self:UpdateSparkColors()
-    self:UpdateTicks()
-    self:UpdateLatency()
-    self:UpdateStrata()
-    self:UpdateDefaultCastBarVisibility()
+function AscensionCastBar:refreshConfig()
+    self:validateAnimationParams()
+    self:updateAnchor()
+    self:updateSparkSize()
+    self:updateIcon()
+    self:applyFont()
+    self:updateBarColor()
+    self:updateBackground()
+    self:updateBorder()
+    self:updateTextLayout()
+    self:updateTextVisibility()
+    self:updateSparkColors()
+    self:updateTicks()
+    self:updateLatency()
+    self:updateStrata()
+    self:updateDefaultCastBarVisibility()
 end
 
 -- -------------------------------------------------------------------------------
 -- HELPER FUNCTIONS (Non-UI, Non-Logic)
 -- -------------------------------------------------------------------------------
 
-function AscensionCastBar:ClampAlpha(v)
-    v = tonumber(v) or 0
-    if v ~= v then return 0 end
-    if math.abs(v) == math.huge then return 1 end
-    if v < 0 then v = 0 elseif v > 1 then v = 1 end
-    return v
-end
 
-function AscensionCastBar:GetBlizzardCastBars()
+function AscensionCastBar:getBlizzardCastBars()
     local frames = {}
     if _G["CastingBarFrame"] then table.insert(frames, _G["CastingBarFrame"]) end
     if _G["PlayerCastingBarFrame"] then table.insert(frames, _G["PlayerCastingBarFrame"]) end
     return frames
 end
 
-function AscensionCastBar:UpdateDefaultCastBarVisibility()
+function AscensionCastBar:updateDefaultCastBarVisibility()
     local hide = self.db.profile.hideDefaultCastbar
-    local frames = self:GetBlizzardCastBars()
+    local frames = self:getBlizzardCastBars()
 
     for _, frame in ipairs(frames) do
         if frame then
@@ -248,41 +253,38 @@ end
 
 function AscensionCastBar:NAME_PLATE_UNIT_ADDED(event, unit)
     if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
-        self:UpdateAnchor()
+        self:updateAnchor()
     end
 end
 
 function AscensionCastBar:NAME_PLATE_UNIT_REMOVED(event, unit)
     if unit == "player" and self.db.profile.cdmTarget == "PersonalResource" then
-        self:UpdateAnchor()
+        self:updateAnchor()
     end
 end
 
-function AscensionCastBar:OpenConfig()
-    self:ToggleConfigMenu()
-end
 
 -- -------------------------------------------------------------------------------
 -- ANIMATION PARAMETERS VALIDATION
 -- -------------------------------------------------------------------------------
 
-function AscensionCastBar:ResetAnimationParams(style)
-    if style and self.ANIMATION_STYLE_PARAMS[style] then
-        self.db.profile.animationParams[style] = CopyTable(self.ANIMATION_STYLE_PARAMS[style])
+function AscensionCastBar:resetAnimationParams(style)
+    if style and self.animationStyleParams[style] then
+        self.db.profile.animationParams[style] = CopyTable(self.animationStyleParams[style])
     else
-        for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS) do
+        for styleName, defaults in pairs(self.animationStyleParams) do
             self.db.profile.animationParams[styleName] = CopyTable(defaults)
         end
     end
-    self:RefreshConfig()
+    self:refreshConfig()
 end
 
-function AscensionCastBar:ValidateAnimationParams()
+function AscensionCastBar:validateAnimationParams()
     if not self.db or not self.db.profile then return end
     local db = self.db.profile
     if not db.animationParams then db.animationParams = {} end
-    if self.ANIMATION_STYLE_PARAMS then
-        for styleName, defaults in pairs(self.ANIMATION_STYLE_PARAMS) do
+    if self.animationStyleParams then
+        for styleName, defaults in pairs(self.animationStyleParams) do
             if styleName and defaults then
                 if not db.animationParams[styleName] then
                     db.animationParams[styleName] = {}
@@ -297,10 +299,3 @@ function AscensionCastBar:ValidateAnimationParams()
     end
 end
 
--- local function CopyTable(orig)
---     local copy = {}
---     for key, value in pairs(orig) do
---         if type(value) == "table" then copy[key] = CopyTable(value) else copy[key] = value end
---     end
---     return copy
--- end

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/Appearance.lua
+-- File: Appearance.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -12,8 +12,10 @@
 -------------------------------------------------------------------------------
 
 local addonName, addonTable = ...
+local ADDON_NAME = "Ascension Cast Bar"
 ---@class AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
 local LSM = LibStub("LibSharedMedia-3.0")
 
 -- Registry in the tab system
@@ -23,8 +25,10 @@ local AppearanceTab = {}
 ---Rendering function for the Appearance tab
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
-function AppearanceTab:Render(layout, profile)
+function AppearanceTab:render(layout, profile)
+    if not AscensionCastBar or not AscensionCastBar.defaults then return end
     local defaults = AscensionCastBar.defaults.profile
+    if not defaults then return end
 
     -- -------------------------------------------------------------------------------
     -- SECTION: BAR STYLE (Main Textures and Colors)
@@ -41,7 +45,7 @@ function AppearanceTab:Render(layout, profile)
             function() return profile.barLSMName end,
             function(val)
                 profile.barLSMName = val
-                AscensionCastBar:UpdateBarTexture()
+                AscensionCastBar:updateBarColor()
             end
         )
 
@@ -50,8 +54,8 @@ function AppearanceTab:Render(layout, profile)
             function() return profile.useClassColor end,
             function(val)
                 profile.useClassColor = val
-                AscensionCastBar:UpdateBarColor()
-                AscensionCastBar:SelectTab("castbar")
+                AscensionCastBar:updateBarColor()
+                AscensionCastBar:selectTab("castbar")
             end
         )
 
@@ -60,13 +64,13 @@ function AppearanceTab:Render(layout, profile)
                 function() return unpack(profile.barColor or defaults.barColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.barColor = { r, g, b, a }
-                    AscensionCastBar:UpdateBarColor()
+                    AscensionCastBar:updateBarColor()
                 end, nil, true
             )
             layout:button(nil, "Reset Bar Color", 120, 20, nil, function()
-                profile.barColor = { unpack(defaults.barColor) }
-                AscensionCastBar:UpdateBarColor()
-                AscensionCastBar:SelectTab("castbar")
+                profile.barColor = { unpack(defaults.barColor or {1,1,1,1}) }
+                AscensionCastBar:updateBarColor()
+                AscensionCastBar:selectTab("castbar")
             end)
         end
 
@@ -75,13 +79,13 @@ function AppearanceTab:Render(layout, profile)
             function() return unpack(profile.bgColor or defaults.bgColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.bgColor = { r, g, b, a }
-                AscensionCastBar:UpdateBackground()
+                AscensionCastBar:updateBackground()
             end, nil, true
         )
         layout:button(nil, "Reset Background", 120, 20, nil, function()
-            profile.bgColor = { unpack(defaults.bgColor) }
-            AscensionCastBar:UpdateBackground()
-            AscensionCastBar:SelectTab("castbar")
+            profile.bgColor = { unpack(defaults.bgColor or {1,1,1,1}) }
+            AscensionCastBar:updateBackground()
+            AscensionCastBar:selectTab("castbar")
         end)
     layout:endSection()
 
@@ -95,8 +99,8 @@ function AppearanceTab:Render(layout, profile)
             function() return profile.borderEnabled end,
             function(val)
                 profile.borderEnabled = val
-                AscensionCastBar:UpdateBorder()
-                AscensionCastBar:SelectTab("castbar")
+                AscensionCastBar:updateBorder()
+                AscensionCastBar:selectTab("castbar")
             end
         )
 
@@ -105,20 +109,20 @@ function AppearanceTab:Render(layout, profile)
                 function() return unpack(profile.borderColor or defaults.borderColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.borderColor = { r, g, b, a }
-                    AscensionCastBar:UpdateBorder()
+                    AscensionCastBar:updateBorder()
                 end, nil, true
             )
             layout:button(nil, "Reset Border Color", 120, 20, nil, function()
-                profile.borderColor = { unpack(defaults.borderColor) }
-                AscensionCastBar:UpdateBorder()
-                AscensionCastBar:SelectTab("castbar")
+                profile.borderColor = { unpack(defaults.borderColor or {1,1,1,1}) }
+                AscensionCastBar:updateBorder()
+                AscensionCastBar:selectTab("castbar")
             end)
 
             layout:slider(nil, "Thickness", 1, 10, 1,
                 function() return profile.borderThickness end,
                 function(val)
                     profile.borderThickness = val
-                    AscensionCastBar:UpdateBorder()
+                    AscensionCastBar:updateBorder()
                 end
             )
         end
@@ -134,8 +138,8 @@ function AppearanceTab:Render(layout, profile)
             function() return profile.showIcon end,
             function(val)
                 profile.showIcon = val
-                AscensionCastBar:UpdateIcon()
-                AscensionCastBar:SelectTab("castbar")
+                AscensionCastBar:updateIcon()
+                AscensionCastBar:selectTab("castbar")
             end
         )
 
@@ -144,7 +148,7 @@ function AppearanceTab:Render(layout, profile)
                 function() return profile.detachIcon end,
                 function(val)
                     profile.detachIcon = val
-                    AscensionCastBar:UpdateIcon()
+                    AscensionCastBar:updateIcon()
                 end
             )
 
@@ -156,7 +160,7 @@ function AppearanceTab:Render(layout, profile)
                 function() return profile.iconAnchor end,
                 function(val)
                     profile.iconAnchor = val
-                    AscensionCastBar:UpdateIcon()
+                    AscensionCastBar:updateIcon()
                 end
             )
 
@@ -164,7 +168,7 @@ function AppearanceTab:Render(layout, profile)
                 function() return profile.iconSize end,
                 function(val)
                     profile.iconSize = val
-                    AscensionCastBar:UpdateIcon()
+                    AscensionCastBar:updateIcon()
                 end
             )
 
@@ -172,7 +176,7 @@ function AppearanceTab:Render(layout, profile)
                 function() return profile.iconX end,
                 function(val)
                     profile.iconX = val
-                    AscensionCastBar:UpdateIcon()
+                    AscensionCastBar:updateIcon()
                 end
             )
 
@@ -180,7 +184,7 @@ function AppearanceTab:Render(layout, profile)
                 function() return profile.iconY end,
                 function(val)
                     profile.iconY = val
-                    AscensionCastBar:UpdateIcon()
+                    AscensionCastBar:updateIcon()
                 end
             )
         end

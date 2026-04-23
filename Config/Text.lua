@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
--- File: Config/Text.lua
+-- File: Text.lua
 -- Version: @project-version@
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
@@ -9,12 +9,14 @@
 -- This software and its source code are the exclusive property of the author.
 -- No part of this file may be copied, modified, redistributed, or used in
 -- derivative works without express written permission.
--------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 
 
 local addonName, addonTable = ...
----@type AscensionCastBar
-local AscensionCastBar = addonTable.main or LibStub("AceAddon-3.0"):GetAddon("Ascension Cast Bar")
+local ADDON_NAME = "Ascension Cast Bar"
+---@class AscensionCastBar
+local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
+if not AscensionCastBar then return end
 local LSM = LibStub("LibSharedMedia-3.0")
 
 -- Registry for the Text tab
@@ -24,8 +26,10 @@ local TextTab = {}
 ---Rendering function for the Text tab
 ---@param layout table layoutModel object
 ---@param profile table Reference to self.db.profile
-function TextTab:Render(layout, profile)
+function TextTab:render(layout, profile)
+    if not AscensionCastBar or not AscensionCastBar.defaults then return end
     local defaults = AscensionCastBar.defaults.profile
+    if not defaults then return end
 
     -- -------------------------------------------------------------------------------
     -- SECCIÓN: GLOBAL FONT SETTINGS
@@ -46,7 +50,7 @@ function TextTab:Render(layout, profile)
             function(val)
                 profile.spellNameFontLSM = val
                 profile.timerFontLSM = val
-                AscensionCastBar:ApplyFont()
+                AscensionCastBar:applyFont()
             end
         )
 
@@ -61,7 +65,7 @@ function TextTab:Render(layout, profile)
             function() return profile.outline end,
             function(val)
                 profile.outline = val
-                AscensionCastBar:ApplyFont()
+                AscensionCastBar:applyFont()
             end
         )
     layout:endSection()
@@ -76,7 +80,7 @@ function TextTab:Render(layout, profile)
             function() return profile.showSpellText end,
             function(val)
                 profile.showSpellText = val
-                AscensionCastBar:UpdateTextVisibility()
+                AscensionCastBar:updateTextVisibility()
             end
         )
 
@@ -84,7 +88,7 @@ function TextTab:Render(layout, profile)
             function() return profile.truncateSpellName end,
             function(val) 
                 profile.truncateSpellName = val 
-                AscensionCastBar:SelectTab("text")
+                AscensionCastBar:selectTab("text")
             end
         )
 
@@ -99,7 +103,7 @@ function TextTab:Render(layout, profile)
             function() return profile.spellNameFontSize end,
             function(val)
                 profile.spellNameFontSize = val
-                AscensionCastBar:ApplyFont()
+                AscensionCastBar:applyFont()
             end
         )
 
@@ -107,13 +111,13 @@ function TextTab:Render(layout, profile)
             function() return unpack(profile.fontColor or defaults.fontColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.fontColor = { r, g, b, a }
-                AscensionCastBar:ApplyFont()
+                AscensionCastBar:applyFont()
             end, nil, true
         )
         layout:button(nil, "Reset Text Color", 120, 20, nil, function()
-            profile.fontColor = { unpack(defaults.fontColor) }
-            AscensionCastBar:ApplyFont()
-            AscensionCastBar:SelectTab("text")
+            profile.fontColor = { unpack(defaults.fontColor or {1,1,1,1}) }
+            AscensionCastBar:applyFont()
+            AscensionCastBar:selectTab("text")
         end)
     layout:endSection()
 
@@ -147,7 +151,7 @@ function TextTab:Render(layout, profile)
             function() return profile.timerFontSize end,
             function(val)
                 profile.timerFontSize = val
-                AscensionCastBar:ApplyFont()
+                AscensionCastBar:applyFont()
             end
         )
 
@@ -155,8 +159,8 @@ function TextTab:Render(layout, profile)
             function() return profile.useSharedColor end,
             function(val)
                 profile.useSharedColor = val
-                AscensionCastBar:ApplyFont()
-                AscensionCastBar:SelectTab("text")
+                AscensionCastBar:applyFont()
+                AscensionCastBar:selectTab("text")
             end
         )
 
@@ -165,13 +169,13 @@ function TextTab:Render(layout, profile)
                 function() return unpack(profile.timerColor or defaults.timerColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.timerColor = { r, g, b, a }
-                    AscensionCastBar:ApplyFont()
+                    AscensionCastBar:applyFont()
                 end, nil, true
             )
             layout:button(nil, "Reset Timer Color", 120, 20, nil, function()
-                profile.timerColor = { unpack(defaults.timerColor) }
-                AscensionCastBar:ApplyFont()
-                AscensionCastBar:SelectTab("text")
+                profile.timerColor = { unpack(defaults.timerColor or {1,1,1,1}) }
+                AscensionCastBar:applyFont()
+                AscensionCastBar:selectTab("text")
             end)
         end
     layout:endSection()
@@ -182,64 +186,64 @@ function TextTab:Render(layout, profile)
     layout:header(nil, "Positioning & Backdrop")
     layout:beginSection()
 
-        layout:checkbox(nil, "Detach Text", "Permite mover el texto a una posición distinta a la de la barra.",
-            function() return profile.detachText end,
+    layout:checkbox(nil, "Detach Text", "Permite mover el texto a una posición distinta a la de la barra.",
+        function() return profile.detachText end,
+        function(val)
+            profile.detachText = val
+            AscensionCastBar:updateTextLayout()
+            AscensionCastBar:selectTab("text")
+        end
+    )
+
+    if profile.detachText then
+        layout:stepper(nil, "X Offset", -500, 500, 1,
+            function() return profile.textX end,
             function(val)
-                profile.detachText = val
-                AscensionCastBar:UpdateTextLayout()
-                AscensionCastBar:SelectTab("text")
+                profile.textX = val
+                AscensionCastBar:updateTextLayout()
             end
         )
 
-        if profile.detachText then
-            layout:stepper(nil, "X Offset", -500, 500, 1,
-                function() return profile.textX end,
-                function(val)
-                    profile.textX = val
-                    AscensionCastBar:UpdateTextLayout()
-                end
-            )
-
-            layout:stepper(nil, "Y Offset", -500, 500, 1,
-                function() return profile.textY end,
-                function(val)
-                    profile.textY = val
-                    AscensionCastBar:UpdateTextLayout()
-                end
-            )
-
-            layout:stepper(nil, "Area Width", 50, 1000, 5,
-                function() return profile.textWidth end,
-                function(val)
-                    profile.textWidth = val
-                    AscensionCastBar:UpdateTextLayout()
-                end
-            )
-        end
-
-        layout:checkbox(nil, "Enable Backdrop", "Añade un fondo oscuro detrás del texto para mejorar la lectura.",
-            function() return profile.textBackdropEnabled end,
+        layout:stepper(nil, "Y Offset", -500, 500, 1,
+            function() return profile.textY end,
             function(val)
-                profile.textBackdropEnabled = val
-                AscensionCastBar:UpdateTextLayout()
-                AscensionCastBar:SelectTab("text")
+                profile.textY = val
+                AscensionCastBar:updateTextLayout()
             end
         )
 
-        if profile.textBackdropEnabled then
-            layout:colorPicker(nil, "Backdrop Color",
-                function() return unpack(profile.textBackdropColor or defaults.textBackdropColor or {0,0,0,0.5}) end,
-                function(r, g, b, a)
-                    profile.textBackdropColor = { r, g, b, a }
-                    AscensionCastBar:UpdateTextLayout()
-                end, nil, true
-            )
-            layout:button(nil, "Reset Backdrop Color", 120, 20, nil, function()
-                profile.textBackdropColor = { unpack(defaults.textBackdropColor) }
-                AscensionCastBar:UpdateTextLayout()
-                AscensionCastBar:SelectTab("text")
-            end)
+        layout:stepper(nil, "Area Width", 50, 1000, 5,
+            function() return profile.textWidth end,
+            function(val)
+                profile.textWidth = val
+                AscensionCastBar:updateTextLayout()
+            end
+        )
+    end
+
+    layout:checkbox(nil, "Enable Backdrop", "Añade un fondo oscuro detrás del texto para mejorar la lectura.",
+        function() return profile.textBackdropEnabled end,
+        function(val)
+            profile.textBackdropEnabled = val
+            AscensionCastBar:updateTextLayout()
+            AscensionCastBar:selectTab("text")
         end
+    )
+
+    if profile.textBackdropEnabled then
+        layout:colorPicker(nil, "Backdrop Color",
+            function() return unpack(profile.textBackdropColor or defaults.textBackdropColor or {0,0,0,0.5}) end,
+            function(r, g, b, a)
+                profile.textBackdropColor = { r, g, b, a }
+                AscensionCastBar:updateTextLayout()
+            end, nil, true
+        )
+        layout:button(nil, "Reset Backdrop Color", 120, 20, nil, function()
+            profile.textBackdropColor = { unpack(defaults.textBackdropColor or {0,0,0,0.5}) }
+            AscensionCastBar:updateTextLayout()
+            AscensionCastBar:selectTab("text")
+        end)
+    end
     layout:endSection()
 end
 
