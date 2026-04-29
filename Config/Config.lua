@@ -2,7 +2,7 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Config.lua
--- Version: @project-version@
+-- Version: V55
 -------------------------------------------------------------------------------
 -- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
 --

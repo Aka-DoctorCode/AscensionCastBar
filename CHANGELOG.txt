@@ -1,4 +1,4 @@
-<h1>@project-version@</h1>
+<h1>V55</h1>
 <ul>
     <li>Major code cleanup and refactoring for better structure and maintainability.</li>
     <li>Improved modularity, reduced duplication, and standardized naming conventions.</li>

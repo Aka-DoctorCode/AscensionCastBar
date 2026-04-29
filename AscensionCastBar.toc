@@ -3,7 +3,7 @@
 ## Notes: Enhanced and customizable cast bar that integrates with cooldown manager integration for retail wow
 ## Author: Aka-DoctorCode
 ## Category: Combat
-## Version: @project-version@
+## Version: V55
 ## SavedVariables: AscensionCastBarDB
 ## RequiredDeps: AscensionSuit
 ## IconTexture: Interface\AddOns\AscensionCastBar\Media\AkaDoctorCode.png
