@@ -2,26 +2,16 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: CastEventManager.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
----@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 if not AscensionCastBar then return end
 
 local reusableCastInfo = {}
 
----@param unit string
----@param channel boolean
----@return table|nil
 local function GetSafeCastInfo(unit, channel)
     if not unit then return nil end
 
@@ -203,7 +193,7 @@ function AscensionCastBar:toggleTestMode(val)
             endTime = (GetTime() + 10) * 1000,
             spellID = 234153,
             notInterruptible = false,
-            numStages = state == "Empowered" and (IsPlayerSpell(408083) and 5 or 4) or 0
+            numStages = state == "Empowered" and ((C_SpellBook and C_SpellBook.IsSpellKnownOrInSpellBook and C_SpellBook.IsSpellKnownOrInSpellBook(408083) or false) and 5 or 4) or 0
         }
 
         cb.lastSpellID = info.spellID
