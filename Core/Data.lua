@@ -2,18 +2,11 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Data.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
----@class AscensionCastBar
 local AscensionCastBar = LibStub("AceAddon-3.0"):GetAddon(ADDON_NAME)
 if not AscensionCastBar then return end
 
@@ -67,8 +60,8 @@ AscensionCastBar.channelTicks = {
     [1238989] = 5,                -- Celestial Conduit Windwalker
     [115294] = function(duration) -- Mana Tea
         local UnitAuras = _G.C_UnitAuras
-        if UnitAuras then
-            local auraData = UnitAuras.GetAuraDataBySpellIdentifier("player", 115867)
+        if UnitAuras and UnitAuras.GetPlayerAuraBySpellID then
+            local auraData = UnitAuras.GetPlayerAuraBySpellID(115867)
             if auraData and auraData.applications and auraData.applications > 0 then
                 return auraData.applications
             end
@@ -345,7 +338,6 @@ AscensionCastBar.defaults = {
 -- STYLES (from Styles.lua)
 -------------------------------------------------------------------------------
 
----@cast AscensionCastBar AscensionCastBar
 
 -------------------------------------------------------------------------------
 -- CONSTANTS & COLORS
