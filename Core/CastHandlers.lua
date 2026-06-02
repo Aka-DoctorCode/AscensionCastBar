@@ -2,14 +2,8 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: CastHandlers.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
@@ -36,7 +30,7 @@ function AscensionCastBar:castStart(info)
     cb:Show()
 
     self:setupCastBarShared(info)
-    self:updateBarColor(info.notInterruptible)
+    self:updateBarColor()
     self:updateTicks(info.spellID, 0, cb.duration)
 end
 
@@ -97,7 +91,7 @@ function AscensionCastBar:channelStart(info)
     cb:Show()
 
     self:setupCastBarShared(info)
-    self:updateBarColor(info.notInterruptible)
+    self:updateBarColor()
     self:updateTicks(info.spellID, 0, cb.duration)
 end
 
@@ -368,7 +362,7 @@ function AscensionCastBar:empowerStart(info)
     cb:Show()
 
     self:setupCastBarShared(info)
-    self:updateBarColor(info.notInterruptible)
+    self:updateBarColor()
 
     self:addEmpowerStages(numStages)
     self:updateTicks(info.spellID, numStages, cb.duration)

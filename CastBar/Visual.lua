@@ -2,14 +2,8 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Visual.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"

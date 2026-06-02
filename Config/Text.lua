@@ -2,14 +2,8 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Text.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
------------------------------------------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 
 local addonName, addonTable = ...
@@ -24,8 +18,6 @@ addonTable.tabs = addonTable.tabs or {}
 local TextTab = {}
 
 ---Rendering function for the Text tab
----@param layout table layoutModel object
----@param profile table Reference to self.db.profile
 function TextTab:render(layout, profile)
     if not AscensionCastBar or not AscensionCastBar.defaults then return end
     local defaults = AscensionCastBar.defaults.profile

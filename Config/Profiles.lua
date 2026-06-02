@@ -2,14 +2,8 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Profiles.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
@@ -22,8 +16,6 @@ addonTable.tabs = addonTable.tabs or {}
 local ProfilesTab = {}
 
 ---Rendering function for the Profiles tab
----@param layout table layoutModel object
----@param profile table Reference to self.db.profile
 function ProfilesTab:render(layout, profile)
     local db = AscensionCastBar.db
 

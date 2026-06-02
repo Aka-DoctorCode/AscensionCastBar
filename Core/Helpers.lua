@@ -2,14 +2,8 @@
 -- Project: AscensionCastBar
 -- Author: Aka-DoctorCode
 -- File: Helpers.lua
--- Version: V55
 -------------------------------------------------------------------------------
--- Copyright (c) 2025–2026 Aka-DoctorCode. All Rights Reserved.
---
--- This software and its source code are the exclusive property of the author.
--- No part of this file may be copied, modified, redistributed, or used in
--- derivative works without express written permission.
--------------------------------------------------------------------------------
+---@diagnostic disable: undefined-global, undefined-field, inject-field
 
 local addonName, addonTable = ...
 local ADDON_NAME = "Ascension Cast Bar"
@@ -20,9 +14,6 @@ if not AscensionCastBar then return end
 -------------------------------------------------------------------------------
 -- HELPERS (Common Utilities)
 -------------------------------------------------------------------------------
-
----@param v any
----@return number
 function AscensionCastBar:clampAlpha(v)
     v = tonumber(v) or 0
     if v ~= v then return 0 end
@@ -31,9 +22,6 @@ function AscensionCastBar:clampAlpha(v)
     return v
 end
 
----@param val any
----@param default number
----@return number
 function AscensionCastBar:safeValue(val, default)
     if type(val) ~= "number" or val ~= val or math.abs(val) == math.huge then
         return default or 1.0
@@ -41,9 +29,6 @@ function AscensionCastBar:safeValue(val, default)
     return val
 end
 
----@param rem number
----@param dur number
----@return string
 function AscensionCastBar:getFormattedTimer(rem, dur)
     if not self.db then return "" end
     local db = self.db.profile
@@ -58,7 +43,6 @@ function AscensionCastBar:getFormattedTimer(rem, dur)
     end
 end
 
----@param info table
 function AscensionCastBar:setupCastBarShared(info)
     local cb = self.castBar
     if not cb or not self.db then return end
