@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: Ascension Cast Bar
 ## Notes: Enhanced and customizable cast bar that integrates with cooldown manager integration for retail wow
 ## Author: Aka-DoctorCode
