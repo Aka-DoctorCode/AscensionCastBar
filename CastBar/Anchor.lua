@@ -136,7 +136,7 @@ function AscensionCastBar:updateAnchor()
 
         if targetFrame then
             self.castBar:ClearAllPoints()
-            self.castBar:SetPoint("BOTTOM", targetFrame, "TOP", 0, db.cdmYOffset or 0)
+            self.castBar:SetPoint("TOP", targetFrame, "BOTTOM", 0, db.cdmYOffset or 0)
             local tWidth = targetFrame:GetWidth()
             if tWidth and tWidth > 10 and tWidth <= UIParent:GetWidth() then
                 self.castBar.baseWidth = tWidth
@@ -186,6 +186,8 @@ function AscensionCastBar:initCDMHooks()
                 hooksecurefunc(targetFrame, "Show", updateFunc)
                 hooksecurefunc(targetFrame, "Hide", updateFunc)
                 hooksecurefunc(targetFrame, "SetSize", updateFunc)
+                hooksecurefunc(targetFrame, "SetHeight", updateFunc)
+                hooksecurefunc(targetFrame, "SetWidth", updateFunc)
             end)
             self:updateAnchor()
         end
@@ -249,7 +251,7 @@ function AscensionCastBar:updateProxyFrame()
 
         if self.castBar then
             self.castBar:ClearAllPoints()
-            self.castBar:SetPoint("BOTTOM", self.actionBarProxy, "TOP", 0, self.db.profile.cdmYOffset or 0)
+            self.castBar:SetPoint("TOP", self.actionBarProxy, "BOTTOM", 0, self.db.profile.cdmYOffset or 0)
 
             if width > 10 then
                 self.castBar.baseWidth = width
