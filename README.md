@@ -1,3 +1,5 @@
+[![Discord](https://img.shields.io/badge/Discord-Join_Community-5865F2?style=for-the-badge&logo=discord&logoColor=5865F2)](https://discord.gg/GaYzvYr7F) ![CurseForge Downloads](https://img.shields.io/curseforge/dt/1405023?style=for-the-badge&color=4900C2) ![CurseForge Version](https://img.shields.io/curseforge/v/1405023?style=for-the-badge&color=4900C2) ![CurseForge Game Versions](https://img.shields.io/curseforge/game-versions/1405023?style=for-the-badge&color=4900C2) [![](https://img.shields.io/badge/Donate-F0B90B?style=for-the-badge)](https://aka-doctorcode.github.io/DonationAddresses/)
+
 # **Ascension Cast Bar**
 
 ***
@@ -6,12 +8,12 @@
 
 ## Key Features
 
-* **Support for Empowered Spells:** Fully compatible with the "Empowered" casting mechanic, featuring visual stage indicators and dynamic color changes as the spell charges and special growing animation representing the empowerment of the ability been cast.
-* **Advanced Customization:** Users can modify the bar's dimensions, colors (including class colors), textures.
-* **Channeling Logic:** Includes support Channeling and displays specific "ticks" for channeled spells like _Drain Life_ or _Penance_.
-* **Visual Effects:** A robust animation system that allows for the customization of tails, glows, and sparks with various intensities and colors.
-* **Integration:** Features built-in support to attach the cast bar to the in game Cooldown Manager (CDM) and action bar. If you are using [bartender 4](https://www.curseforge.com/wow/addons/bartender4) add on you can also attach the cast bar to most action bars.
-* **Other Details:** working latency display,
+*   **Support for Empowered Spells:** Fully compatible with the "Empowered" casting mechanic, featuring visual stage indicators and dynamic color changes as the spell charges and special growing animation representing the empowerment of the ability been cast.
+*   **Advanced Customization:** Users can modify the bar's dimensions, colors (including class colors), textures.
+*   **Channeling Logic:** Includes support Channeling and displays specific "ticks" for channeled spells like _Drain Life_ or _Penance_.
+*   **Visual Effects:** A robust animation system that allows for the customization of tails, glows, and sparks with various intensities and colors.
+*   **Integration:** Features built-in support to attach the cast bar to the in game Cooldown Manager (CDM) and action bar. If you are using [bartender 4](https://www.curseforge.com/wow/addons/bartender4) add on you can also attach the cast bar to most action bars.
+*   **Other Details:** working latency display,
 
 ### **Menu:** go into the add-ons in game menu
 
@@ -21,12 +23,12 @@
 
 ### Características Principales
 
-* **Soporte para Hechizos Empoderados:**  totalmente compatible con la mecánica de lanzamiento «potenciado», con indicadores visuales de fase y cambios de color dinámicos a medida que se carga el hechizo, así como una animación especial creciente que representa la potenciación de la habilidad lanzada.
-* **Personalización Avanzada:** los usuarios pueden modificar las dimensiones, los colores (incluidos los colores de clase) y las texturas de la barra.
-* **Lógica de Canalización:** incluye compatibilidad con la canalización y muestra «ticks» específicos para hechizos canalizados como Drain Life o Penance.
-* **Efectos Visuales:** un robusto sistema de animación que permite personalizar colas, resplandores y chispas con diversas intensidades y colores.
-* **Integración:** cuenta con soporte integrado para adjuntar la barra de lanzamiento al gestor de tiempo de reutilización (CDM) y a la barra de acciones del juego. Si utilizas el complemento [Bartender 4](https://www.curseforge.com/wow/addons/bartender4), también puedes adjuntar la barra de lanzamiento a la mayoría de las barras de acción.
-* **Otros Detalles**: visualización de la latencia en funcionamiento.
+*   **Soporte para Hechizos Empoderados:**  totalmente compatible con la mecánica de lanzamiento «potenciado», con indicadores visuales de fase y cambios de color dinámicos a medida que se carga el hechizo, así como una animación especial creciente que representa la potenciación de la habilidad lanzada.
+*   **Personalización Avanzada:** los usuarios pueden modificar las dimensiones, los colores (incluidos los colores de clase) y las texturas de la barra.
+*   **Lógica de Canalización:** incluye compatibilidad con la canalización y muestra «ticks» específicos para hechizos canalizados como Drain Life o Penance.
+*   **Efectos Visuales:** un robusto sistema de animación que permite personalizar colas, resplandores y chispas con diversas intensidades y colores.
+*   **Integración:** cuenta con soporte integrado para adjuntar la barra de lanzamiento al gestor de tiempo de reutilización (CDM) y a la barra de acciones del juego. Si utilizas el complemento [Bartender 4](https://www.curseforge.com/wow/addons/bartender4), también puedes adjuntar la barra de lanzamiento a la mayoría de las barras de acción.
+*   **Otros Detalles**: visualización de la latencia en funcionamiento.
 
 ### Menú: Ve a la sección de add-ons del menú del juego
 

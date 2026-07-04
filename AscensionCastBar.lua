@@ -78,6 +78,27 @@ function AscensionCastBar:openConfig()
     end
 end
 
+function AscensionCastBar:toggleAttachmentTestMode()
+    local db = self.db.profile
+    local cb = self.castBar
+    local isCurrentlyTesting = cb and cb:IsShown() and cb.lastSpellName == "Test Spell"
+    
+    local newState = not isCurrentlyTesting
+    
+    db.previewEnabled = newState
+    db.attachToCDM = newState
+    db.testAttached = newState
+    
+    if newState then
+        print("|cff7F13ECAscension Cast Bar:|r Attachment test mode ENABLED.")
+    else
+        print("|cff7F13ECAscension Cast Bar:|r Attachment test mode DISABLED.")
+    end
+    
+    self:toggleTestMode(newState)
+    self:refreshConfig()
+end
+
 function AscensionCastBar:OnEnable()
     self:validateAnimationParams()
     self:updateDefaultCastBarVisibility()
@@ -99,6 +120,7 @@ function AscensionCastBar:OnEnable()
     end)
     self:RegisterChatCommand("acb", "openConfig")
     self:RegisterChatCommand("ascensioncastbar", "openConfig")
+    self:RegisterChatCommand("acbt", "toggleAttachmentTestMode")
     self:refreshConfig()
     if self.castBar then
         self.castBar:Hide()
