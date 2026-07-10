@@ -85,9 +85,8 @@ function AscensionCastBar:createBar()
     castBar.sparkGlow = castBar:CreateTexture(nil, "OVERLAY", nil, 6)
 
     -- Text Context
-    castBar.textCtx = CreateFrame("Frame", "AscensionCastBarTextFrame", UIParent)
-    castBar.textCtx:SetFrameStrata("MEDIUM")
-    castBar.textCtx:SetFrameLevel(25)
+    castBar.textCtx = CreateFrame("Frame", "AscensionCastBarTextFrame", castBar)
+    castBar.textCtx:SetFrameLevel(castBar:GetFrameLevel() + 50)
     castBar.textCtx.bg = castBar.textCtx:CreateTexture(nil, "BACKGROUND")
     castBar.textCtx.bg:SetAllPoints()
 

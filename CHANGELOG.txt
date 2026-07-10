@@ -3,6 +3,7 @@
     <li>License Update</li>
     <li>Readme Updated</li>
     <li>Added toggleAttachmentTestMode function and acbt chat command</li>
+    <li>Added option to attach the cast bar to Coolinator frames</li>
 </ul>
 <br>
 <h2>Positive feedback is always appreciated, it helps me to continue working on this project</h2>

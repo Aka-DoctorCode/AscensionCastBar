@@ -140,6 +140,7 @@ function GeneralTab:render(layout, profile)
                 { label = "Tracked Buffs (CDM)", value = "Buffs" },
                 { label = "Essential Cooldowns (CDM)", value = "Essential" },
                 { label = "Utility Cooldowns (CDM)", value = "Utility" },
+                { label = "Coolinator", value = "Coolinator" },
                 { label = "Action Bar 1", value = "ActionBar1" },
                 { label = "Action Bar 2", value = "ActionBar2" },
                 { label = "Action Bar 3", value = "ActionBar3" },

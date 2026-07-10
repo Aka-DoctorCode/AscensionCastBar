@@ -31,9 +31,6 @@ function AscensionCastBar:updateStrata()
     if not self.castBar then return end
     local strata = self.db.profile.frameStrata or "MEDIUM"
     self.castBar:SetFrameStrata(strata)
-    if self.castBar.textCtx then
-        self.castBar.textCtx:SetFrameStrata(strata)
-    end
 end
 
 function AscensionCastBar:getCDMTargetFrame()
@@ -67,6 +64,8 @@ function AscensionCastBar:getCDMTargetFrame()
         return _G["MultiBar7"]
     elseif target == "PersonalResource" then
         return _G["PersonalResourceDisplayFrame"]
+    elseif target == "Coolinator" then
+        return _G["CoolinatorPrimaryGroupAnchor"]
     end
 
     return nil

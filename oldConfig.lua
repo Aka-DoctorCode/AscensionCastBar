@@ -434,6 +434,9 @@ function AscensionCastBar:setupOptions()
                                     ["Essential"] = "Essential Cooldowns (CDM)",
                                     ["Utility"] = "Utility Cooldowns (CDM)",
 
+                                    -- Other AddOns
+                                    ["Coolinator"] = "Coolinator",
+
                                     -- Standard Action Bars
                                     ["ActionBar1"] = "Action Bar 1",
                                     ["ActionBar2"] = "Action Bar 2",
@@ -461,7 +464,7 @@ function AscensionCastBar:setupOptions()
 
                                 -- 2. THE SORTING ORDER (The list of KEYS in the desired order)
                                 sorting = {
-                                    "PlayerFrame", "PersonalResource", "Buffs", "Essential", "Utility", "ActionBar1",
+                                    "PlayerFrame", "PersonalResource", "Buffs", "Essential", "Utility", "Coolinator", "ActionBar1",
                                     "ActionBar2", "ActionBar3", "ActionBar4", "ActionBar5", "ActionBar6", "ActionBar7",
                                     "ActionBar8", "BT4Bar1", "BT4Bar2", "BT4Bar3", "BT4Bar4", "BT4Bar5", "BT4Bar6",
                                     "BT4Bar7", "BT4Bar8", "BT4Bar9", "BT4Bar10", "BT4PetBar", "BT4StanceBar"
