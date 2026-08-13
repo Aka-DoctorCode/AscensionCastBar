@@ -77,6 +77,7 @@ function AscensionCastBar:updateAnchor()
     local db = self.db.profile
     local testOverride = (self.db.profile.previewEnabled and not self.db.profile.testAttached)
     if not db.attachToCDM or testOverride then
+        if self.actionBarProxy then self.actionBarProxy:Hide() end
         self.castBar:ClearAllPoints()
         self.castBar:SetPoint(db.point, UIParent, db.relativePoint, db.manualX, db.manualY)
         self.castBar.baseWidth = db.manualWidth or 270
