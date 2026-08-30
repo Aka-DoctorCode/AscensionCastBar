@@ -64,11 +64,21 @@ end
 function AscensionCastBar:applyFont()
     local db = self.db.profile
     local cb = self.castBar
-    local outline = db.outline or "OUTLINE"
+    if not cb or not cb.spellName or not cb.timer then return end
+
+    local outlineMode = db.outline or "OUTLINE"
+    local fontOutlineFlag = ""
+    if outlineMode == "OUTLINE" or outlineMode == "OUTLINESHADOW" then
+        fontOutlineFlag = "OUTLINE"
+    elseif outlineMode == "THICKOUTLINE" then
+        fontOutlineFlag = "THICKOUTLINE"
+    elseif outlineMode == "MONOCHROME" then
+        fontOutlineFlag = "MONOCHROME"
+    end
 
     local r, g, b, a = unpack(db.fontColor or {1,1,1,1})
     local sP = LSM:Fetch("font", db.spellNameFontLSM) or self.barDefaultFontPath
-    cb.spellName:SetFont(sP, db.spellNameFontSize, outline)
+    cb.spellName:SetFont(sP, db.spellNameFontSize, fontOutlineFlag)
     cb.spellName:SetTextColor(r, g, b, a)
 
     if not db.useSharedColor and db.timerColor then
@@ -76,8 +86,24 @@ function AscensionCastBar:applyFont()
     end
 
     local tP = LSM:Fetch("font", db.timerFontLSM) or self.barDefaultFontPath
-    cb.timer:SetFont(tP, db.timerFontSize, outline)
+    cb.timer:SetFont(tP, db.timerFontSize, fontOutlineFlag)
     cb.timer:SetTextColor(r, g, b, a)
+
+    if outlineMode == "SHADOW" or outlineMode == "OUTLINESHADOW" then
+        local thickness = db.shadowThickness or 1
+        local shadowX = (db.shadowOffsetX or 1) * thickness
+        local shadowY = (db.shadowOffsetY or -1) * thickness
+        local sr, sg, sb, sa = unpack(db.shadowColor or { 0, 0, 0, 1 })
+        cb.spellName:SetShadowOffset(shadowX, shadowY)
+        cb.spellName:SetShadowColor(sr, sg, sb, sa)
+        cb.timer:SetShadowOffset(shadowX, shadowY)
+        cb.timer:SetShadowColor(sr, sg, sb, sa)
+    else
+        cb.spellName:SetShadowOffset(0, 0)
+        cb.spellName:SetShadowColor(0, 0, 0, 0)
+        cb.timer:SetShadowOffset(0, 0)
+        cb.timer:SetShadowColor(0, 0, 0, 0)
+    end
 end
 
 function AscensionCastBar:updateTextVisibility()

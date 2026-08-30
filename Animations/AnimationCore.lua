@@ -143,6 +143,17 @@ function AscensionCastBar:hideAllSparkElements()
     end
 end
 
+function AscensionCastBar:updateSparkVisibility()
+    local cb = self.castBar
+    if not cb or not self.db then return end
+    local db = self.db.profile
+    if not db then return end
+
+    if not db.enableSpark then
+        self:hideAllSparkElements()
+    end
+end
+
 function AscensionCastBar:cleanupOverlays()
     local cb = self.castBar
     if not cb or not self.db then return end

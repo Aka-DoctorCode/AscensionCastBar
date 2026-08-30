@@ -60,6 +60,10 @@ AscensionCastBar.defaults = {
         spellNameFontLSM = "Expressway, Bold",
         timerFontLSM = "Boris Black Bloxx",
         outline = "OUTLINE",
+        shadowThickness = 1,
+        shadowOffsetX = 1,
+        shadowOffsetY = -1,
+        shadowColor = { 0, 0, 0, 1 },
         useSharedColor = true,
         timerColor = { 0.8, 1, 0.95, 1 },
         detachText = false,
@@ -708,11 +712,74 @@ function AscensionCastBar:setupOptions()
                     outline = {
                         name = "Font Outline",
                         type = "select",
-                        values = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline", ["MONOCHROME"] = "Monochrome" },
+                        values = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline", ["SHADOW"] = "Shadow", ["OUTLINESHADOW"] = "Outline + Shadow", ["MONOCHROME"] = "Monochrome" },
                         order = 3,
                         get = function(info) return self.db.profile.outline end,
                         set = function(info, val)
                             self.db.profile.outline = val; self:applyFont()
+                        end,
+                    },
+                    shadowThickness = {
+                        name = "Shadow Thickness",
+                        type = "range",
+                        min = 1,
+                        max = 10,
+                        step = 1,
+                        order = 3.5,
+                        hidden = function() return self.db.profile.outline ~= "SHADOW" and self.db.profile.outline ~= "OUTLINESHADOW" end,
+                        get = function(info) return self.db.profile.shadowThickness end,
+                        set = function(info, val)
+                            self.db.profile.shadowThickness = val; self:applyFont()
+                        end,
+                    },
+                    shadowOffsetX = {
+                        name = "Shadow Offset X",
+                        type = "range",
+                        min = -10,
+                        max = 10,
+                        step = 1,
+                        order = 4,
+                        hidden = function() return self.db.profile.outline ~= "SHADOW" and self.db.profile.outline ~= "OUTLINESHADOW" end,
+                        get = function(info) return self.db.profile.shadowOffsetX end,
+                        set = function(info, val)
+                            self.db.profile.shadowOffsetX = val; self:applyFont()
+                        end,
+                    },
+                    shadowOffsetY = {
+                        name = "Shadow Offset Y",
+                        type = "range",
+                        min = -10,
+                        max = 10,
+                        step = 1,
+                        order = 5,
+                        hidden = function() return self.db.profile.outline ~= "SHADOW" and self.db.profile.outline ~= "OUTLINESHADOW" end,
+                        get = function(info) return self.db.profile.shadowOffsetY end,
+                        set = function(info, val)
+                            self.db.profile.shadowOffsetY = val; self:applyFont()
+                        end,
+                    },
+                    shadowColor = {
+                        name = "Shadow Color",
+                        type = "color",
+                        hasAlpha = true,
+                        order = 6,
+                        hidden = function() return self.db.profile.outline ~= "SHADOW" and self.db.profile.outline ~= "OUTLINESHADOW" end,
+                        get = function(info)
+                            local c = self.db.profile.shadowColor or defaults.shadowColor or { 0, 0, 0, 1 }
+                            return c[1], c[2], c[3], c[4]
+                        end,
+                        set = function(info, r, g, b, a)
+                            self.db.profile.shadowColor = { r, g, b, a }; self:applyFont()
+                        end,
+                    },
+                    shadowColorReset = {
+                        name = "Reset Shadow Color",
+                        type = "execute",
+                        width = "half",
+                        order = 7,
+                        hidden = function() return self.db.profile.outline ~= "SHADOW" and self.db.profile.outline ~= "OUTLINESHADOW" end,
+                        func = function()
+                            self.db.profile.shadowColor = { unpack(defaults.shadowColor or {0,0,0,1}) }; self:applyFont()
                         end,
                     },
                     headerName = { name = "Spell Name", type = "header", order = 10 },

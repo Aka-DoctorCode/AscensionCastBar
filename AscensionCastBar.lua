@@ -12,7 +12,7 @@ local AscensionCastBar = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-
 addonTable.main = AscensionCastBar -- Set this immediately!
 local LSM = LibStub("LibSharedMedia-3.0")
 
--- Inicialización explícita del namespace compartido
+-- Explicit initialization of the shared namespace
 addonTable.tabs = addonTable.tabs or {}
 addonTable.configUtils = nil
 addonTable.UIContext = nil
@@ -59,6 +59,17 @@ function AscensionCastBar:OnInitialize()
     self:createBar()
 end
 
+function AscensionCastBar:openOldConfig()
+    local acd = LibStub("AceConfigDialog-3.0", true)
+    if acd then
+        if acd.OpenFrames and acd.OpenFrames[ADDON_NAME] then
+            acd:Close(ADDON_NAME)
+        else
+            acd:Open(ADDON_NAME)
+        end
+    end
+end
+
 function AscensionCastBar:openConfig()
     if not addonTable.UIContext then
         local UIFactory = LibStub("AscensionSuit-UI", true)
@@ -77,6 +88,7 @@ function AscensionCastBar:openConfig()
         print("|cff7F13ECAscension Cast Bar:|r Configuration system not loaded correctly.")
     end
 end
+AscensionCastBar.openSuiteConfig = AscensionCastBar.openConfig
 
 function AscensionCastBar:toggleAttachmentTestMode()
     local db = self.db.profile
@@ -118,8 +130,9 @@ function AscensionCastBar:OnEnable()
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP", "handleCastStop")
         self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", "handleCastStart")
     end)
-    self:RegisterChatCommand("acb", "openConfig")
-    self:RegisterChatCommand("ascensioncastbar", "openConfig")
+    self:RegisterChatCommand("acb", "openOldConfig")
+    self:RegisterChatCommand("ascensioncastbar", "openOldConfig")
+    self:RegisterChatCommand("acb2", "openConfig")
     self:RegisterChatCommand("acbt", "toggleAttachmentTestMode")
     self:refreshConfig()
     if self.castBar then

@@ -48,8 +48,10 @@ local function initUIContext()
     if not UIContext then return end
     UIContext.newLayout = function(context, contentFrame)
         cleanupContent(contentFrame)
-        if context.layoutModel and context.layoutModel.reset then
-            return context.layoutModel:reset(contentFrame)
+        if not context.layoutModel then
+            context.layoutModel = context:createLayoutModel(contentFrame)
+        elseif context.layoutModel.reset then
+            context.layoutModel:reset(contentFrame)
         end
         return context.layoutModel
     end
@@ -184,14 +186,17 @@ function AscensionCastBar:CreateMainFrame()
     local menu = UIContext:createTabbedInterface(frame, tabNames, tabBuildFuncs, 1)
     
     -- Expose selectTab for external use
-    self.selectTab = function(_, tabID)
+    self.selectTab = function(firstArg, secondArg)
+        local targetID = (type(firstArg) == "string") and firstArg or secondArg
+        if not targetID then return end
         for i, item in ipairs(tabData) do
-            if item.id == tabID then
+            if item.id == targetID then
                 menu.selectTab(i)
                 break
             end
         end
     end
+    self.SelectTab = self.selectTab
 
     self.mainFrame = frame
 end

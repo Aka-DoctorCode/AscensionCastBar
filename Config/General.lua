@@ -20,10 +20,7 @@ local GeneralTab = {}
 function GeneralTab:render(layout, profile)
     
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: SETUP & TESTING
-    -- -------------------------------------------------------------------------------
-    -- -------------------------------------------------------------------------------
-    -- SECCIÓN: SETUP & TESTING
+    -- SECTION: SETUP & TESTING
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Setup & Testing")
     layout:beginSection()
@@ -64,7 +61,7 @@ function GeneralTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: DIMENSIONS
+    -- SECTION: DIMENSIONS
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Dimensions")
     layout:beginSection()
@@ -89,21 +86,21 @@ function GeneralTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: POSITIONING
+    -- SECTION: POSITIONING
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Positioning")
     layout:beginSection()
 
         local stratas = {
-    { label = "Tooltip",        value = "TOOLTIP" },
-    { label = "Fullscreen Dialog", value = "FULLSCREEN_DIALOG" },
-    { label = "Fullscreen",     value = "FULLSCREEN" },
-    { label = "Dialog",         value = "DIALOG" },
-    { label = "High",           value = "HIGH" },
-    { label = "Medium",         value = "MEDIUM" },
-    { label = "Low",            value = "LOW" },
-    { label = "Background",     value = "BACKGROUND" },
-}
+            { label = "Tooltip",        value = "TOOLTIP" },
+            { label = "Fullscreen Dialog", value = "FULLSCREEN_DIALOG" },
+            { label = "Fullscreen",     value = "FULLSCREEN" },
+            { label = "Dialog",         value = "DIALOG" },
+            { label = "High",           value = "HIGH" },
+            { label = "Medium",         value = "MEDIUM" },
+            { label = "Low",            value = "LOW" },
+            { label = "Background",     value = "BACKGROUND" },
+        }
 
         layout:dropdown(nil, "Frame Strata", nil, stratas,
             function() return profile.frameStrata or "MEDIUM" end,
@@ -113,7 +110,7 @@ function GeneralTab:render(layout, profile)
             end
         )
 
-        layout:checkbox(nil, "Attach to UI Frame", "Ancla la barra a elementos de la interfaz (como el marco de jugador) automáticamente.",
+        layout:checkbox(nil, "Attach to UI Frame", "Automatically anchors the cast bar to UI elements (such as player frame).",
             function() return profile.attachToCDM end,
             function(val)
                 profile.attachToCDM = val
@@ -124,7 +121,7 @@ function GeneralTab:render(layout, profile)
         )
 
         if profile.attachToCDM then
-            layout:checkbox(nil, "Test Attachment", "Cambia entre probar el anclaje automático (ON) o la posición manual (OFF).",
+            layout:checkbox(nil, "Test Attachment", "Toggle between testing automatic attachment (ON) or manual position (OFF).",
                 function() return profile.testAttached end,
                 function(val)
                     profile.testAttached = val
@@ -133,7 +130,7 @@ function GeneralTab:render(layout, profile)
                     AscensionCastBar:updateAnchor()
                 end
             )
-            -- Configuración de Anclaje Automático
+            -- Automatic Attachment Configuration
             local cdmTargets = {
                 { label = "Player Frame", value = "PlayerFrame" },
                 { label = "Personal Resource Display", value = "PersonalResource" },
@@ -180,7 +177,7 @@ function GeneralTab:render(layout, profile)
                 end
             )
         else
-            -- Configuración de Anclaje Manual
+            -- Manual Attachment Configuration
             local anchors = {
                 { label = "Center", value = "CENTER" },
                 { label = "Top",    value = "TOP" },
@@ -224,5 +221,5 @@ function GeneralTab:render(layout, profile)
     layout:endSection()
 end
 
--- Registrar el módulo de la pestaña
+-- Register tab
 addonTable.tabs["general"] = GeneralTab

@@ -21,7 +21,7 @@ function VisualFXTab:render(layout, profile)
     if not defaults then return end
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: MAIN STYLE
+    -- SECTION: MAIN STYLE
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Animation Style")
     layout:beginSection()
@@ -51,22 +51,22 @@ function VisualFXTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: GLOBAL GLOW & OFFSETS
+    -- SECTION: GLOBAL GLOW & OFFSETS
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Global Glow & Offsets")
     layout:beginSection()
 
-        layout:colorPicker(nil, "Global Glow Color",
+        layout:colorPicker(nil, "Global Glow Color", nil,
             function() return unpack(profile.glowColor or defaults.glowColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.glowColor = { r, g, b, a }
                 AscensionCastBar:updateSparkColors()
-            end, nil, true
+            end
         )
-        layout:button(nil, "Reset Glow Color", 150, 20, nil, function()
+        layout:button(nil, "Reset Glow Color", "", 160, 24, nil, function()
             profile.glowColor = { unpack(defaults.glowColor or {1,1,1,1}) }
             AscensionCastBar:updateSparkColors()
-            AscensionCastBar:SelectTab("visualfx")
+            AscensionCastBar:selectTab("visualfx")
         end)
 
         layout:slider(nil, "Glow Intensity", 0, 5, 0.1,
@@ -98,32 +98,33 @@ function VisualFXTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: SPARK SETTINGS
+    -- SECTION: SPARK HEAD
     -- -------------------------------------------------------------------------------
-    layout:header(nil, "Spark Settings")
+    layout:header(nil, "Spark Head")
     layout:beginSection()
         
-        layout:checkbox(nil, "Enable Spark", nil,
+        layout:checkbox(nil, "Enable Spark Head", nil,
             function() return profile.enableSpark end,
             function(val)
                 profile.enableSpark = val
+                AscensionCastBar:updateSparkVisibility()
                 AscensionCastBar:updateSparkSize()
-                AscensionCastBar:SelectTab("visualfx")
+                AscensionCastBar:selectTab("visualfx")
             end
         )
 
         if profile.enableSpark then
-            layout:colorPicker(nil, "Spark Head Color",
+            layout:colorPicker(nil, "Spark Head Color", nil,
                 function() return unpack(profile.sparkColor or defaults.sparkColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.sparkColor = { r, g, b, a }
                     AscensionCastBar:updateSparkColors()
-                end, nil, true
+                end
             )
-            layout:button(nil, "Reset Spark Color", 150, 20, nil, function()
+            layout:button(nil, "Reset Spark Color", "", 160, 24, nil, function()
                 profile.sparkColor = { unpack(defaults.sparkColor or {1,1,1,1}) }
                 AscensionCastBar:updateSparkColors()
-                AscensionCastBar:SelectTab("visualfx")
+                AscensionCastBar:selectTab("visualfx")
             end)
 
             layout:slider(nil, "Spark Intensity", 0, 5, 0.05,
@@ -147,7 +148,7 @@ function VisualFXTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: FINE TUNE ANIMATION
+    -- SECTION: FINE TUNE ANIMATION
     -- -------------------------------------------------------------------------------
     local currentStyle = profile.animStyle
     if currentStyle and currentStyle ~= "Comet" and profile.animationParams[currentStyle] then
@@ -266,7 +267,7 @@ function VisualFXTab:render(layout, profile)
     end
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: MOTION TAILS
+    -- SECTION: MOTION TAILS
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Motion Tails")
     layout:beginSection()
@@ -276,34 +277,32 @@ function VisualFXTab:render(layout, profile)
             function(val)
                 profile.enableTails = val
                 AscensionCastBar:updateSparkColors()
-                AscensionCastBar:SelectTab("visualfx")
+                AscensionCastBar:selectTab("visualfx")
             end
         )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIONES DINÁMICAS: Configuración de cada Capa (1 a 4)
+    -- SECTION: TAIL LAYERS (1 to 4)
     -- -------------------------------------------------------------------------------
     if profile.enableTails then
         for i = 1, 4 do
             layout:header(nil, "Tail Layer " .. i)
             layout:beginSection()
 
-                -- Color de la capa
-                layout:colorPicker("TailColor_" .. i, "Color",
+                layout:colorPicker("TailColor_" .. i, "Color", nil,
                     function() return unpack(profile["tail" .. i .. "Color"] or defaults["tail" .. i .. "Color"] or {1,1,1,1}) end,
                     function(r, g, b, a)
                         profile["tail" .. i .. "Color"] = { r, g, b, a }
                         AscensionCastBar:updateSparkColors()
-                    end, nil, true
+                    end
                 )
-                layout:button(nil, "Reset Tail " .. i .. " Color", 150, 20, nil, function()
+                layout:button(nil, "Reset Tail " .. i .. " Color", "", 160, 24, nil, function()
                     profile["tail" .. i .. "Color"] = { unpack(defaults["tail" .. i .. "Color"] or {1,1,1,1}) }
                     AscensionCastBar:updateSparkColors()
-                    AscensionCastBar:SelectTab("visualfx")
+                    AscensionCastBar:selectTab("visualfx")
                 end)
 
-                -- Longitud de la estela
                 layout:slider("TailLength_" .. i, "Length", 10, 500, 5,
                     function() return profile["tail" .. i .. "Length"] end,
                     function(val)
@@ -312,7 +311,6 @@ function VisualFXTab:render(layout, profile)
                     end
                 )
 
-                -- Intensidad/Opacidad
                 layout:slider("TailIntensity_" .. i, "Intensity", 0, 5, 0.05,
                     function() return profile["tail" .. i .. "Intensity"] end,
                     function(val)
@@ -325,11 +323,11 @@ function VisualFXTab:render(layout, profile)
         end
     end
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: MAINTENANCE
+    -- SECTION: MAINTENANCE
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Maintenance")
     layout:beginSection()
-        layout:button(nil, "Reset Animation Defaults", 250, nil, nil, function()
+        layout:button(nil, "Reset Animation Defaults", "", 250, 24, nil, function()
             local currentStyle = profile.animStyle
             if currentStyle and defaults.animationParams[currentStyle] then
                 profile.animationParams[currentStyle] = CopyTable(AscensionCastBar.animationStyleParams[currentStyle])
@@ -352,10 +350,10 @@ function VisualFXTab:render(layout, profile)
 
             AscensionCastBar:updateSparkColors()
             AscensionCastBar:updateSparkSize()
-            AscensionCastBar:SelectTab("visualfx")
+            AscensionCastBar:selectTab("visualfx")
         end)
     layout:endSection()
 end
 
--- Registrar la pestaña
+-- Register tab
 addonTable.tabs["visualfx"] = VisualFXTab

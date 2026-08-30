@@ -52,14 +52,14 @@ function AppearanceTab:render(layout, profile)
         )
 
         if not profile.useClassColor then
-            layout:colorPicker(nil, "Bar Color",
+            layout:colorPicker(nil, "Bar Color", nil,
                 function() return unpack(profile.barColor or defaults.barColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.barColor = { r, g, b, a }
                     AscensionCastBar:updateBarColor()
-                end, nil, true
+                end
             )
-            layout:button(nil, "Reset Bar Color", 120, 20, nil, function()
+            layout:button(nil, "Reset Bar Color", "", 140, 24, nil, function()
                 profile.barColor = { unpack(defaults.barColor or {1,1,1,1}) }
                 AscensionCastBar:updateBarColor()
                 AscensionCastBar:selectTab("castbar")
@@ -67,14 +67,14 @@ function AppearanceTab:render(layout, profile)
         end
 
         -- Background Color (BG)
-        layout:colorPicker(nil, "Background Color",
+        layout:colorPicker(nil, "Background Color", nil,
             function() return unpack(profile.bgColor or defaults.bgColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.bgColor = { r, g, b, a }
                 AscensionCastBar:updateBackground()
-            end, nil, true
+            end
         )
-        layout:button(nil, "Reset Background", 120, 20, nil, function()
+        layout:button(nil, "Reset Background", "", 140, 24, nil, function()
             profile.bgColor = { unpack(defaults.bgColor or {1,1,1,1}) }
             AscensionCastBar:updateBackground()
             AscensionCastBar:selectTab("castbar")
@@ -97,14 +97,14 @@ function AppearanceTab:render(layout, profile)
         )
 
         if profile.borderEnabled then
-            layout:colorPicker(nil, "Border Color",
+            layout:colorPicker(nil, "Border Color", nil,
                 function() return unpack(profile.borderColor or defaults.borderColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.borderColor = { r, g, b, a }
                     AscensionCastBar:updateBorder()
-                end, nil, true
+                end
             )
-            layout:button(nil, "Reset Border Color", 120, 20, nil, function()
+            layout:button(nil, "Reset Border Color", "", 140, 24, nil, function()
                 profile.borderColor = { unpack(defaults.borderColor or {1,1,1,1}) }
                 AscensionCastBar:updateBorder()
                 AscensionCastBar:selectTab("castbar")
@@ -126,7 +126,7 @@ function AppearanceTab:render(layout, profile)
     layout:header(nil, "Spell Icon")
     layout:beginSection()
         
-        layout:checkbox(nil, "Show Icon", "Muestra el icono del hechizo que se está casteando.",
+        layout:checkbox(nil, "Show Icon", "Show the icon of the currently casting spell.",
             function() return profile.showIcon end,
             function(val)
                 profile.showIcon = val
@@ -136,7 +136,7 @@ function AppearanceTab:render(layout, profile)
         )
 
         if profile.showIcon then
-            layout:checkbox(nil, "Detach Icon", "Separa el icono de la barra para moverlo libremente.",
+            layout:checkbox(nil, "Detach Icon", "Detach the icon from the bar to position it independently.",
                 function() return profile.detachIcon end,
                 function(val)
                     profile.detachIcon = val

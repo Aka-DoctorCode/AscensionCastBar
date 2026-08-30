@@ -20,64 +20,60 @@ function ProfilesTab:render(layout, profile)
     local db = AscensionCastBar.db
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: ACTIVE PROFILE
-    -- -------------------------------------------------------------------------------
-    -- -------------------------------------------------------------------------------
-    -- SECCIÓN: ACTIVE PROFILE
+    -- SECTION: ACTIVE PROFILE
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Profile Management")
     layout:header(nil, "Current Profile: |cff00ff00" .. db:GetCurrentProfile() .. "|r")
     layout:beginSection()
 
-        -- Selector de Perfil existente
+        -- Existing profiles selector
         local profiles = db:GetProfiles()
         local profileList = {}
         for _, name in ipairs(profiles) do
-            profileList[name] = name
+            table.insert(profileList, { label = name, value = name })
         end
 
         layout:dropdown(nil, "Switch to Profile", nil, profileList,
             function() return db:GetCurrentProfile() end,
             function(val)
                 db:SetProfile(val)
-                -- Refrescar toda la UI tras el cambio de perfil
-                AscensionCastBar:refreshConfig() 
+                AscensionCastBar:refreshConfig()
+                AscensionCastBar:selectTab("profiles")
             end
         )
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: MAINTENANCE (Reset & Copy)
+    -- SECTION: MAINTENANCE (Reset & Copy)
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Maintenance")
     layout:beginSection()
 
-        -- Botón: Resetear Perfil actual
-        layout:button(nil, "Reset Current Profile", nil, nil, nil, function()
+        layout:button(nil, "Reset Current Profile", "", 200, 24, nil, function()
             StaticPopup_Show("ASCENSION_CASTBAR_RESET_CONFIRM")
         end)
 
-        -- Botón: Crear Nuevo Perfil (Usando el prompt de Blizzard)
-        layout:button(nil, "Create New Profile", nil, nil, nil, function()
+        layout:button(nil, "Create New Profile", "", 200, 24, nil, function()
             StaticPopup_Show("ASCENSION_CASTBAR_NEW_PROFILE")
         end)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: INFORMATION
+    -- SECTION: INFORMATION
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Addon Info")
     layout:header(nil, "Author: Aka-DoctorCode")
     layout:header(nil, "Version: " .. (C_AddOns.GetAddOnMetadata(addonName, "Version") or "4.7"))
     layout:beginSection()
         
-        layout:button(nil, "Open Advanced Ace3 Profiles", 220, nil, nil, function()
-            -- Abre el menú estándar de Ace3 por si necesitan borrar o copiar perfiles específicos
+        layout:button(nil, "Open Advanced Ace3 Profiles", "", 240, 24, nil, function()
             if AscensionCastBar and AscensionCastBar.optionsFrame then
+                local opt = AscensionCastBar.optionsFrame
                 if Settings and Settings.OpenToCategory then
-                    Settings.OpenToCategory(AscensionCastBar.optionsFrame.name)
+                    local catID = (opt.GetID and opt:GetID()) or opt.ID or opt.name
+                    pcall(Settings.OpenToCategory, catID)
                 elseif _G["InterfaceOptionsFrame_OpenToCategory"] then
-                    _G["InterfaceOptionsFrame_OpenToCategory"](AscensionCastBar.optionsFrame)
+                    pcall(_G["InterfaceOptionsFrame_OpenToCategory"], opt)
                 end
             end
         end)
@@ -85,7 +81,7 @@ function ProfilesTab:render(layout, profile)
 end
 
 -- -------------------------------------------------------------------------------
--- POPUPS DE CONFIRMACIÓN (Seguridad)
+-- CONFIRMATION POPUPS
 -- -------------------------------------------------------------------------------
 StaticPopupDialogs["ASCENSION_CASTBAR_RESET_CONFIRM"] = {
     text = "Are you sure you want to reset your current profile? All customizations will be lost.",
@@ -94,6 +90,7 @@ StaticPopupDialogs["ASCENSION_CASTBAR_RESET_CONFIRM"] = {
     OnAccept = function()
         AscensionCastBar.db:ResetProfile()
         AscensionCastBar:refreshConfig()
+        if AscensionCastBar.selectTab then AscensionCastBar:selectTab("profiles") end
     end,
     timeout = 0,
     whileDead = true,
@@ -110,6 +107,7 @@ StaticPopupDialogs["ASCENSION_CASTBAR_NEW_PROFILE"] = {
         if name and name ~= "" then
             AscensionCastBar.db:SetProfile(name)
             AscensionCastBar:refreshConfig()
+            if AscensionCastBar.selectTab then AscensionCastBar:selectTab("profiles") end
         end
     end,
     timeout = 0,
@@ -117,5 +115,5 @@ StaticPopupDialogs["ASCENSION_CASTBAR_NEW_PROFILE"] = {
     hideOnEscape = true,
 }
 
--- Registrar la pestaña
+-- Register tab
 addonTable.tabs["profiles"] = ProfilesTab

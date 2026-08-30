@@ -24,15 +24,12 @@ function TextTab:render(layout, profile)
     if not defaults then return end
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: GLOBAL FONT SETTINGS
-    -- -------------------------------------------------------------------------------
-    -- -------------------------------------------------------------------------------
-    -- SECCIÓN: GLOBAL FONT SETTINGS
+    -- SECTION: GLOBAL FONT SETTINGS
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Global Font Settings")
     layout:beginSection()
         
-        -- Selector de Fuente (LSM)
+        -- Font Face (LSM)
         local fonts = {}
         for _, name in ipairs(LSM:List("font")) do
             table.insert(fonts, { label = name, value = name })
@@ -46,29 +43,77 @@ function TextTab:render(layout, profile)
             end
         )
 
-        -- Outline (Borde de fuente)
+        -- Font Outline / Shadow
         layout:dropdown(nil, "Font Outline", nil,
             { 
-                { label = "None",          value = "NONE" }, 
-                { label = "Outline",       value = "OUTLINE" }, 
-                { label = "Thick Outline", value = "THICKOUTLINE" }, 
-                { label = "Monochrome",    value = "MONOCHROME" } 
+                { label = "None",             value = "NONE" }, 
+                { label = "Outline",          value = "OUTLINE" }, 
+                { label = "Thick Outline",    value = "THICKOUTLINE" }, 
+                { label = "Shadow",           value = "SHADOW" },
+                { label = "Outline + Shadow", value = "OUTLINESHADOW" },
+                { label = "Monochrome",       value = "MONOCHROME" } 
             },
             function() return profile.outline end,
             function(val)
+                local oldOutline = profile.outline
                 profile.outline = val
                 AscensionCastBar:applyFont()
+                local wasShadow = (oldOutline == "SHADOW" or oldOutline == "OUTLINESHADOW")
+                local isShadow = (val == "SHADOW" or val == "OUTLINESHADOW")
+                if wasShadow ~= isShadow then
+                    AscensionCastBar:selectTab("text")
+                end
             end
         )
+
+        if profile.outline == "SHADOW" or profile.outline == "OUTLINESHADOW" then
+            layout:stepper(nil, "Shadow Thickness", 1, 10, 1,
+                function() return profile.shadowThickness end,
+                function(val)
+                    profile.shadowThickness = val
+                    AscensionCastBar:applyFont()
+                end
+            )
+
+            layout:stepper(nil, "Shadow Offset X", -10, 10, 1,
+                function() return profile.shadowOffsetX end,
+                function(val)
+                    profile.shadowOffsetX = val
+                    AscensionCastBar:applyFont()
+                end
+            )
+
+            layout:stepper(nil, "Shadow Offset Y", -10, 10, 1,
+                function() return profile.shadowOffsetY end,
+                function(val)
+                    profile.shadowOffsetY = val
+                    AscensionCastBar:applyFont()
+                end
+            )
+
+            layout:colorPicker(nil, "Shadow Color", nil,
+                function() return unpack(profile.shadowColor or defaults.shadowColor or {0,0,0,1}) end,
+                function(r, g, b, a)
+                    profile.shadowColor = { r, g, b, a }
+                    AscensionCastBar:applyFont()
+                end
+            )
+
+            layout:button(nil, "Reset Shadow Color", "", 140, 24, nil, function()
+                profile.shadowColor = { unpack(defaults.shadowColor or {0,0,0,1}) }
+                AscensionCastBar:applyFont()
+                AscensionCastBar:selectTab("text")
+            end)
+        end
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: SPELL NAME (Configuración del nombre del hechizo)
+    -- SECTION: SPELL NAME
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Spell Name")
     layout:beginSection()
         
-        layout:checkbox(nil, "Show Name", "Muestra el nombre del hechizo en la barra.",
+        layout:checkbox(nil, "Show Name", "Show spell name on the cast bar.",
             function() return profile.showSpellText end,
             function(val)
                 profile.showSpellText = val
@@ -76,7 +121,7 @@ function TextTab:render(layout, profile)
             end
         )
 
-        layout:checkbox(nil, "Truncate Name", "Recorta los nombres largos para que no se salgan de la barra.",
+        layout:checkbox(nil, "Truncate Name", "Truncate long spell names to fit the bar.",
             function() return profile.truncateSpellName end,
             function(val) 
                 profile.truncateSpellName = val 
@@ -99,14 +144,14 @@ function TextTab:render(layout, profile)
             end
         )
 
-        layout:colorPicker(nil, "Color",
+        layout:colorPicker(nil, "Color", nil,
             function() return unpack(profile.fontColor or defaults.fontColor or {1,1,1,1}) end,
             function(r, g, b, a)
                 profile.fontColor = { r, g, b, a }
                 AscensionCastBar:applyFont()
-            end, nil, true
+            end
         )
-        layout:button(nil, "Reset Text Color", 120, 20, nil, function()
+        layout:button(nil, "Reset Text Color", "", 140, 24, nil, function()
             profile.fontColor = { unpack(defaults.fontColor or {1,1,1,1}) }
             AscensionCastBar:applyFont()
             AscensionCastBar:selectTab("text")
@@ -114,17 +159,17 @@ function TextTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: TIMER (Configuración del tiempo)
+    -- SECTION: TIMER
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Timer")
     layout:beginSection()
         
-        layout:checkbox(nil, "Show Timer", "Muestra el tiempo restante o transcurrido.",
+        layout:checkbox(nil, "Show Timer", "Show remaining or elapsed cast time.",
             function() return profile.showTimerText end,
             function(val) profile.showTimerText = val end
         )
 
-        layout:checkbox(nil, "Hide on Channel", "Oculta el temporizador solo cuando estás canalizando.",
+        layout:checkbox(nil, "Hide on Channel", "Hide timer text when channeling.",
             function() return profile.hideTimerOnChannel end,
             function(val) profile.hideTimerOnChannel = val end
         )
@@ -147,7 +192,7 @@ function TextTab:render(layout, profile)
             end
         )
 
-        layout:checkbox(nil, "Use Shared Color", "Usa el mismo color que el nombre del hechizo.",
+        layout:checkbox(nil, "Use Shared Color", "Use the same color as the spell name.",
             function() return profile.useSharedColor end,
             function(val)
                 profile.useSharedColor = val
@@ -157,14 +202,14 @@ function TextTab:render(layout, profile)
         )
 
         if not profile.useSharedColor then
-            layout:colorPicker(nil, "Timer Color",
+            layout:colorPicker(nil, "Timer Color", nil,
                 function() return unpack(profile.timerColor or defaults.timerColor or {1,1,1,1}) end,
                 function(r, g, b, a)
                     profile.timerColor = { r, g, b, a }
                     AscensionCastBar:applyFont()
-                end, nil, true
+                end
             )
-            layout:button(nil, "Reset Timer Color", 120, 20, nil, function()
+            layout:button(nil, "Reset Timer Color", "", 140, 24, nil, function()
                 profile.timerColor = { unpack(defaults.timerColor or {1,1,1,1}) }
                 AscensionCastBar:applyFont()
                 AscensionCastBar:selectTab("text")
@@ -173,12 +218,12 @@ function TextTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECCIÓN: POSITIONING & BACKDROP
+    -- SECTION: POSITIONING & BACKDROP
     -- -------------------------------------------------------------------------------
     layout:header(nil, "Positioning & Backdrop")
     layout:beginSection()
 
-    layout:checkbox(nil, "Detach Text", "Permite mover el texto a una posición distinta a la de la barra.",
+    layout:checkbox(nil, "Detach Text", "Detach text positioning from the cast bar.",
         function() return profile.detachText end,
         function(val)
             profile.detachText = val
@@ -213,7 +258,7 @@ function TextTab:render(layout, profile)
         )
     end
 
-    layout:checkbox(nil, "Enable Backdrop", "Añade un fondo oscuro detrás del texto para mejorar la lectura.",
+    layout:checkbox(nil, "Enable Backdrop", "Show backdrop behind text to improve readability.",
         function() return profile.textBackdropEnabled end,
         function(val)
             profile.textBackdropEnabled = val
@@ -223,14 +268,14 @@ function TextTab:render(layout, profile)
     )
 
     if profile.textBackdropEnabled then
-        layout:colorPicker(nil, "Backdrop Color",
+        layout:colorPicker(nil, "Backdrop Color", nil,
             function() return unpack(profile.textBackdropColor or defaults.textBackdropColor or {0,0,0,0.5}) end,
             function(r, g, b, a)
                 profile.textBackdropColor = { r, g, b, a }
                 AscensionCastBar:updateTextLayout()
-            end, nil, true
+            end
         )
-        layout:button(nil, "Reset Backdrop Color", 120, 20, nil, function()
+        layout:button(nil, "Reset Backdrop Color", "", 140, 24, nil, function()
             profile.textBackdropColor = { unpack(defaults.textBackdropColor or {0,0,0,0.5}) }
             AscensionCastBar:updateTextLayout()
             AscensionCastBar:selectTab("text")
@@ -239,5 +284,5 @@ function TextTab:render(layout, profile)
     layout:endSection()
 end
 
--- Registrar la pestaña
+-- Register tab
 addonTable.tabs["text"] = TextTab
