@@ -55,9 +55,13 @@ function AscensionCastBar:updateTicks(spellID, numStages, duration)
 
     local c = db.channelTicksColor
     local thickness = db.channelTicksThickness or 1
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
     local width = self.castBar:GetWidth()
+    local height = self.castBar:GetHeight()
 
-    if width <= 10 then width = db.manualWidth or 270 end
+    if width <= 5 then width = db.manualWidth or 270 end
+    if height <= 5 then height = db.manualHeight or 24 end
 
     if isEmpowered then
         local numPips = (self.castBar.numStages and self.castBar.numStages - 1) or (count - 1)
@@ -75,30 +79,67 @@ function AscensionCastBar:updateTicks(spellID, numStages, duration)
                 self.castBar.ticks[i] = tick
             end
             tick:ClearAllPoints()
-            tick:SetPoint("CENTER", self.castBar, "LEFT", width * cumulative, 0)
-            tick:SetSize(thickness, self.castBar:GetHeight())
+            if isVertical then
+                local pos = height * cumulative
+                if isInverted then pos = height - pos end
+                tick:SetPoint("CENTER", self.castBar, "BOTTOM", 0, pos)
+                tick:SetSize(width, thickness)
+            else
+                local pos = width * cumulative
+                if isInverted then pos = width - pos end
+                tick:SetPoint("CENTER", self.castBar, "LEFT", pos, 0)
+                tick:SetSize(thickness, height)
+            end
             tick:SetColorTexture(c[1], c[2], c[3], c[4])
             tick:Show()
         end
     else
-        local w = width / count
-        for i = 1, count - 1 do
-            local tick = self.castBar.ticks[i]
-            if not tick then
-                tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
-                self.castBar.ticks[i] = tick
-            end
-            tick:ClearAllPoints()
-            tick:SetSize(thickness, self.castBar:GetHeight())
+        if isVertical then
+            local h = height / count
+            for i = 1, count - 1 do
+                local tick = self.castBar.ticks[i]
+                if not tick then
+                    tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
+                    self.castBar.ticks[i] = tick
+                end
+                tick:ClearAllPoints()
+                tick:SetSize(width, thickness)
 
-            local pos = w * i
-            if db.reverseChanneling then
-                pos = width - pos
-            end
+                local pos = h * i
+                if db.reverseChanneling then
+                    pos = height - pos
+                end
+                if isInverted then
+                    pos = height - pos
+                end
 
-            tick:SetPoint("CENTER", self.castBar, "LEFT", pos, 0)
-            tick:SetColorTexture(c[1], c[2], c[3], c[4])
-            tick:Show()
+                tick:SetPoint("CENTER", self.castBar, "BOTTOM", 0, pos)
+                tick:SetColorTexture(c[1], c[2], c[3], c[4])
+                tick:Show()
+            end
+        else
+            local w = width / count
+            for i = 1, count - 1 do
+                local tick = self.castBar.ticks[i]
+                if not tick then
+                    tick = self.castBar.ticksFrame:CreateTexture(nil, "OVERLAY")
+                    self.castBar.ticks[i] = tick
+                end
+                tick:ClearAllPoints()
+                tick:SetSize(thickness, height)
+
+                local pos = w * i
+                if db.reverseChanneling then
+                    pos = width - pos
+                end
+                if isInverted then
+                    pos = width - pos
+                end
+
+                tick:SetPoint("CENTER", self.castBar, "LEFT", pos, 0)
+                tick:SetColorTexture(c[1], c[2], c[3], c[4])
+                tick:Show()
+            end
         end
     end
 end

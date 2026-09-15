@@ -13,6 +13,7 @@
 *   **Channeling Logic:** Includes support Channeling and displays specific "ticks" for channeled spells like _Drain Life_ or _Penance_.
 *   **Visual Effects:** A robust animation system that allows for the customization of tails, glows, and sparks with various intensities and colors.
 *   **Integration:** Features built-in support to attach the cast bar to the in game Cooldown Manager (CDM) and action bar. If you are using [bartender 4](https://www.curseforge.com/wow/addons/bartender4) add on you can also attach the cast bar to most action bars. It also supports the [Coolinator](https://www.curseforge.com/wow/addons/coolinator) cooldown manager.
+*   **Orientation & Invert Fill:** Full support for Horizontal and Vertical orientations. Choose between standard fill (left-to-right, bottom-to-top) or inverted fill (right-to-left, top-to-bottom), with customizable vertical text layouts and 4-way icon positioning.
 *   **Other Details:** working latency display,
 
 ### **Menu:** go into the add-ons in game menu
@@ -23,8 +24,9 @@
 
 ### Características Principales
 
-*   **Soporte para Hechizos Empoderados:**  totalmente compatible con la mecánica de lanzamiento «potenciado», con indicadores visuales de fase y cambios de color dinámicos a medida que se carga el hechizo, así como una animación especial creciente que representa la potenciación de la habilidad lanzada.
+*   **Soporte para Hechizos Empoderados:**  totalmente compatible con la mecánica de lanzamiento «potenciado», con indicadores visuales de fase y cambios de color dinámicos a medida que se carga el hechizo, así como una animación especial creciente que representa la potenciación de la habilidad lanzada.
 *   **Personalización Avanzada:** los usuarios pueden modificar las dimensiones, los colores (incluidos los colores de clase) y las texturas de la barra.
+*   **Orientación y Dirección de Llenado Invertida:** soporte completo para orientaciones horizontal y vertical. Elige entre llenado estándar (izquierda a derecha, abajo a arriba) o invertido (derecha a izquierda, arriba a abajo), con diseños de texto vertical configurables y anclaje de icono en 4 direcciones.
 *   **Lógica de Canalización:** incluye compatibilidad con la canalización y muestra «ticks» específicos para hechizos canalizados como Drain Life o Penance.
 *   **Efectos Visuales:** un robusto sistema de animación que permite personalizar colas, resplandores y chispas con diversas intensidades y colores.
 *   **Integración:** cuenta con soporte integrado para adjuntar la barra de lanzamiento al gestor de tiempo de reutilización (CDM) y a la barra de acciones del juego. Si utilizas el complemento [Bartender 4](https://www.curseforge.com/wow/addons/bartender4), también puedes adjuntar la barra de lanzamiento a la mayoría de las barras de acción. También es compatible con el gestor de tiempos de reutilización [Coolinator](https://www.curseforge.com/wow/addons/coolinator).

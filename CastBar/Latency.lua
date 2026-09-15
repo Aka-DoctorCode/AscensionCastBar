@@ -43,16 +43,11 @@ function AscensionCastBar:updateLatencyBar(castBar)
     local frac = (ms / 1000) / (castBar.duration or 1)
     if frac > db.latencyMaxPercent then frac = db.latencyMaxPercent end
 
-    local w = castBar:GetWidth() * frac
-    local minW = 2
-    if w < minW then w = minW end
-    if w <= 0.5 then
-        castBar.latency:Hide()
-        return
-    end
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
+    local b = db.borderEnabled and db.borderThickness or 0
 
     castBar.latency:ClearAllPoints()
-    local b = db.borderEnabled and db.borderThickness or 0
 
     local isFilling = false
     if castBar.isEmpowered or castBar.casting then
@@ -61,15 +56,52 @@ function AscensionCastBar:updateLatencyBar(castBar)
         isFilling = true
     end
 
-    if not isFilling then
-        castBar.latency:SetPoint("TOPLEFT", castBar, "TOPLEFT", b, -b)
-        castBar.latency:SetPoint("BOTTOMLEFT", castBar, "BOTTOMLEFT", b, b)
+    if isVertical then
+        local h = castBar:GetHeight() * frac
+        local minH = 2
+        if h < minH then h = minH end
+        if h <= 0.5 then
+            castBar.latency:Hide()
+            return
+        end
+
+        local placeAtTop = isFilling
+        if isInverted then
+            placeAtTop = not placeAtTop
+        end
+
+        if placeAtTop then
+            castBar.latency:SetPoint("TOPLEFT", castBar, "TOPLEFT", b, -b)
+            castBar.latency:SetPoint("TOPRIGHT", castBar, "TOPRIGHT", -b, -b)
+        else
+            castBar.latency:SetPoint("BOTTOMLEFT", castBar, "BOTTOMLEFT", b, b)
+            castBar.latency:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -b, b)
+        end
+        castBar.latency:SetHeight(h)
     else
-        castBar.latency:SetPoint("TOPRIGHT", castBar, "TOPRIGHT", -b, -b)
-        castBar.latency:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -b, b)
+        local w = castBar:GetWidth() * frac
+        local minW = 2
+        if w < minW then w = minW end
+        if w <= 0.5 then
+            castBar.latency:Hide()
+            return
+        end
+
+        local placeAtRight = isFilling
+        if isInverted then
+            placeAtRight = not placeAtRight
+        end
+
+        if placeAtRight then
+            castBar.latency:SetPoint("TOPRIGHT", castBar, "TOPRIGHT", -b, -b)
+            castBar.latency:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", -b, b)
+        else
+            castBar.latency:SetPoint("TOPLEFT", castBar, "TOPLEFT", b, -b)
+            castBar.latency:SetPoint("BOTTOMLEFT", castBar, "BOTTOMLEFT", b, b)
+        end
+        castBar.latency:SetWidth(w)
     end
 
-    castBar.latency:SetWidth(w)
     local c = db.latencyColor
     castBar.latency:SetColorTexture(c[1], c[2], c[3], c[4])
     castBar.latency:Show()

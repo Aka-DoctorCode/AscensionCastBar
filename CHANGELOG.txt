@@ -1,10 +1,7 @@
 <h1>@project-version@</h1>
 <ul>
-    <li>Added Drop Shadow and Outline + Shadow text styling options with customizable thickness, offsets, and color.</li>
-    <li>Updated chat commands: <code>/acb</code> and <code>/ascensioncastbar</code> open the standalone Ace3 config window; <code>/acb2</code> opens the AscensionSuit modular config suite.</li>
-    <li>Audited and resolved AscensionSuit UI library integration across all configuration panels. A full replacement is being build but is comming from the a total overhoul of the AscensionSuit UI library itself</li>
-    <li>Added missing <code>updateSparkVisibility</code> animation handler.</li>
-    <li>Fixed profile selector dropdown formatting and dynamic menu refresh.</li>
+    <li>Added vertical bar fill orientation option with configurable fill direction (bottom-to-top or inverted top-to-bottom), multiple vertical text layouts (stacked inside, outside top/bottom/left/right), 4-way icon anchoring, and vertical animation support.</li>
+    <li>Added option to invert horizontal fill direction (filling right-to-left), with fully adapted spark travel, latency indicator, tick marks, and empower stage scaling.</li>
 </ul>
 <br>
 <h2>Positive feedback is always appreciated, it helps me to continue working on this project</h2>

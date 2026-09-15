@@ -169,6 +169,10 @@ AscensionCastBar.defaults = {
         -- Manual
         manualWidth = 270,
         manualHeight = 24,
+        orientation = "HORIZONTAL",
+        invertFill = false,
+        invertVerticalFill = false,
+        verticalTextLayout = "StackedInside",
         point = "CENTER",
         relativePoint = "CENTER",
         manualX = 0,

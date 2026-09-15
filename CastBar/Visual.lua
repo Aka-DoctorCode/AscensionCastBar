@@ -31,21 +31,50 @@ function AscensionCastBar:updateBorder()
     self.castBar.border.left:SetWidth(t); self.castBar.border.right:SetWidth(t)
 end
 
+function AscensionCastBar:updateBarOrientation()
+    local cb = self.castBar
+    if not cb or not self.db then return end
+    local db = self.db.profile
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
+
+    if isVertical then
+        cb:SetOrientation("VERTICAL")
+        if cb.SetRotatesTexture then cb:SetRotatesTexture(true) end
+        cb:SetReverseFill(isInverted)
+    else
+        cb:SetOrientation("HORIZONTAL")
+        if cb.SetRotatesTexture then cb:SetRotatesTexture(false) end
+        cb:SetReverseFill(isInverted)
+    end
+end
+
 function AscensionCastBar:updateBarColor()
     local db = self.db.profile
     local cb = self.castBar
     if not cb or not cb.glowFrame then return end
 
+    self:updateBarOrientation()
+
     cb.glowFrame:Hide()
+
+    local isVertical = (db.orientation == "VERTICAL")
 
     if cb.isEmpowered and cb.currentStage then
         local s = cb.currentStage
         cb:SetScale(1.0)
 
-        local baseWidth = cb.baseWidth or db.manualWidth or 270
-        local widthMultiplier = db.empowerWidthScale and (1 + ((s - 1) * 0.05)) or 1
-        local newWidth = baseWidth * widthMultiplier
-        cb:SetWidth(newWidth)
+        if isVertical then
+            local baseHeight = cb.baseHeight or db.manualHeight or 200
+            local heightMultiplier = db.empowerWidthScale and (1 + ((s - 1) * 0.05)) or 1
+            local newHeight = baseHeight * heightMultiplier
+            cb:SetHeight(newHeight)
+        else
+            local baseWidth = cb.baseWidth or db.manualWidth or 270
+            local widthMultiplier = db.empowerWidthScale and (1 + ((s - 1) * 0.05)) or 1
+            local newWidth = baseWidth * widthMultiplier
+            cb:SetWidth(newWidth)
+        end
         self:updateEmpowerGeometry()
 
         local c = db.empowerStage1Color or { 0, 1, 0, 1 }
@@ -68,7 +97,13 @@ function AscensionCastBar:updateBarColor()
         return
     else
         cb:SetScale(1.0)
-        cb:SetWidth(cb.baseWidth or db.manualWidth or 270)
+        if isVertical then
+            cb:SetHeight(cb.baseHeight or db.manualHeight or 200)
+            cb:SetWidth(cb.baseWidth or db.manualWidth or 24)
+        else
+            cb:SetWidth(cb.baseWidth or db.manualWidth or 270)
+            cb:SetHeight(cb.baseHeight or db.manualHeight or db.height or 24)
+        end
     end
 
     if cb.channeling and db.useChannelColor then
@@ -89,28 +124,41 @@ end
 
 function AscensionCastBar:updateIcon()
     local db = self.db.profile
+    local cb = self.castBar
+    if not cb or not cb.icon then return end
+
     if db.showIcon then
-        self.castBar.icon:Show()
-        local h = db.height
+        cb.icon:Show()
+        local isVertical = (db.orientation == "VERTICAL")
+        local defaultSize = isVertical and (cb:GetWidth() > 0 and cb:GetWidth() or 24) or (db.height or 24)
+
         if db.detachIcon then
-            self.castBar.icon:SetSize(db.iconSize, db.iconSize)
-            self.castBar.icon:ClearAllPoints()
-            if db.iconAnchor == "Left" then
-                self.castBar.icon:SetPoint("RIGHT", self.castBar, "LEFT", db.iconX, db.iconY)
+            cb.icon:SetSize(db.iconSize, db.iconSize)
+            cb.icon:ClearAllPoints()
+            if db.iconAnchor == "Top" then
+                cb.icon:SetPoint("BOTTOM", cb, "TOP", db.iconX, db.iconY)
+            elseif db.iconAnchor == "Bottom" then
+                cb.icon:SetPoint("TOP", cb, "BOTTOM", db.iconX, db.iconY)
+            elseif db.iconAnchor == "Right" then
+                cb.icon:SetPoint("LEFT", cb, "RIGHT", db.iconX, db.iconY)
             else
-                self.castBar.icon:SetPoint("LEFT", self.castBar, "RIGHT", db.iconX, db.iconY)
+                cb.icon:SetPoint("RIGHT", cb, "LEFT", db.iconX, db.iconY)
             end
         else
-            self.castBar.icon:SetSize(h, h)
-            self.castBar.icon:ClearAllPoints()
-            if db.iconAnchor == "Left" then
-                self.castBar.icon:SetPoint("LEFT", self.castBar, "LEFT", 0, 0)
+            cb.icon:SetSize(defaultSize, defaultSize)
+            cb.icon:ClearAllPoints()
+            if db.iconAnchor == "Top" then
+                cb.icon:SetPoint("TOP", cb, "TOP", 0, 0)
+            elseif db.iconAnchor == "Bottom" then
+                cb.icon:SetPoint("BOTTOM", cb, "BOTTOM", 0, 0)
+            elseif db.iconAnchor == "Right" then
+                cb.icon:SetPoint("RIGHT", cb, "RIGHT", 0, 0)
             else
-                self.castBar.icon:SetPoint("RIGHT", self.castBar, "RIGHT", 0, 0)
+                cb.icon:SetPoint("LEFT", cb, "LEFT", 0, 0)
             end
         end
     else
-        self.castBar.icon:Hide()
+        cb.icon:Hide()
     end
     if not db.detachText then self:updateTextLayout() end
 end

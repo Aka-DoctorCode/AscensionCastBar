@@ -145,6 +145,8 @@ end
 function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tailProgress, time, offset, w)
     castBar.sparkGlow:Hide()
     local params = db.animationParams.Flux or empty_table
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
 
     local dm = w * self:safeValue(params.driftMultiplier, 0.05)
     local jitterY = self:safeValue(params.jitterY, 3.5)
@@ -157,9 +159,21 @@ function AscensionCastBar.AnimationStyles.Flux(self, castBar, db, progress, tail
         local rY = (math_random() * jitterY * 2) - jitterY
         local rX = (math_random() * jitterX * 2) - jitterX
 
-        local xPos = -baseOff + drift + rX + (db.tailOffset or 0)
-
-        tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", xPos, rY)
+        if isVertical then
+            local dist = baseOff - drift + (db.tailOffset or 0)
+            local yPos = isInverted and dist or -dist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", rX, yPos)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(90) or math.rad(-90))
+            end
+        else
+            local dist = baseOff - drift + (db.tailOffset or 0)
+            local xPos = isInverted and dist or -dist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", xPos, rY)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(180) or 0)
+            end
+        end
         tex:SetAlpha(self:clampAlpha(intense) * tailProgress)
         tex:Show()
     end
@@ -175,21 +189,36 @@ end
 function AscensionCastBar.AnimationStyles.Helix(self, castBar, db, progress, tailProgress, time, offset, w)
     castBar.sparkGlow:Show()
     local params = db.animationParams.Helix or empty_table
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
 
     local dm = w * self:safeValue(params.driftMultiplier, 0.1)
-    local amp = db.height * self:safeValue(params.amplitude, 0.4)
+    local crossDim = isVertical and (castBar:GetWidth() > 0 and castBar:GetWidth() or db.manualWidth or 24) or (db.height or 24)
+    local amp = crossDim * self:safeValue(params.amplitude, 0.4)
     local waveSpeed = self:safeValue(params.waveSpeed, 8)
 
     local sv = math_sin(time * waveSpeed + (offset * 0.05)) * amp
     local cv = math_cos(time * waveSpeed + (offset * 0.05)) * amp
 
-    local function Helix(tex, baseOff, drift, yOff, intense)
+    local function Helix(tex, baseOff, drift, crossOff, intense)
         if not tex then return end
 
         tex:ClearAllPoints()
-        local xPos = -baseOff + drift + (db.tailOffset or 0)
-
-        tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", xPos, yOff)
+        if isVertical then
+            local dist = baseOff - drift - (db.tailOffset or 0)
+            local yPos = isInverted and dist or -dist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", crossOff, yPos)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(90) or math.rad(-90))
+            end
+        else
+            local dist = baseOff - drift - (db.tailOffset or 0)
+            local xPos = isInverted and dist or -dist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", xPos, crossOff)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(180) or 0)
+            end
+        end
         tex:SetAlpha(self:clampAlpha(intense) * tailProgress)
         tex:Show()
     end
@@ -348,14 +377,28 @@ function AscensionCastBar.AnimationStyles.Comet(self, castBar, db, progress, tai
     castBar.sparkGlow:Show()
     castBar.sparkGlow:SetAlpha(self:clampAlpha(db.glowIntensity))
     local params = db.animationParams.Comet or {}
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
 
     local function Comet(tex, rel_pos, int)
         if not tex then return end
 
         tex:ClearAllPoints()
-        local trailX = -(rel_pos * w) + (db.tailOffset or 0)
-
-        tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", trailX, 0)
+        if isVertical then
+            local trailDist = (rel_pos * w) - (db.tailOffset or 0)
+            local trailY = isInverted and trailDist or -trailDist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, trailY)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(90) or math.rad(-90))
+            end
+        else
+            local trailDist = (rel_pos * w) - (db.tailOffset or 0)
+            local trailX = isInverted and trailDist or -trailDist
+            tex:SetPoint("CENTER", castBar.sparkHead, "CENTER", trailX, 0)
+            if tex.SetRotation then
+                tex:SetRotation(isInverted and math.rad(180) or 0)
+            end
+        end
         tex:SetAlpha(self:clampAlpha(int) * tailProgress)
         tex:Show()
     end

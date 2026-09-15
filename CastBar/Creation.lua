@@ -127,11 +127,9 @@ end
 
 function AscensionCastBar:initializeTailMask()
     local cb = self.castBar
+    if not cb then return end
     if not cb.tailMask then
         cb.tailMask = CreateFrame("Frame", nil, cb)
-        cb.tailMask:SetPoint("LEFT", cb, "LEFT")
-        cb.tailMask:SetPoint("TOP", cb, "TOP")
-        cb.tailMask:SetPoint("BOTTOM", cb, "BOTTOM")
-        cb.tailMask:SetWidth(cb:GetWidth())
+        cb.tailMask:SetClipsChildren(true)
     end
 end

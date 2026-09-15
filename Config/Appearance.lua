@@ -146,8 +146,10 @@ function AppearanceTab:render(layout, profile)
 
             layout:dropdown(nil, "Position", nil, 
                 { 
-                    { label = "Left", value = "Left" }, 
-                    { label = "Right", value = "Right" } 
+                    { label = "Left",   value = "Left" }, 
+                    { label = "Right",  value = "Right" },
+                    { label = "Top",    value = "Top" },
+                    { label = "Bottom", value = "Bottom" },
                 },
                 function() return profile.iconAnchor end,
                 function(val)

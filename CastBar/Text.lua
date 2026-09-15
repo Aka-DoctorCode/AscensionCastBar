@@ -17,6 +17,8 @@ function AscensionCastBar:updateTextLayout()
     local cb = self.castBar
     if not cb or not cb.textCtx then return end
 
+    local isVertical = (db.orientation == "VERTICAL")
+
     if db.detachText then
         cb.textCtx:ClearAllPoints()
         cb.textCtx:SetPoint("CENTER", UIParent, "CENTER", db.textX, db.textY)
@@ -30,18 +32,87 @@ function AscensionCastBar:updateTextLayout()
         end
 
         cb.spellName:ClearAllPoints()
+        cb.spellName:SetJustifyH("LEFT")
         cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 5, 0)
         cb.spellName:SetPoint("RIGHT", cb.timer, "LEFT", -5, 0)
 
         cb.timer:ClearAllPoints()
+        cb.timer:SetJustifyH("RIGHT")
         cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", -5, 0)
+    elseif isVertical then
+        cb.textCtx:ClearAllPoints()
+        cb.textCtx.bg:SetColorTexture(0, 0, 0, 0)
+        cb.spellName:ClearAllPoints()
+        cb.timer:ClearAllPoints()
+
+        local iconH = 0
+        if db.showIcon and not db.detachIcon then
+            iconH = cb:GetWidth() > 0 and cb:GetWidth() or 24
+        end
+
+        local layoutMode = db.verticalTextLayout or "StackedInside"
+
+        if layoutMode == "OutsideTop" then
+            cb.textCtx:SetPoint("BOTTOM", cb, "TOP", 0, 4)
+            cb.textCtx:SetSize(db.textWidth or 200, (db.spellNameFontSize or 14) + 10)
+            cb.spellName:SetJustifyH("LEFT")
+            cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 0, 0)
+            cb.spellName:SetPoint("RIGHT", cb.timer, "LEFT", -4, 0)
+            cb.timer:SetJustifyH("RIGHT")
+            cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", 0, 0)
+        elseif layoutMode == "OutsideBottom" then
+            cb.textCtx:SetPoint("TOP", cb, "BOTTOM", 0, -4)
+            cb.textCtx:SetSize(db.textWidth or 200, (db.spellNameFontSize or 14) + 10)
+            cb.spellName:SetJustifyH("LEFT")
+            cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 0, 0)
+            cb.spellName:SetPoint("RIGHT", cb.timer, "LEFT", -4, 0)
+            cb.timer:SetJustifyH("RIGHT")
+            cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", 0, 0)
+        elseif layoutMode == "OutsideRight" then
+            cb.textCtx:SetPoint("LEFT", cb, "RIGHT", 8, 0)
+            cb.textCtx:SetSize(db.textWidth or 200, cb:GetHeight())
+            cb.spellName:SetJustifyH("LEFT")
+            cb.spellName:SetPoint("TOPLEFT", cb.textCtx, "TOPLEFT", 0, -4)
+            cb.timer:SetJustifyH("LEFT")
+            cb.timer:SetPoint("BOTTOMLEFT", cb.textCtx, "BOTTOMLEFT", 0, 4)
+        elseif layoutMode == "OutsideLeft" then
+            cb.textCtx:SetPoint("RIGHT", cb, "LEFT", -8, 0)
+            cb.textCtx:SetSize(db.textWidth or 200, cb:GetHeight())
+            cb.spellName:SetJustifyH("RIGHT")
+            cb.spellName:SetPoint("TOPRIGHT", cb.textCtx, "TOPRIGHT", 0, -4)
+            cb.timer:SetJustifyH("RIGHT")
+            cb.timer:SetPoint("BOTTOMRIGHT", cb.textCtx, "BOTTOMRIGHT", 0, 4)
+        elseif layoutMode == "Default" then
+            cb.textCtx:SetAllPoints(cb)
+            cb.spellName:SetJustifyH("LEFT")
+            cb.timer:SetJustifyH("RIGHT")
+            cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 5, 0)
+            cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", -5, 0)
+        else
+            -- "StackedInside"
+            cb.textCtx:SetAllPoints(cb)
+            local topPad = (db.iconAnchor == "Top" and iconH > 0) and (iconH + 4) or 4
+            local btmPad = (db.iconAnchor == "Bottom" and iconH > 0) and (iconH + 4) or 4
+
+            cb.spellName:SetJustifyH("CENTER")
+            cb.spellName:SetPoint("TOP", cb.textCtx, "TOP", 0, -topPad)
+            cb.spellName:SetPoint("LEFT", cb.textCtx, "LEFT", 2, 0)
+            cb.spellName:SetPoint("RIGHT", cb.textCtx, "RIGHT", -2, 0)
+
+            cb.timer:SetJustifyH("CENTER")
+            cb.timer:SetPoint("BOTTOM", cb.textCtx, "BOTTOM", 0, btmPad)
+            cb.timer:SetPoint("LEFT", cb.textCtx, "LEFT", 2, 0)
+            cb.timer:SetPoint("RIGHT", cb.textCtx, "RIGHT", -2, 0)
+        end
     else
         cb.textCtx:ClearAllPoints()
         cb.textCtx:SetAllPoints(cb)
         cb.textCtx.bg:SetColorTexture(0, 0, 0, 0)
 
         cb.spellName:ClearAllPoints()
+        cb.spellName:SetJustifyH("LEFT")
         cb.timer:ClearAllPoints()
+        cb.timer:SetJustifyH("RIGHT")
 
         local iconW = 0
         if db.showIcon and not db.detachIcon then iconW = db.height end

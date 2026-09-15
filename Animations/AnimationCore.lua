@@ -51,29 +51,61 @@ function AscensionCastBar:updateSparkSize()
 
     local db = self.db.profile
     if not db then return end
-    local sc, h = db.sparkScale or 1, db.height or 24
+    local isVertical = (db.orientation == "VERTICAL")
+    local sc = db.sparkScale or 1
+    local crossSize = isVertical and (cb:GetWidth() > 0 and cb:GetWidth() or db.manualWidth or 24) or (db.height or 24)
 
     if cb.sparkHead then
-        cb.sparkHead:SetSize(32 * sc, h * 2 * sc)
+        if isVertical then
+            cb.sparkHead:SetSize(crossSize * 2 * sc, 32 * sc)
+        else
+            cb.sparkHead:SetSize(32 * sc, crossSize * 2 * sc)
+        end
     end
     if cb.sparkGlow then
-        cb.sparkGlow:SetSize(190 * sc, h * 2.4)
+        if isVertical then
+            cb.sparkGlow:SetSize(crossSize * 2.4, 190 * sc)
+        else
+            cb.sparkGlow:SetSize(190 * sc, crossSize * 2.4)
+        end
     end
     if cb.sparkTail then
-        cb.sparkTail:SetSize(db.tail1Length * sc, h * 1.4)
+        if isVertical then
+            cb.sparkTail:SetSize(crossSize * 1.4, db.tail1Length * sc)
+        else
+            cb.sparkTail:SetSize(db.tail1Length * sc, crossSize * 1.4)
+        end
     end
     if cb.sparkTail2 then
-        cb.sparkTail2:SetSize(db.tail2Length * sc, h * 1.1)
+        if isVertical then
+            cb.sparkTail2:SetSize(crossSize * 1.1, db.tail2Length * sc)
+        else
+            cb.sparkTail2:SetSize(db.tail2Length * sc, crossSize * 1.1)
+        end
     end
     if cb.sparkTail3 then
-        cb.sparkTail3:SetSize(db.tail3Length * sc, h * 1.4)
+        if isVertical then
+            cb.sparkTail3:SetSize(crossSize * 1.4, db.tail3Length * sc)
+        else
+            cb.sparkTail3:SetSize(db.tail3Length * sc, crossSize * 1.4)
+        end
     end
     if cb.sparkTail4 then
-        cb.sparkTail4:SetSize(db.tail4Length * sc, h * 1.1)
+        if isVertical then
+            cb.sparkTail4:SetSize(crossSize * 1.1, db.tail4Length * sc)
+        else
+            cb.sparkTail4:SetSize(db.tail4Length * sc, crossSize * 1.1)
+        end
     end
 
     if cb.tailMask then
-        cb.tailMask:SetWidth(cb:GetWidth())
+        if isVertical then
+            cb.tailMask:SetHeight(cb:GetHeight())
+            cb.tailMask:SetWidth(cb:GetWidth())
+        else
+            cb.tailMask:SetWidth(cb:GetWidth())
+            cb.tailMask:SetHeight(cb:GetHeight())
+        end
     end
 end
 
@@ -222,51 +254,134 @@ function AscensionCastBar:updateSpark(passedProgress, tailProgress)
 
     self:cleanupOverlays()
     local tP = self:clampAlpha(tailProgress or visualProgress)
-
-    local w = castBar:GetWidth()
-    if w <= 0 then return end
-
-    local offset = w * visualProgress
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
     local time = GetTime()
 
-    local baseWidth = db.manualWidth or 270
-    local effOffset = (db.headLengthOffset or 0) * (w / math_max(baseWidth, 1))
-    local customOffsetX = (db.sparkOffset or 0) + effOffset
+    if isVertical then
+        local h = castBar:GetHeight()
+        if h <= 0 then return end
 
-    if castBar.sparkHead then
-        castBar.sparkHead:ClearAllPoints()
-        castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + customOffsetX, 0)
-        castBar.sparkHead:SetAlpha(self:clampAlpha(db.sparkIntensity))
-        castBar.sparkHead:Show()
-    end
+        local effectiveProgress = visualProgress
+        if isInverted then
+            effectiveProgress = 1 - visualProgress
+        end
 
-    if castBar.sparkGlow then
-        castBar.sparkGlow:ClearAllPoints()
-        castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
-    end
+        local offset = h * effectiveProgress
+        local baseHeight = db.manualHeight or 200
+        local effOffset = (db.headLengthOffset or 0) * (h / math_max(baseHeight, 1))
+        local customOffsetY = (db.sparkOffset or 0) + effOffset
 
-    if castBar.tailMask then
-        castBar.tailMask:SetWidth(math_max(0.001, offset))
-    end
+        if castBar.sparkHead then
+            castBar.sparkHead:ClearAllPoints()
+            castBar.sparkHead:SetPoint("CENTER", castBar, "BOTTOM", 0, offset + customOffsetY)
+            castBar.sparkHead:SetAlpha(self:clampAlpha(db.sparkIntensity))
+            if castBar.sparkHead.SetRotation then
+                castBar.sparkHead:SetRotation(0)
+            end
+            castBar.sparkHead:Show()
+        end
 
-    if not db.enableTails or (self.AnimationStyles and self.AnimationStyles.withoutTails[style]) then
-        if castBar.sparkTail then castBar.sparkTail:Hide() end
-        if castBar.sparkTail2 then castBar.sparkTail2:Hide() end
-        if castBar.sparkTail3 then castBar.sparkTail3:Hide() end
-        if castBar.sparkTail4 then castBar.sparkTail4:Hide() end
-    end
+        if castBar.sparkGlow then
+            castBar.sparkGlow:ClearAllPoints()
+            castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
+        end
 
-    local animFunc = self.AnimationStyles and self.AnimationStyles[style]
-    if animFunc and type(animFunc) == "function" then
-        local success, err = pcall(animFunc, self, castBar, db, visualProgress, tP, time, offset, w)
-        if not success then
+        if castBar.tailMask then
+            castBar.tailMask:ClearAllPoints()
+            if isInverted then
+                castBar.tailMask:SetPoint("TOPLEFT", castBar, "TOPLEFT", 0, 0)
+                castBar.tailMask:SetPoint("TOPRIGHT", castBar, "TOPRIGHT", 0, 0)
+                castBar.tailMask:SetHeight(math_max(0.001, h - offset))
+            else
+                castBar.tailMask:SetPoint("BOTTOMLEFT", castBar, "BOTTOMLEFT", 0, 0)
+                castBar.tailMask:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 0, 0)
+                castBar.tailMask:SetHeight(math_max(0.001, offset))
+            end
+        end
+
+        if not db.enableTails or (self.AnimationStyles and self.AnimationStyles.withoutTails[style]) then
+            if castBar.sparkTail then castBar.sparkTail:Hide() end
+            if castBar.sparkTail2 then castBar.sparkTail2:Hide() end
+            if castBar.sparkTail3 then castBar.sparkTail3:Hide() end
+            if castBar.sparkTail4 then castBar.sparkTail4:Hide() end
+        end
+
+        local animFunc = self.AnimationStyles and self.AnimationStyles[style]
+        if animFunc and type(animFunc) == "function" then
+            local success, err = pcall(animFunc, self, castBar, db, visualProgress, tP, time, offset, h)
+            if not success then
+                if self.AnimationStyles and self.AnimationStyles.Comet then
+                    self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, h)
+                end
+            end
+        else
             if self.AnimationStyles and self.AnimationStyles.Comet then
-                self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, w)
+                self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, h)
             end
         end
     else
-        if self.AnimationStyles and self.AnimationStyles.Comet then
-            self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, w)
+        local w = castBar:GetWidth()
+        if w <= 0 then return end
+
+        local effectiveProgress = visualProgress
+        if isInverted then
+            effectiveProgress = 1 - visualProgress
+        end
+
+        local offset = w * effectiveProgress
+
+        local baseWidth = db.manualWidth or 270
+        local effOffset = (db.headLengthOffset or 0) * (w / math_max(baseWidth, 1))
+        local customOffsetX = (db.sparkOffset or 0) + effOffset
+
+        if castBar.sparkHead then
+            castBar.sparkHead:ClearAllPoints()
+            castBar.sparkHead:SetPoint("CENTER", castBar, "LEFT", offset + customOffsetX, 0)
+            castBar.sparkHead:SetAlpha(self:clampAlpha(db.sparkIntensity))
+            if castBar.sparkHead.SetRotation then
+                castBar.sparkHead:SetRotation(math.rad(90))
+            end
+            castBar.sparkHead:Show()
+        end
+
+        if castBar.sparkGlow then
+            castBar.sparkGlow:ClearAllPoints()
+            castBar.sparkGlow:SetPoint("CENTER", castBar.sparkHead, "CENTER", 0, 0)
+        end
+
+        if castBar.tailMask then
+            castBar.tailMask:ClearAllPoints()
+            if isInverted then
+                castBar.tailMask:SetPoint("TOPRIGHT", castBar, "TOPRIGHT", 0, 0)
+                castBar.tailMask:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 0, 0)
+                castBar.tailMask:SetWidth(math_max(0.001, w - offset))
+            else
+                castBar.tailMask:SetPoint("TOPLEFT", castBar, "TOPLEFT", 0, 0)
+                castBar.tailMask:SetPoint("BOTTOMLEFT", castBar, "BOTTOMLEFT", 0, 0)
+                castBar.tailMask:SetWidth(math_max(0.001, offset))
+            end
+        end
+
+        if not db.enableTails or (self.AnimationStyles and self.AnimationStyles.withoutTails[style]) then
+            if castBar.sparkTail then castBar.sparkTail:Hide() end
+            if castBar.sparkTail2 then castBar.sparkTail2:Hide() end
+            if castBar.sparkTail3 then castBar.sparkTail3:Hide() end
+            if castBar.sparkTail4 then castBar.sparkTail4:Hide() end
+        end
+
+        local animFunc = self.AnimationStyles and self.AnimationStyles[style]
+        if animFunc and type(animFunc) == "function" then
+            local success, err = pcall(animFunc, self, castBar, db, visualProgress, tP, time, offset, w)
+            if not success then
+                if self.AnimationStyles and self.AnimationStyles.Comet then
+                    self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, w)
+                end
+            end
+        else
+            if self.AnimationStyles and self.AnimationStyles.Comet then
+                self.AnimationStyles.Comet(self, castBar, db, visualProgress, tP, time, offset, w)
+            end
         end
     end
 end

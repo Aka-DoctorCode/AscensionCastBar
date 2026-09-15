@@ -26,6 +26,10 @@ AscensionCastBar.defaults = {
         -- Manual
         manualWidth = 270,
         manualHeight = 24,
+        orientation = "HORIZONTAL",
+        invertFill = false,
+        invertVerticalFill = false,
+        verticalTextLayout = "StackedInside",
         point = "CENTER",
         relativePoint = "CENTER",
         manualX = 0,
@@ -277,32 +281,92 @@ function AscensionCastBar:setupOptions()
                         end,
                     },
 
-                    -- SECTION: SIZE
-                    headerSize = { name = "Dimensions", type = "header", order = 10 },
+                    -- SECTION: SIZE & ORIENTATION
+                    headerSize = { name = "Dimensions & Orientation", type = "header", order = 10 },
+                    orientation = {
+                        name = "Orientation",
+                        desc = "Select horizontal or vertical bar orientation.",
+                        type = "select",
+                        values = {
+                            ["HORIZONTAL"] = "Horizontal",
+                            ["VERTICAL"]   = "Vertical",
+                        },
+                        order = 10.1,
+                        get = function(info) return self.db.profile.orientation or "HORIZONTAL" end,
+                        set = function(info, val)
+                            self.db.profile.orientation = val
+                            self:updateBarOrientation()
+                            self:updateAnchor()
+                            self:updateSparkSize()
+                            self:updateIcon()
+                            self:updateTextLayout()
+                            self:updateTicks()
+                            self:updateLatency()
+                        end,
+                    },
+                    invertFill = {
+                        name = "Invert Fill Direction",
+                        desc = "Inverts bar fill direction (Right to Left for horizontal, Top to Bottom for vertical).",
+                        type = "toggle",
+                        width = "full",
+                        order = 10.2,
+                        get = function(info) return self.db.profile.invertFill or (self.db.profile.orientation == "VERTICAL" and self.db.profile.invertVerticalFill) or false end,
+                        set = function(info, val)
+                            self.db.profile.invertFill = val
+                            self.db.profile.invertVerticalFill = val
+                            self:updateBarOrientation()
+                            self:updateTicks()
+                            self:updateLatency()
+                        end,
+                    },
+                    verticalTextLayout = {
+                        name = "Vertical Text Layout",
+                        desc = "Arrangement of spell name and timer text in vertical mode.",
+                        type = "select",
+                        values = {
+                            ["StackedInside"] = "Stacked Inside",
+                            ["OutsideTop"]    = "Outside Top",
+                            ["OutsideBottom"] = "Outside Bottom",
+                            ["OutsideRight"]  = "Outside Right",
+                            ["OutsideLeft"]   = "Outside Left",
+                            ["Default"]       = "Default (Horizontal)",
+                        },
+                        order = 10.3,
+                        hidden = function() return self.db.profile.orientation ~= "VERTICAL" end,
+                        get = function(info) return self.db.profile.verticalTextLayout or "StackedInside" end,
+                        set = function(info, val)
+                            self.db.profile.verticalTextLayout = val
+                            self:updateTextLayout()
+                        end,
+                    },
                     manualWidth = {
                         name = "Bar Width",
                         type = "range",
-                        min = 50,
+                        min = 10,
                         max = 1000,
                         step = 1,
                         order = 11,
                         get = function(info) return self.db.profile.manualWidth end,
                         set = function(info, val)
-                            self.db.profile.manualWidth = val; self:updateAnchor()
+                            self.db.profile.manualWidth = val
+                            if self.castBar then self.castBar:SetWidth(val) end
+                            self:updateAnchor()
+                            self:updateSparkSize()
+                            self:updateIcon()
                         end,
                     },
                     height = {
                         name = "Bar Height",
                         type = "range",
                         min = 10,
-                        max = 150,
+                        max = 1000,
                         step = 1,
                         order = 12,
                         get = function(info) return self.db.profile.manualHeight end,
                         set = function(info, val)
                             self.db.profile.manualHeight = val
                             self.db.profile.height = val
-                            self.castBar:SetHeight(val)
+                            if self.castBar then self.castBar:SetHeight(val) end
                             self:updateSparkSize()
                             self:updateIcon()
                         end,
@@ -641,7 +705,12 @@ function AscensionCastBar:setupOptions()
                             iconAnchor = {
                                 name = "Position",
                                 type = "select",
-                                values = { ["Left"] = "Left", ["Right"] = "Right" },
+                                values = {
+                                    ["Left"]   = "Left",
+                                    ["Right"]  = "Right",
+                                    ["Top"]    = "Top",
+                                    ["Bottom"] = "Bottom",
+                                },
                                 order = 2,
                                 get = function(info) return self.db.profile.iconAnchor end,
                                 set = function(info, val)

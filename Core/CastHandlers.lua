@@ -175,8 +175,12 @@ function AscensionCastBar:addEmpowerStages(numStages)
 
     local db = self.db.profile
     local border = (db.borderEnabled and db.borderThickness) or 0
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
     local width = cb:GetWidth() or 270
+    local height = cb:GetHeight() or 24
     local usableW = math.max(1, width - (border * 2))
+    local usableH = math.max(1, height - (border * 2))
 
     local stageMaxMS = 0
     local durations = {}
@@ -192,21 +196,16 @@ function AscensionCastBar:addEmpowerStages(numStages)
     local cumMS = 0
     for i = 1, cb.numStages do
         local d = durations[i]
-        local leftPortion = cumMS / stageMaxMS
+        local startPortion = cumMS / stageMaxMS
         cumMS = cumMS + d
-        local rightPortion = cumMS / stageMaxMS
+        local endPortion = cumMS / stageMaxMS
 
-        local left = border + (usableW * leftPortion)
-        local right = border + (usableW * rightPortion)
-
-        -- Create/Get Tier
         local tier = cb.stageTiers[i]
         if not tier then
             tier = {}
             tier.tint = cb.empowerStageFrame:CreateTexture(nil, "ARTWORK", nil, 1)
             tier.tint:SetBlendMode("BLEND")
 
-            -- Simple Pulse Animation
             tier.pulse = tier.tint:CreateAnimationGroup()
             local a = tier.pulse:CreateAnimation("Alpha")
             a:SetFromAlpha(0.8)
@@ -218,15 +217,33 @@ function AscensionCastBar:addEmpowerStages(numStages)
         end
 
         tier.tint:ClearAllPoints()
-        tier.tint:SetPoint("TOPLEFT", cb, "TOPLEFT", left, -border)
-        tier.tint:SetPoint("BOTTOMRIGHT", cb, "BOTTOMLEFT", right, border)
+        if isVertical then
+            local p1 = border + (usableH * startPortion)
+            local p2 = border + (usableH * endPortion)
+            if isInverted then
+                tier.tint:SetPoint("TOPLEFT", cb, "TOPLEFT", border, -p1)
+                tier.tint:SetPoint("BOTTOMRIGHT", cb, "TOPRIGHT", -border, -p2)
+            else
+                tier.tint:SetPoint("BOTTOMLEFT", cb, "BOTTOMLEFT", border, p1)
+                tier.tint:SetPoint("TOPRIGHT", cb, "BOTTOMRIGHT", -border, p2)
+            end
+        else
+            local p1 = border + (usableW * startPortion)
+            local p2 = border + (usableW * endPortion)
+            if isInverted then
+                tier.tint:SetPoint("TOPRIGHT", cb, "TOPRIGHT", -p1, -border)
+                tier.tint:SetPoint("BOTTOMLEFT", cb, "BOTTOMRIGHT", -p2, border)
+            else
+                tier.tint:SetPoint("TOPLEFT", cb, "TOPLEFT", p1, -border)
+                tier.tint:SetPoint("BOTTOMRIGHT", cb, "BOTTOMLEFT", p2, border)
+            end
+        end
 
         local r, g, b, a = self:getStageTint(i)
         tier.tint:SetColorTexture(r, g, b, a)
         tier._baseAlpha = a
-        tier.tint:Hide() -- Hidden by default to preserve the standard backdrop
+        tier.tint:Hide()
 
-        -- Create/Get Pip (except for the last hold stage which is the end of the bar)
         if i < cb.numStages then
             local pip = cb.stagePips[i]
             if not pip then
@@ -234,8 +251,25 @@ function AscensionCastBar:addEmpowerStages(numStages)
                 cb.stagePips[i] = pip
             end
             pip:ClearAllPoints()
-            pip:SetPoint("TOP", cb, "TOPLEFT", right, -border)
-            pip:SetPoint("BOTTOM", cb, "BOTTOMLEFT", right, border)
+            if isVertical then
+                local p2 = border + (usableH * endPortion)
+                if isInverted then
+                    pip:SetPoint("LEFT", cb, "TOPLEFT", border, -p2)
+                    pip:SetPoint("RIGHT", cb, "TOPRIGHT", -border, -p2)
+                else
+                    pip:SetPoint("LEFT", cb, "BOTTOMLEFT", border, p2)
+                    pip:SetPoint("RIGHT", cb, "BOTTOMRIGHT", -border, p2)
+                end
+            else
+                local p2 = border + (usableW * endPortion)
+                if isInverted then
+                    pip:SetPoint("TOP", cb, "TOPRIGHT", -p2, -border)
+                    pip:SetPoint("BOTTOM", cb, "BOTTOMRIGHT", -p2, border)
+                else
+                    pip:SetPoint("TOP", cb, "TOPLEFT", p2, -border)
+                    pip:SetPoint("BOTTOM", cb, "BOTTOMLEFT", p2, border)
+                end
+            end
             pip:SetShown(db.showEmpowerStages)
         end
     end
@@ -263,8 +297,12 @@ function AscensionCastBar:updateEmpowerGeometry()
 
     local db = self.db.profile
     local border = (db.borderEnabled and db.borderThickness) or 0
+    local isVertical = (db.orientation == "VERTICAL")
+    local isInverted = db.invertFill or (isVertical and db.invertVerticalFill) or false
     local width = cb:GetWidth() or 270
+    local height = cb:GetHeight() or 24
     local usableW = math.max(1, width - (border * 2))
+    local usableH = math.max(1, height - (border * 2))
 
     local stageMaxMS = 0
     if cb.stagePoints and #cb.stagePoints > 0 and cb.duration then
@@ -274,19 +312,55 @@ function AscensionCastBar:updateEmpowerGeometry()
     end
 
     for i = 1, cb.numStages do
-        local leftPortion = (i == 1) and 0 or (cb.stagePoints[i - 1] / stageMaxMS)
-        local rightPortion = (i == cb.numStages) and 1 or (cb.stagePoints[i] / stageMaxMS)
-
-        local left = border + (usableW * leftPortion)
-        local right = border + (usableW * rightPortion)
+        local startPortion = (i == 1) and 0 or (cb.stagePoints[i - 1] / stageMaxMS)
+        local endPortion = (i == cb.numStages) and 1 or (cb.stagePoints[i] / stageMaxMS)
 
         if cb.stageTiers[i] and cb.stageTiers[i].tint then
-            cb.stageTiers[i].tint:SetPoint("TOPLEFT", cb, "TOPLEFT", left, -border)
-            cb.stageTiers[i].tint:SetPoint("BOTTOMRIGHT", cb, "BOTTOMLEFT", right, border)
+            cb.stageTiers[i].tint:ClearAllPoints()
+            if isVertical then
+                local p1 = border + (usableH * startPortion)
+                local p2 = border + (usableH * endPortion)
+                if isInverted then
+                    cb.stageTiers[i].tint:SetPoint("TOPLEFT", cb, "TOPLEFT", border, -p1)
+                    cb.stageTiers[i].tint:SetPoint("BOTTOMRIGHT", cb, "TOPRIGHT", -border, -p2)
+                else
+                    cb.stageTiers[i].tint:SetPoint("BOTTOMLEFT", cb, "BOTTOMLEFT", border, p1)
+                    cb.stageTiers[i].tint:SetPoint("TOPRIGHT", cb, "BOTTOMRIGHT", -border, p2)
+                end
+            else
+                local p1 = border + (usableW * startPortion)
+                local p2 = border + (usableW * endPortion)
+                if isInverted then
+                    cb.stageTiers[i].tint:SetPoint("TOPRIGHT", cb, "TOPRIGHT", -p1, -border)
+                    cb.stageTiers[i].tint:SetPoint("BOTTOMLEFT", cb, "BOTTOMRIGHT", -p2, border)
+                else
+                    cb.stageTiers[i].tint:SetPoint("TOPLEFT", cb, "TOPLEFT", p1, -border)
+                    cb.stageTiers[i].tint:SetPoint("BOTTOMRIGHT", cb, "BOTTOMLEFT", p2, border)
+                end
+            end
         end
+
         if i < cb.numStages and cb.stagePips and cb.stagePips[i] then
-            cb.stagePips[i]:SetPoint("TOP", cb, "TOPLEFT", right, -border)
-            cb.stagePips[i]:SetPoint("BOTTOM", cb, "BOTTOMLEFT", right, border)
+            cb.stagePips[i]:ClearAllPoints()
+            if isVertical then
+                local p2 = border + (usableH * endPortion)
+                if isInverted then
+                    cb.stagePips[i]:SetPoint("LEFT", cb, "TOPLEFT", border, -p2)
+                    cb.stagePips[i]:SetPoint("RIGHT", cb, "TOPRIGHT", -border, -p2)
+                else
+                    cb.stagePips[i]:SetPoint("LEFT", cb, "BOTTOMLEFT", border, p2)
+                    cb.stagePips[i]:SetPoint("RIGHT", cb, "BOTTOMRIGHT", -border, p2)
+                end
+            else
+                local p2 = border + (usableW * endPortion)
+                if isInverted then
+                    cb.stagePips[i]:SetPoint("TOP", cb, "TOPRIGHT", -p2, -border)
+                    cb.stagePips[i]:SetPoint("BOTTOM", cb, "BOTTOMRIGHT", -p2, border)
+                else
+                    cb.stagePips[i]:SetPoint("TOP", cb, "TOPLEFT", p2, -border)
+                    cb.stagePips[i]:SetPoint("BOTTOM", cb, "BOTTOMLEFT", p2, border)
+                end
+            end
         end
     end
 
@@ -298,7 +372,16 @@ function AscensionCastBar:updateEmpowerGeometry()
                 cumulative = cb.stagePoints[i] / stageMaxMS
             end
             if cb.ticks[i] then
-                cb.ticks[i]:SetPoint("CENTER", cb, "LEFT", width * cumulative, 0)
+                cb.ticks[i]:ClearAllPoints()
+                if isVertical then
+                    local pos = height * cumulative
+                    if isInverted then pos = height - pos end
+                    cb.ticks[i]:SetPoint("CENTER", cb, "BOTTOM", 0, pos)
+                else
+                    local pos = width * cumulative
+                    if isInverted then pos = width - pos end
+                    cb.ticks[i]:SetPoint("CENTER", cb, "LEFT", pos, 0)
+                end
             end
         end
     end

@@ -143,6 +143,7 @@ end
 
 function AscensionCastBar:refreshConfig()
     self:validateAnimationParams()
+    self:updateBarOrientation()
     self:updateAnchor()
     self:updateSparkSize()
     self:updateIcon()

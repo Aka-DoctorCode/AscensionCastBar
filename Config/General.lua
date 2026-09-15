@@ -61,19 +61,74 @@ function GeneralTab:render(layout, profile)
     layout:endSection()
 
     -- -------------------------------------------------------------------------------
-    -- SECTION: DIMENSIONS
+    -- SECTION: DIMENSIONS & ORIENTATION
     -- -------------------------------------------------------------------------------
-    layout:header(nil, "Dimensions")
+    layout:header(nil, "Dimensions & Orientation")
     layout:beginSection()
-        layout:stepper(nil, "Bar Width", 50, 1000, 5,
-            function() return profile.manualWidth end,
+        layout:dropdown(nil, "Orientation", nil,
+            {
+                { label = "Horizontal", value = "HORIZONTAL" },
+                { label = "Vertical",   value = "VERTICAL" },
+            },
+            function() return profile.orientation or "HORIZONTAL" end,
             function(val)
-                profile.manualWidth = val
+                profile.orientation = val
+                AscensionCastBar:updateBarOrientation()
                 AscensionCastBar:updateAnchor()
+                AscensionCastBar:updateSparkSize()
+                AscensionCastBar:updateIcon()
+                AscensionCastBar:updateTextLayout()
+                AscensionCastBar:updateTicks()
+                AscensionCastBar:updateLatency()
+                AscensionCastBar:selectTab("general")
             end
         )
 
-        layout:stepper(nil, "Bar Height", 10, 150, 1,
+        local invertDesc = (profile.orientation == "VERTICAL")
+            and "Fills downward from top to bottom instead of bottom to top."
+            or "Fills from right to left instead of left to right."
+
+        layout:checkbox(nil, "Invert Fill Direction", invertDesc,
+            function() return profile.invertFill or (profile.orientation == "VERTICAL" and profile.invertVerticalFill) or false end,
+            function(val)
+                profile.invertFill = val
+                profile.invertVerticalFill = val
+                AscensionCastBar:updateBarOrientation()
+                AscensionCastBar:updateTicks()
+                AscensionCastBar:updateLatency()
+            end
+        )
+
+        if profile.orientation == "VERTICAL" then
+            layout:dropdown(nil, "Vertical Text Layout", nil,
+                {
+                    { label = "Stacked Inside",    value = "StackedInside" },
+                    { label = "Outside Top",        value = "OutsideTop" },
+                    { label = "Outside Bottom",     value = "OutsideBottom" },
+                    { label = "Outside Right",      value = "OutsideRight" },
+                    { label = "Outside Left",       value = "OutsideLeft" },
+                    { label = "Default (Horizontal)", value = "Default" },
+                },
+                function() return profile.verticalTextLayout or "StackedInside" end,
+                function(val)
+                    profile.verticalTextLayout = val
+                    AscensionCastBar:updateTextLayout()
+                end
+            )
+        end
+
+        layout:stepper(nil, "Bar Width", 10, 1000, 1,
+            function() return profile.manualWidth end,
+            function(val)
+                profile.manualWidth = val
+                if AscensionCastBar.castBar then AscensionCastBar.castBar:SetWidth(val) end
+                AscensionCastBar:updateAnchor()
+                AscensionCastBar:updateSparkSize()
+                AscensionCastBar:updateIcon()
+            end
+        )
+
+        layout:stepper(nil, "Bar Height", 10, 1000, 1,
             function() return profile.manualHeight end,
             function(val)
                 profile.manualHeight = val
