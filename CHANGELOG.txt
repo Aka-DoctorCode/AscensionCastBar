@@ -1,7 +1,6 @@
 <h1>@project-version@</h1>
 <ul>
-    <li>Added vertical bar fill orientation option with configurable fill direction (bottom-to-top or inverted top-to-bottom), multiple vertical text layouts (stacked inside, outside top/bottom/left/right), 4-way icon anchoring, and vertical animation support.</li>
-    <li>Added option to invert horizontal fill direction (filling right-to-left), with fully adapted spark travel, latency indicator, tick marks, and empower stage scaling.</li>
+    <li>.toc update</li>
 </ul>
 <br>
 <h2>Positive feedback is always appreciated, it helps me to continue working on this project</h2>
