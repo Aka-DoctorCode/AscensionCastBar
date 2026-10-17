@@ -573,7 +573,7 @@ function AscensionCastBar:setupOptions()
                         order = 2,
                         get = function(info) return self.db.profile.barLSMName end,
                         set = function(info, val)
-                            self.db.profile.barLSMName = val; self:UpdateBarTexture()
+                            self.db.profile.barLSMName = val; self:updateBarColor()
                         end,
                     },
                     useClassColor = {

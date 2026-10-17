@@ -1,6 +1,6 @@
-<h1>@project-version@</h1>
+<h1>V67</h1>
 <ul>
-    <li>.toc update</li>
+    <li>Fixed a Lua error (attempt to call a nil value) when selecting a statusbar texture in the configuration options.</li>
 </ul>
 <br>
 <h2>Positive feedback is always appreciated, it helps me to continue working on this project</h2>
